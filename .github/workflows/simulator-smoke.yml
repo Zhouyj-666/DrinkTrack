@@ -1,0 +1,152 @@
+name: Simulator Smoke Test
+
+# Builds DrinkTrack for the iOS Simulator, launches it, walks through the main
+# screens with XCUITest and uploads screenshots as the "simulator-screenshots"
+# artifact. Runs only on the simulator-smoke-test branch (or manually), so the
+# IPA workflow on main (build.yml) is untouched.
+#
+# HealthKit note: the simulator has no real Health data and the Health permission
+# sheet cannot be driven reliably in CI, so the UI test taps the in-app
+# "skip authorization" button. HealthKit being denied/unavailable is expected
+# here and is NOT treated as a failure.
+on:
+  push:
+    branches: [ simulator-smoke-test ]
+  workflow_dispatch:
+
+jobs:
+  simulator-smoke:
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      SHOTS: ${{ github.workspace }}/screenshots
+      LOGS: ${{ github.workspace }}/smoke-logs
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16.4 (same as IPA build)
+        run: |
+          if [ -d /Applications/Xcode_16.4.app ]; then sudo xcode-select -s /Applications/Xcode_16.4.app; fi
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i simulator || true
+          mkdir -p "$SHOTS" "$LOGS"
+
+      - name: Add CI-only UI test target + scheme
+        run: |
+          gem list -i xcodeproj >/dev/null 2>&1 || sudo gem install xcodeproj --no-document
+          ruby ci/simulator/add_uitest_target.rb
+          xcodebuild -list -project DrinkTrack/DrinkTrack.xcodeproj
+
+      - name: Pick and boot simulator
+        run: |
+          PICK=$(python3 ci/simulator/pick_simulator.py)
+          UDID=$(echo "$PICK" | cut -d'|' -f1)
+          echo "Selected simulator: $PICK"
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          echo "SIM_DESC=$PICK" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+
+      - name: Build for testing (simulator)
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing \
+            -project DrinkTrack/DrinkTrack.xcodeproj \
+            -scheme DrinkTrackSmoke \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -derivedDataPath build-sim \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM= \
+            CODE_SIGNING_REQUIRED=NO \
+            2>&1 | tee "$LOGS/build-for-testing.log"
+
+      - name: Plain launch check (no XCUITest)
+        run: |
+          APP=build-sim/Build/Products/Debug-iphonesimulator/DrinkTrack.app
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")
+          echo "BUNDLE_ID=$BUNDLE_ID" >> "$GITHUB_ENV"
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl launch "$UDID" "$BUNDLE_ID" | tee "$LOGS/plain-launch.txt"
+          sleep 10
+          xcrun simctl io "$UDID" screenshot "$SHOTS/00-plain-launch.png" || true
+          if xcrun simctl spawn "$UDID" launchctl list | grep -q "$BUNDLE_ID"; then
+            echo "PLAIN_LAUNCH=alive after 10s" >> "$GITHUB_ENV"
+          else
+            echo "PLAIN_LAUNCH=NOT running after 10s (possible crash)" >> "$GITHUB_ENV"
+          fi
+          xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
+          # Reset app state so the UI test starts from a fresh onboarding.
+          xcrun simctl uninstall "$UDID" "$BUNDLE_ID" || true
+
+      - name: Run UI smoke test
+        id: uitest
+        run: |
+          set +e
+          set -o pipefail
+          TEST_RUNNER_SCREENSHOT_DIR="$SHOTS/uitest" xcodebuild test-without-building \
+            -project DrinkTrack/DrinkTrack.xcodeproj \
+            -scheme DrinkTrackSmoke \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -derivedDataPath build-sim \
+            -resultBundlePath Smoke.xcresult \
+            2>&1 | tee "$LOGS/uitest.log"
+          CODE=$?
+          echo "UITEST_EXIT=$CODE" >> "$GITHUB_ENV"
+          exit 0
+
+      - name: Export screenshots from xcresult and collect crash logs
+        if: always()
+        run: |
+          mkdir -p "$SHOTS/xcresult" "$SHOTS/crashes"
+          if [ -d Smoke.xcresult ]; then
+            xcrun xcresulttool export attachments --path Smoke.xcresult --output-path "$SHOTS/xcresult" || true
+            xcrun xcresulttool get test-results summary --path Smoke.xcresult > "$LOGS/test-summary.json" 2>/dev/null || true
+            ditto -c -k --keepParent Smoke.xcresult "$LOGS/Smoke.xcresult.zip" || true
+          fi
+          cp ~/Library/Logs/DiagnosticReports/*DrinkTrack* "$SHOTS/crashes/" 2>/dev/null || true
+          find "$HOME/Library/Developer/CoreSimulator/Devices/$UDID" -path '*DiagnosticReports*' -name '*DrinkTrack*' -exec cp {} "$SHOTS/crashes/" \; 2>/dev/null || true
+          xcrun simctl io "$UDID" screenshot "$SHOTS/99-final-simulator-state.png" || true
+          {
+            echo "Simulator: $SIM_DESC"
+            echo "Plain launch: $PLAIN_LAUNCH"
+            echo "UI test exit code: ${UITEST_EXIT:-not run}"
+            echo "HealthKit: system authorization intentionally skipped in simulator (expected limitation, not a failure)."
+            echo "Crash logs found: $(ls "$SHOTS/crashes" | wc -l | tr -d ' ')"
+          } | tee "$SHOTS/SUMMARY.txt"
+          {
+            echo "## DrinkTrack simulator smoke test"
+            echo '```'
+            cat "$SHOTS/SUMMARY.txt"
+            echo '```'
+            echo "Screenshots: download the **simulator-screenshots** artifact."
+          } >> "$GITHUB_STEP_SUMMARY"
+          find "$SHOTS" -type f | sort
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-screenshots
+          path: screenshots
+          retention-days: 30
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-smoke-logs
+          path: smoke-logs
+          retention-days: 30
+
+      - name: Report UI test result
+        if: always()
+        run: |
+          echo "UI test exit code: ${UITEST_EXIT:-not run}"
+          if [ "${UITEST_EXIT:-1}" != "0" ]; then
+            echo "::warning::UI smoke test reported failures - see simulator-screenshots (MISSING-/CRASH- images) and simulator-smoke-logs."
+            exit 1
+          fi
