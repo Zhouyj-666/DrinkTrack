@@ -1,8 +1,11 @@
 name: Build DrinkTrack IPA
 
-# 在云�?macOS 机器上编�?DrinkTrack，产出一�?*未正式签�?*�?.ipa�?# 供你�?Windows 上用 Sideloadly 重签后安装到 iPhone�?#
-# 触发方式�?#   - push �?main 分支自动触发
-#   - 也可以在 GitHub 网页�?Actions 标签页手动点 "Run workflow"
+# 在云端 macOS 机器上编译 DrinkTrack，产出一个**未正式签名**的 .ipa，
+# 供你在 Windows 上用 Sideloadly 重签后安装到 iPhone。
+#
+# 触发方式：
+#   - push 到 main 分支自动触发
+#   - 也可以在 GitHub 网页上 Actions 标签页手动点 "Run workflow"
 on:
   push:
     branches: [ main, master ]
@@ -10,7 +13,9 @@ on:
 
 jobs:
   build:
-    # macos-15 自带 Xcode 15.x（含 iOS 17 SDK），和本工程�?IPHONEOS_DEPLOYMENT_TARGET = 17.0 匹配�?    # 如果以后要升到更新的 SDK，把这里换成 macos-15 即可�?    runs-on: macos-15
+    # macos-15 自带 Xcode 15.x（含 iOS 17 SDK），和本工程的 IPHONEOS_DEPLOYMENT_TARGET = 17.0 匹配。
+    # 如果以后要升到更新的 SDK，把这里换成 macos-15 即可。
+    runs-on: macos-15
 
     steps:
       - name: 拉取代码
@@ -40,29 +45,36 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             2>&1 | tee build.log
 
-      - name: 嵌入 entitlements（ad-hoc 签名�?        # 为什么需要这一步：上一步完全关掉了签名，产物里不会带任�?entitlements�?        # �?HealthKit 是要�?entitlement 声明�?—�?如果 .app 里一�?entitlement 都没有，
-        # Sideloadly 重签时就不知道要申请 HealthKit 权限，装上去后读健康数据会直接失败�?        # 这里�?ad-hoc 签名（codesign -s -，不需要任何证书）�?entitlements 先写进去�?        # 让后续重签工具有迹可循�?        run: |
+      - name: 嵌入 entitlements（ad-hoc 签名）
+        # 为什么需要这一步：上一步完全关掉了签名，产物里不会带任何 entitlements。
+        # 而 HealthKit 是要靠 entitlement 声明的 —— 如果 .app 里一条 entitlement 都没有，
+        # Sideloadly 重签时就不知道要申请 HealthKit 权限，装上去后读健康数据会直接失败。
+        # 这里用 ad-hoc 签名（codesign -s -，不需要任何证书）把 entitlements 先写进去，
+        # 让后续重签工具有迹可循。
+        run: |
           APP="build/Build/Products/Release-iphoneos/DrinkTrack.app"
           codesign --force --sign - \
             --entitlements DrinkTrack/DrinkTrack/DrinkTrack.entitlements \
             "$APP"
-          echo "--- 确认 entitlements 已嵌�?---"
+          echo "--- 确认 entitlements 已嵌入 ---"
           codesign -d --entitlements :- "$APP" || true
 
-      - name: 打包�?.ipa
+      - name: 打包成 .ipa
         run: |
           mkdir -p Payload
           cp -R build/Build/Products/Release-iphoneos/DrinkTrack.app Payload/
           zip -qry DrinkTrack.ipa Payload
           ls -lh DrinkTrack.ipa
 
-      - name: 上传 IPA（在 Actions 运行结果页面下载�?        uses: actions/upload-artifact@v4
+      - name: 上传 IPA（在 Actions 运行结果页面下载）
+        uses: actions/upload-artifact@v4
         with:
           name: DrinkTrack-ipa
           path: DrinkTrack.ipa
           retention-days: 30
 
-      - name: 上传完整编译日志（无论成功失败都上传，失败时发给 Claude 排查�?        if: always()
+      - name: 上传完整编译日志（无论成功失败都上传，失败时发给 Claude 排查）
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-log
