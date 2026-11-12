@@ -57,7 +57,11 @@ final class DrinkTrackSmokeUITests: XCTestCase {
     @MainActor
     @discardableResult
     private func tap(_ element: XCUIElement, _ step: String, timeout: TimeInterval = 8, required: Bool = true) -> Bool {
-        guard element.waitForExistence(timeout: timeout) else {
+        if !element.waitForExistence(timeout: timeout / 2) {
+            // Lazy Form/List rows only exist once scrolled near; swipe to reveal.
+            for _ in 0..<5 where !element.exists { app.swipeUp(); _ = element.waitForExistence(timeout: 1) }
+        }
+        guard element.exists else {
             snap("MISSING-" + step)
             note("Could not find control for step '\(step)'.")
             if required { XCTFail("Missing control: \(step)") }
@@ -71,6 +75,12 @@ final class DrinkTrackSmokeUITests: XCTestCase {
             snap("DISABLED-" + step)
             note("Control for step '\(step)' exists but is disabled.")
             if required { XCTFail("Disabled control: \(step)") }
+            return false
+        }
+        guard element.isHittable else {
+            snap("NOT-HITTABLE-" + step)
+            note("Control for step '\(step)' exists but is not hittable (covered or off-screen).")
+            if required { XCTFail("Not hittable: \(step)") }
             return false
         }
         element.tap()
@@ -190,6 +200,8 @@ final class DrinkTrackSmokeUITests: XCTestCase {
                 }
                 tap(app.buttons["完成"], "quicklog-done")
                 sleep(1)
+                let cancel = app.navigationBars.buttons["取消"]
+                if cancel.exists { note("Quick-log sheet still open; dismissing via Cancel."); cancel.tap(); sleep(1) }
                 snap("dashboard-after-log")
             }
             if tap(app.buttons["结束会话"], "dashboard-end-session", required: false) {
