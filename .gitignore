@@ -1,0 +1,17 @@
+# macOS / Xcode
+.DS_Store
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.ipa
+Payload/
+build.log
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# 说明：xcshareddata/ 下的 shared scheme **必须**提交，不能忽略——
+# GitHub Actions 上的 xcodebuild -scheme 依赖它。
+!**/xcshareddata/**

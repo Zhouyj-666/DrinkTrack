@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>zh_CN</string>
+	<key>CFBundleDisplayName</key>
+	<string>DrinkTrack</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+
+	<!-- FR-HK-06 权限管理：系统授权弹窗展示的文案 -->
+	<key>NSHealthShareUsageDescription</key>
+	<string>DrinkTrack 需要读取你的心率、血氧、HRV 和睡眠数据，用来在饮酒时展示你的实时身体状态，以及生成饮酒日与非饮酒日的长期对比报告。我们只读取数据，不会修改或删除你的健康记录。</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>DrinkTrack 本版本不会写入任何 Apple Health 数据。</string>
+
+	<!-- FR-DR-05 地点（可选），调用系统定位服务 -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>用于在你录入饮酒记录时可选地标注当前地点，定位失败时不影响记录，不会对外展示你的精确位置。</string>
+
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+</dict>
+</plist>
