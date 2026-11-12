@@ -40,7 +40,9 @@ struct TrendsView: View {
                     SessionDetailView(session: session)
                 } label: {
                     HStack {
-                        Text(session.startedAt, style: .date)
+                        if let startedAt = session.startedAt {
+                            Text(startedAt, style: .date)
+                        }
                         Spacer()
                         let count = (session.logs as? Set<DrinkLogEntity>)?.count ?? 0
                         Text("\(count) 条记录").font(.caption).foregroundStyle(DesignSystem.secondaryInk)

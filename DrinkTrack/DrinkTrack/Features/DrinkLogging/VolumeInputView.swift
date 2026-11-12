@@ -42,9 +42,9 @@ struct VolumeInputView: View {
             }
         }
         .onAppear { syncVolume() }
-        .onChange(of: cupCount) { _ in syncVolume() }
-        .onChange(of: selectedCupIndex) { _ in syncVolume() }
-        .onChange(of: mode) { _ in syncVolume() }
+        .onChange(of: cupCount) { _, _ in syncVolume() }
+        .onChange(of: selectedCupIndex) { _, _ in syncVolume() }
+        .onChange(of: mode) { _, _ in syncVolume() }
     }
 
     private var totalFromCups: Double {

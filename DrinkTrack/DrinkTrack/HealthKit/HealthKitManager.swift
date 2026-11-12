@@ -75,10 +75,14 @@ final class HealthKitManager: ObservableObject {
         let query = HKAnchoredObjectQuery(
             type: type, predicate: predicate, anchor: nil, limit: HKObjectQueryNoLimit
         ) { [weak self] _, samples, _, _, error in
-            self?.handleHeartRateSamples(samples, error: error)
+            Task { @MainActor in
+                self?.handleHeartRateSamples(samples, error: error)
+            }
         }
         query.updateHandler = { [weak self] _, samples, _, _, error in
-            self?.handleHeartRateSamples(samples, error: error)
+            Task { @MainActor in
+                self?.handleHeartRateSamples(samples, error: error)
+            }
         }
         healthStore.execute(query)
         heartRateQuery = query
@@ -91,11 +95,9 @@ final class HealthKitManager: ObservableObject {
             HealthSamplePoint(timestamp: $0.endDate, value: $0.quantity.doubleValue(for: unit))
         }.sorted { $0.timestamp < $1.timestamp }
 
-        Task { @MainActor in
-            self.recentHeartRatePoints = points
-            self.latestHeartRate = points.last?.value
-            self.watchSeemsConnected = (points.last?.timestamp ?? .distantPast).timeIntervalSinceNow > -900
-        }
+        recentHeartRatePoints = points
+        latestHeartRate = points.last?.value
+        watchSeemsConnected = (points.last?.timestamp ?? .distantPast).timeIntervalSinceNow > -900
     }
 
     // MARK: - FR-HK-02 血氧采集
@@ -106,10 +108,14 @@ final class HealthKitManager: ObservableObject {
         let query = HKAnchoredObjectQuery(
             type: type, predicate: predicate, anchor: nil, limit: HKObjectQueryNoLimit
         ) { [weak self] _, samples, _, _, error in
-            self?.handleSpO2Samples(samples, error: error)
+            Task { @MainActor in
+                self?.handleSpO2Samples(samples, error: error)
+            }
         }
         query.updateHandler = { [weak self] _, samples, _, _, error in
-            self?.handleSpO2Samples(samples, error: error)
+            Task { @MainActor in
+                self?.handleSpO2Samples(samples, error: error)
+            }
         }
         healthStore.execute(query)
         spo2Query = query
@@ -121,16 +127,15 @@ final class HealthKitManager: ObservableObject {
             HealthSamplePoint(timestamp: $0.endDate, value: $0.quantity.doubleValue(for: .percent()) * 100)
         }.sorted { $0.timestamp < $1.timestamp }
 
-        Task { @MainActor in
-            self.recentSpO2Points = points
-            self.latestSpO2 = points.last?.value
-        }
+        recentSpO2Points = points
+        latestSpO2 = points.last?.value
     }
 
     // MARK: - FR-HK-03 HRV 采集（直接读取原生 SDNN，不做换算）
 
     func fetchLatestHRV() async -> Double? {
         let type = HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!
+        let store = healthStore
         return await withCheckedContinuation { continuation in
             let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
             let query = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { [weak self] _, samples, _ in
@@ -142,7 +147,7 @@ final class HealthKitManager: ObservableObject {
                 Task { @MainActor in self?.latestHRV = ms }
                 continuation.resume(returning: ms)
             }
-            healthStore.execute(query)
+            store.execute(query)
         }
     }
 
@@ -152,12 +157,13 @@ final class HealthKitManager: ObservableObject {
     func fetchSevenDayHRVAverage() async -> Double? {
         let type = HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!
         let predicate = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-7 * 24 * 3600), end: nil)
+        let store = healthStore
         return await withCheckedContinuation { continuation in
             let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .discreteAverage) { _, stats, _ in
                 let ms = stats?.averageQuantity()?.doubleValue(for: .secondUnit(with: .milli))
                 continuation.resume(returning: ms)
             }
-            healthStore.execute(query)
+            store.execute(query)
         }
     }
 
@@ -166,13 +172,14 @@ final class HealthKitManager: ObservableObject {
     func fetchRestingHeartRateAverage() async -> Double? {
         let type = HKQuantityType.quantityType(forIdentifier: .restingHeartRate)!
         let predicate = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-7 * 24 * 3600), end: nil)
+        let store = healthStore
         return await withCheckedContinuation { continuation in
             let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .discreteAverage) { _, stats, _ in
                 let unit = HKUnit.count().unitDivided(by: .minute())
                 let bpm = stats?.averageQuantity()?.doubleValue(for: unit)
                 continuation.resume(returning: bpm)
             }
-            healthStore.execute(query)
+            store.execute(query)
         }
     }
 
@@ -182,6 +189,7 @@ final class HealthKitManager: ObservableObject {
         let type = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis)!
         let start = Calendar.current.date(byAdding: .hour, value: -18, to: Date()) ?? Date()
         let predicate = HKQuery.predicateForSamples(withStart: start, end: Date())
+        let store = healthStore
         return await withCheckedContinuation { continuation in
             let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, _ in
                 guard let categorySamples = samples as? [HKCategorySample], !categorySamples.isEmpty else {
@@ -197,7 +205,7 @@ final class HealthKitManager: ObservableObject {
                 let efficiency = totalInBed > 0 ? totalAsleep / totalInBed : 0
                 continuation.resume(returning: (totalAsleep, efficiency))
             }
-            healthStore.execute(query)
+            store.execute(query)
         }
     }
 
@@ -240,6 +248,7 @@ final class HealthKitManager: ObservableObject {
         guard !days.isEmpty else { return nil }
         let calendar = Calendar.current
         let type = HKQuantityType.quantityType(forIdentifier: identifier)!
+        let store = healthStore
         var total = 0.0
         var count = 0
         for day in days {
@@ -249,7 +258,7 @@ final class HealthKitManager: ObservableObject {
                 let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .discreteAverage) { _, stats, _ in
                     continuation.resume(returning: stats?.averageQuantity()?.doubleValue(for: unit))
                 }
-                healthStore.execute(query)
+                store.execute(query)
             }
             if let value {
                 total += value
@@ -268,6 +277,7 @@ final class HealthKitManager: ObservableObject {
         guard enabled else { return [] }
         guard #available(iOS 16.0, *) else { return [] }
         let type = HKObjectType.electrocardiogramType()
+        let store = healthStore
         return await withCheckedContinuation { continuation in
             let predicate = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-24 * 3600), end: nil)
             let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, _ in
@@ -276,7 +286,7 @@ final class HealthKitManager: ObservableObject {
                 } ?? []
                 continuation.resume(returning: dates)
             }
-            healthStore.execute(query)
+            store.execute(query)
         }
     }
 }

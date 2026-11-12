@@ -55,7 +55,7 @@ final class PersistenceController {
             let result = try viewContext.execute(deleteRequest) as? NSBatchDeleteResult
             if let objectIDs = result?.result as? [NSManagedObjectID] {
                 let changes = [NSDeletedObjectsKey: objectIDs]
-                NSMergePolicy.mergeChanges(fromRemoteContextSave: changes, into: [viewContext])
+                NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [viewContext])
             }
         }
         save()

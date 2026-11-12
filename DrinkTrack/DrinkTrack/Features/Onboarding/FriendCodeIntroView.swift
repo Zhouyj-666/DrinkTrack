@@ -44,7 +44,7 @@ struct FriendCodeIntroView: View {
         request.sortDescriptors = [NSSortDescriptor(keyPath: \UserProfileEntity.createdAt, ascending: false)]
         request.fetchLimit = 1
         if let profile = try? context.fetch(request).first {
-            friendCode = profile.friendCode
+            friendCode = profile.friendCode ?? "------"
         }
     }
 }

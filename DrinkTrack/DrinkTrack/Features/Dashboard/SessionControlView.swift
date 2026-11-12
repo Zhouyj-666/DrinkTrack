@@ -11,7 +11,9 @@ struct SessionControlView: View {
             if let session = activeSession {
                 VStack(alignment: .leading) {
                     Text("进行中的饮酒会话").font(.caption).foregroundStyle(DesignSystem.secondaryInk)
-                    Text(session.startedAt, style: .relative).font(.headline) + Text(" 前开始")
+                    if let startedAt = session.startedAt {
+                        Text(startedAt, style: .relative).font(.headline) + Text(" 前开始")
+                    }
                 }
                 Spacer()
                 Button("+ 添加记录") { showQuickLog = true }

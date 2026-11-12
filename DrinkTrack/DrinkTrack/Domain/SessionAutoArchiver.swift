@@ -20,8 +20,8 @@ struct SessionAutoArchiver {
 
         for session in activeSessions {
             let logs = (session.logs as? Set<DrinkLogEntity>) ?? []
-            let lastActivity = logs.map(\.timestamp).max() ?? session.startedAt
-            if shouldAutoArchive(lastActivityAt: lastActivity ?? session.startedAt) {
+            guard let lastActivity = logs.compactMap(\.timestamp).max() ?? session.startedAt else { continue }
+            if shouldAutoArchive(lastActivityAt: lastActivity) {
                 session.status = "archived"
                 session.endedAt = Date()
             }

@@ -50,17 +50,23 @@ struct VolumeTrendChart: View {
 
     private var stackedPoints: [StackedPoint] {
         let calendar = Calendar.current
-        let grouped = Dictionary(grouping: logs) { log in
-            calendar.startOfDay(for: log.timestamp)
+        let datedLogs = logs.compactMap { log -> (day: Date, log: DrinkLogEntity)? in
+            guard let timestamp = log.timestamp else { return nil }
+            return (calendar.startOfDay(for: timestamp), log)
         }
+        let grouped = Dictionary(grouping: datedLogs, by: \.day)
         var result: [StackedPoint] = []
-        for (day, dayLogs) in grouped {
-            let byCategory = Dictionary(grouping: dayLogs) { $0.category }
+        for (day, dayItems) in grouped {
+            let dayLogs = dayItems.map(\.log)
+            let byCategory = Dictionary(grouping: dayLogs) { $0.category ?? "" }
             for (rawCategory, categoryLogs) in byCategory {
                 guard let category = DrinkCategory(rawValue: rawCategory) else { continue }
-                let value = unit == .ml
-                    ? categoryLogs.reduce(0) { $0 + $1.volumeMl }
-                    : categoryLogs.reduce(0) { $0 + $1.standardDrinks }
+                let value: Double
+                if unit == .ml {
+                    value = categoryLogs.reduce(0) { $0 + $1.volumeMl }
+                } else {
+                    value = categoryLogs.reduce(0) { $0 + $1.standardDrinks }
+                }
                 result.append(StackedPoint(day: day, category: category, value: value))
             }
         }

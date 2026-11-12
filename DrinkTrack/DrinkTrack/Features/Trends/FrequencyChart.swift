@@ -55,9 +55,20 @@ struct FrequencyChart: View {
             case .year: return calendar.date(byAdding: .year, value: -1, to: Date()) ?? .distantPast
             }
         }()
-        let filtered = logs.filter { $0.timestamp >= cutoff }
-        let grouped = Dictionary(grouping: filtered) { calendar.startOfDay(for: $0.timestamp) }
-        return grouped.map { DayTotal(day: $0.key, totalML: $0.value.reduce(0) { $0 + $1.volumeMl }) }
-            .sorted { $0.day < $1.day }
+        let filtered = logs.filter { log in
+            guard let timestamp = log.timestamp else { return false }
+            return timestamp >= cutoff
+        }
+        let grouped = Dictionary(grouping: filtered) { log in
+            calendar.startOfDay(for: log.timestamp ?? cutoff)
+        }
+        var totals: [DayTotal] = []
+        for (day, dayLogs) in grouped {
+            let totalML = dayLogs.reduce(0.0) { partial, log in
+                partial + log.volumeMl
+            }
+            totals.append(DayTotal(day: day, totalML: totalML))
+        }
+        return totals.sorted { $0.day < $1.day }
     }
 }

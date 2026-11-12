@@ -13,12 +13,16 @@ struct ShareCardView: View {
                 Image(systemName: "wineglass.fill").foregroundStyle(DesignSystem.heartRateLine)
                 Text("DrinkTrack 饮酒打卡").font(.headline)
                 Spacer()
-                Text(session.startedAt, style: .date).font(.caption).foregroundStyle(DesignSystem.secondaryInk)
+                if let startedAt = session.startedAt {
+                    Text(startedAt, style: .date).font(.caption).foregroundStyle(DesignSystem.secondaryInk)
+                }
             }
 
-            let logs = (session.logs as? Set<DrinkLogEntity> ?? []).sorted { $0.timestamp < $1.timestamp }
-            ForEach(logs, id: \.id) { log in
-                if let category = DrinkCategory(rawValue: log.category) {
+            let logs = (session.logs as? Set<DrinkLogEntity> ?? []).sorted {
+                ($0.timestamp ?? .distantPast) < ($1.timestamp ?? .distantPast)
+            }
+            ForEach(logs, id: \.objectID) { log in
+                if let rawCategory = log.category, let category = DrinkCategory(rawValue: rawCategory) {
                     HStack {
                         Text(category.emoji)
                         Text("\(category.displayName) \(Int(log.volumeMl))ml")
