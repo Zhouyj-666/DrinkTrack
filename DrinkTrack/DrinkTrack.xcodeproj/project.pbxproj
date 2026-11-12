@@ -111,6 +111,7 @@
 				000000000000000000000008,
 			);
 			name = Model;
+			path = Model;
 			sourceTree = "<group>";
 		};
 		00000000000000000000000A /* HealthKit */ = {
@@ -120,6 +121,7 @@
 				00000000000000000000000D,
 			);
 			name = HealthKit;
+			path = HealthKit;
 			sourceTree = "<group>";
 		};
 		00000000000000000000000F /* Domain */ = {
@@ -132,6 +134,7 @@
 				000000000000000000000018,
 			);
 			name = Domain;
+			path = Domain;
 			sourceTree = "<group>";
 		};
 		00000000000000000000001A /* Repositories */ = {
@@ -141,6 +144,7 @@
 				00000000000000000000001D,
 			);
 			name = Repositories;
+			path = Repositories;
 			sourceTree = "<group>";
 		};
 		000000000000000000000020 /* Onboarding */ = {
@@ -153,6 +157,7 @@
 				000000000000000000000029,
 			);
 			name = Onboarding;
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		00000000000000000000002B /* Dashboard */ = {
@@ -165,6 +170,7 @@
 				000000000000000000000034,
 			);
 			name = Dashboard;
+			path = Dashboard;
 			sourceTree = "<group>";
 		};
 		000000000000000000000036 /* DrinkLogging */ = {
@@ -175,6 +181,7 @@
 				00000000000000000000003B,
 			);
 			name = DrinkLogging;
+			path = DrinkLogging;
 			sourceTree = "<group>";
 		};
 		00000000000000000000003D /* Trends */ = {
@@ -186,6 +193,7 @@
 				000000000000000000000044,
 			);
 			name = Trends;
+			path = Trends;
 			sourceTree = "<group>";
 		};
 		000000000000000000000046 /* Social */ = {
@@ -197,6 +205,7 @@
 				00000000000000000000004D,
 			);
 			name = Social;
+			path = Social;
 			sourceTree = "<group>";
 		};
 		00000000000000000000004F /* Settings */ = {
@@ -206,6 +215,7 @@
 				000000000000000000000052,
 			);
 			name = Settings;
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		00000000000000000000001F /* Features */ = {
@@ -219,6 +229,7 @@
 				00000000000000000000004F,
 			);
 			name = Features;
+			path = Features;
 			sourceTree = "<group>";
 		};
 		000000000000000000000054 /* Shared */ = {
@@ -229,6 +240,7 @@
 				000000000000000000000059,
 			);
 			name = Shared;
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		000000000000000000000001 /* DrinkTrack */ = {
