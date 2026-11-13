@@ -22,9 +22,9 @@
 		000000000000000000000022 /* OnboardingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000021 /* OnboardingCoordinator.swift */; };
 		000000000000000000000024 /* DisclaimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000023 /* DisclaimerView.swift */; };
 		000000000000000000000026 /* PrivacyPolicyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000025 /* PrivacyPolicyView.swift */; };
-		000000000000000000000028 /* BasicInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000027 /* BasicInfoView.swift */; };
-		00000000000000000000002A /* FriendCodeIntroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000029 /* FriendCodeIntroView.swift */; };
-		00000000000000000000002D /* SessionControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000002C /* SessionControlView.swift */; };
+		000000000000000000000028 /* AppIntroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000027 /* AppIntroView.swift */; };
+		00000000000000000000002B /* SessionControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000002A /* SessionControlView.swift */; };
+		00000000000000000000002D /* SessionLogListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000002C /* SessionLogListView.swift */; };
 		00000000000000000000002F /* HeartRateChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000002E /* HeartRateChartView.swift */; };
 		000000000000000000000031 /* SpO2View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000030 /* SpO2View.swift */; };
 		000000000000000000000033 /* AlertToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000032 /* AlertToastView.swift */; };
@@ -42,10 +42,13 @@
 		00000000000000000000004E /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000004D /* SessionDetailView.swift */; };
 		000000000000000000000051 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000050 /* SettingsView.swift */; };
 		000000000000000000000053 /* DataManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000052 /* DataManagementView.swift */; };
-		000000000000000000000056 /* DisclaimerStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000055 /* DisclaimerStrings.swift */; };
-		000000000000000000000058 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* DesignSystem.swift */; };
-		00000000000000000000005A /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000059 /* RootView.swift */; };
-		00000000000000000000005E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000005D /* Assets.xcassets */; };
+		000000000000000000000055 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000054 /* ProfileView.swift */; };
+		000000000000000000000057 /* HealthConnectionStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000056 /* HealthConnectionStatusView.swift */; };
+		00000000000000000000005A /* DisclaimerStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000059 /* DisclaimerStrings.swift */; };
+		00000000000000000000005C /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000005B /* DesignSystem.swift */; };
+		00000000000000000000005E /* NumericField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000005D /* NumericField.swift */; };
+		000000000000000000000060 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000005F /* RootView.swift */; };
+		000000000000000000000064 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000063 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -65,9 +68,9 @@
 		000000000000000000000021 /* OnboardingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCoordinator.swift; sourceTree = "<group>"; };
 		000000000000000000000023 /* DisclaimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisclaimerView.swift; sourceTree = "<group>"; };
 		000000000000000000000025 /* PrivacyPolicyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyView.swift; sourceTree = "<group>"; };
-		000000000000000000000027 /* BasicInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicInfoView.swift; sourceTree = "<group>"; };
-		000000000000000000000029 /* FriendCodeIntroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendCodeIntroView.swift; sourceTree = "<group>"; };
-		00000000000000000000002C /* SessionControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionControlView.swift; sourceTree = "<group>"; };
+		000000000000000000000027 /* AppIntroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntroView.swift; sourceTree = "<group>"; };
+		00000000000000000000002A /* SessionControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionControlView.swift; sourceTree = "<group>"; };
+		00000000000000000000002C /* SessionLogListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogListView.swift; sourceTree = "<group>"; };
 		00000000000000000000002E /* HeartRateChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartRateChartView.swift; sourceTree = "<group>"; };
 		000000000000000000000030 /* SpO2View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpO2View.swift; sourceTree = "<group>"; };
 		000000000000000000000032 /* AlertToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertToastView.swift; sourceTree = "<group>"; };
@@ -85,12 +88,15 @@
 		00000000000000000000004D /* SessionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
 		000000000000000000000050 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		000000000000000000000052 /* DataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManagementView.swift; sourceTree = "<group>"; };
-		000000000000000000000055 /* DisclaimerStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisclaimerStrings.swift; sourceTree = "<group>"; };
-		000000000000000000000057 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
-		000000000000000000000059 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
-		00000000000000000000005B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		00000000000000000000005C /* DrinkTrack.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DrinkTrack.entitlements; sourceTree = "<group>"; };
-		00000000000000000000005D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		000000000000000000000054 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		000000000000000000000056 /* HealthConnectionStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthConnectionStatusView.swift; sourceTree = "<group>"; };
+		000000000000000000000059 /* DisclaimerStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisclaimerStrings.swift; sourceTree = "<group>"; };
+		00000000000000000000005B /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		00000000000000000000005D /* NumericField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericField.swift; sourceTree = "<group>"; };
+		00000000000000000000005F /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		000000000000000000000061 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		000000000000000000000062 /* DrinkTrack.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DrinkTrack.entitlements; sourceTree = "<group>"; };
+		000000000000000000000063 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,7 +117,6 @@
 				000000000000000000000008,
 			);
 			name = Model;
-			path = Model;
 			sourceTree = "<group>";
 		};
 		00000000000000000000000A /* HealthKit */ = {
@@ -121,7 +126,6 @@
 				00000000000000000000000D,
 			);
 			name = HealthKit;
-			path = HealthKit;
 			sourceTree = "<group>";
 		};
 		00000000000000000000000F /* Domain */ = {
@@ -134,7 +138,6 @@
 				000000000000000000000018,
 			);
 			name = Domain;
-			path = Domain;
 			sourceTree = "<group>";
 		};
 		00000000000000000000001A /* Repositories */ = {
@@ -144,7 +147,6 @@
 				00000000000000000000001D,
 			);
 			name = Repositories;
-			path = Repositories;
 			sourceTree = "<group>";
 		};
 		000000000000000000000020 /* Onboarding */ = {
@@ -154,15 +156,14 @@
 				000000000000000000000023,
 				000000000000000000000025,
 				000000000000000000000027,
-				000000000000000000000029,
 			);
 			name = Onboarding;
-			path = Onboarding;
 			sourceTree = "<group>";
 		};
-		00000000000000000000002B /* Dashboard */ = {
+		000000000000000000000029 /* Dashboard */ = {
 			isa = PBXGroup;
 			children = (
+				00000000000000000000002A,
 				00000000000000000000002C,
 				00000000000000000000002E,
 				000000000000000000000030,
@@ -170,7 +171,6 @@
 				000000000000000000000034,
 			);
 			name = Dashboard;
-			path = Dashboard;
 			sourceTree = "<group>";
 		};
 		000000000000000000000036 /* DrinkLogging */ = {
@@ -181,7 +181,6 @@
 				00000000000000000000003B,
 			);
 			name = DrinkLogging;
-			path = DrinkLogging;
 			sourceTree = "<group>";
 		};
 		00000000000000000000003D /* Trends */ = {
@@ -193,7 +192,6 @@
 				000000000000000000000044,
 			);
 			name = Trends;
-			path = Trends;
 			sourceTree = "<group>";
 		};
 		000000000000000000000046 /* Social */ = {
@@ -205,7 +203,6 @@
 				00000000000000000000004D,
 			);
 			name = Social;
-			path = Social;
 			sourceTree = "<group>";
 		};
 		00000000000000000000004F /* Settings */ = {
@@ -213,34 +210,34 @@
 			children = (
 				000000000000000000000050,
 				000000000000000000000052,
+				000000000000000000000054,
+				000000000000000000000056,
 			);
 			name = Settings;
-			path = Settings;
 			sourceTree = "<group>";
 		};
 		00000000000000000000001F /* Features */ = {
 			isa = PBXGroup;
 			children = (
 				000000000000000000000020,
-				00000000000000000000002B,
+				000000000000000000000029,
 				000000000000000000000036,
 				00000000000000000000003D,
 				000000000000000000000046,
 				00000000000000000000004F,
 			);
 			name = Features;
-			path = Features;
 			sourceTree = "<group>";
 		};
-		000000000000000000000054 /* Shared */ = {
+		000000000000000000000058 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000055,
-				000000000000000000000057,
 				000000000000000000000059,
+				00000000000000000000005B,
+				00000000000000000000005D,
+				00000000000000000000005F,
 			);
 			name = Shared;
-			path = Shared;
 			sourceTree = "<group>";
 		};
 		000000000000000000000001 /* DrinkTrack */ = {
@@ -252,10 +249,10 @@
 				00000000000000000000000F,
 				00000000000000000000001A,
 				00000000000000000000001F,
-				000000000000000000000054,
-				00000000000000000000005B,
-				00000000000000000000005C,
-				00000000000000000000005D,
+				000000000000000000000058,
+				000000000000000000000061,
+				000000000000000000000062,
+				000000000000000000000063,
 			);
 			path = DrinkTrack;
 			sourceTree = "<group>";
@@ -347,7 +344,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				00000000000000000000005E /* Assets.xcassets in Resources */,
+				000000000000000000000064 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -373,9 +370,9 @@
 				000000000000000000000022 /* OnboardingCoordinator.swift in Sources */,
 				000000000000000000000024 /* DisclaimerView.swift in Sources */,
 				000000000000000000000026 /* PrivacyPolicyView.swift in Sources */,
-				000000000000000000000028 /* BasicInfoView.swift in Sources */,
-				00000000000000000000002A /* FriendCodeIntroView.swift in Sources */,
-				00000000000000000000002D /* SessionControlView.swift in Sources */,
+				000000000000000000000028 /* AppIntroView.swift in Sources */,
+				00000000000000000000002B /* SessionControlView.swift in Sources */,
+				00000000000000000000002D /* SessionLogListView.swift in Sources */,
 				00000000000000000000002F /* HeartRateChartView.swift in Sources */,
 				000000000000000000000031 /* SpO2View.swift in Sources */,
 				000000000000000000000033 /* AlertToastView.swift in Sources */,
@@ -393,9 +390,12 @@
 				00000000000000000000004E /* SessionDetailView.swift in Sources */,
 				000000000000000000000051 /* SettingsView.swift in Sources */,
 				000000000000000000000053 /* DataManagementView.swift in Sources */,
-				000000000000000000000056 /* DisclaimerStrings.swift in Sources */,
-				000000000000000000000058 /* DesignSystem.swift in Sources */,
-				00000000000000000000005A /* RootView.swift in Sources */,
+				000000000000000000000055 /* ProfileView.swift in Sources */,
+				000000000000000000000057 /* HealthConnectionStatusView.swift in Sources */,
+				00000000000000000000005A /* DisclaimerStrings.swift in Sources */,
+				00000000000000000000005C /* DesignSystem.swift in Sources */,
+				00000000000000000000005E /* NumericField.swift in Sources */,
+				000000000000000000000060 /* RootView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

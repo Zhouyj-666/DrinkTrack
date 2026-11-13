@@ -11,20 +11,13 @@ struct SettingsView: View {
     @State private var profile: UserProfileEntity?
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section("健康数据权限") {
-                    HStack {
-                        Text("HealthKit 授权状态")
-                        Spacer()
-                        Text(healthKitManager.isAuthorized ? "已授权" : "未授权/受限")
-                            .foregroundStyle(healthKitManager.isAuthorized ? DesignSystem.statusGood : DesignSystem.statusWarning)
-                    }
-                    Button("重新请求授权") {
-                        Task { await healthKitManager.requestAuthorization() }
-                    }
-                }
-
+        // 注意：这里**不能**再包一层 NavigationStack。
+        // SettingsView 现在是从「我的」页 push 进来的子页面，
+        // 嵌套 NavigationStack 会导致内部的 NavigationLink 无法正常跳转。
+        Form {
+                // 健康连接状态不在这里重复展示——它在「我的」页顶部，
+                // 用 HealthConnectionStatusView 如实反映真实可读性，
+                // 而不是像以前那样显示一个永远为「已授权」的假状态。
                 Section {
                     Toggle("显示异常心律 (AFib) 事件", isOn: Binding(
                         get: { afibEnabled },
@@ -64,19 +57,19 @@ struct SettingsView: View {
                 NavigationLink("数据管理") {
                     DataManagementView()
                 }
+        }
+        .navigationTitle("设置")
+        .navigationBarTitleDisplayMode(.inline)
+        .task { loadProfile() }
+        .alert("额外提示", isPresented: $showAFibDisclaimer) {
+            Button("取消", role: .cancel) {}
+            Button("我已了解，开启") {
+                afibEnabled = true
+                persistAFibFlag(true)
+                Task { await healthKitManager.requestAFibAuthorizationIfNeeded() }
             }
-            .navigationTitle("设置")
-            .task { loadProfile() }
-            .alert("额外提示", isPresented: $showAFibDisclaimer) {
-                Button("取消", role: .cancel) {}
-                Button("我已了解，开启") {
-                    afibEnabled = true
-                    persistAFibFlag(true)
-                    Task { await healthKitManager.requestAFibAuthorizationIfNeeded() }
-                }
-            } message: {
-                Text(DisclaimerStrings.afibExtraDisclaimer)
-            }
+        } message: {
+            Text(DisclaimerStrings.afibExtraDisclaimer)
         }
     }
 

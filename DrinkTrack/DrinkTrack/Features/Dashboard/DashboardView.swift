@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreData
 
-/// §5.3 实时状态仪表盘：心率曲线、血氧展示、被动预警、会话开始/结束控制。
+/// §5.3 实时状态仪表盘：饮酒记录列表、心率曲线、血氧展示、被动预警、会话开始/结束控制。
 struct DashboardView: View {
     @EnvironmentObject private var healthKitManager: HealthKitManager
     @EnvironmentObject private var drinkRepository: DrinkRepository
@@ -11,15 +11,39 @@ struct DashboardView: View {
     @State private var showQuickLog = false
     @State private var activeAlertMessage: String?
     @State private var restingHeartRate: Double = 65
-
-    private let supportsSpO2 = true // 简化判断；真实实现应查询设备型号或 HKQuantityType 可用性
+    /// 录入后自增，用来强制刷新依赖会话关系的派生数据（Core Data 关系变更不会自动发布）
+    @State private var logRevision = 0
 
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(spacing: 16) {
-                        SessionControlView(drinkRepository: drinkRepository, activeSession: $activeSession, showQuickLog: $showQuickLog)
+                        SessionControlView(
+                            drinkRepository: drinkRepository,
+                            activeSession: $activeSession,
+                            showQuickLog: $showQuickLog
+                        )
+
+                        // 录入的记录现在第一时间可见（修复「记录不显示」）
+                        if activeSession != nil {
+                            SessionLogListView(session: activeSession)
+                                .id(logRevision)
+                        }
+
+                        // 健康数据没连上时，把状态和自查方法摆在显眼处，
+                        // 而不是让用户对着一张空图表猜为什么没数据
+                        if !healthKitManager.connectionState.isUsable {
+                            HealthConnectionStatusView(
+                                state: healthKitManager.connectionState,
+                                onRequestAuthorization: {
+                                    Task { await healthKitManager.requestAuthorization() }
+                                },
+                                onRefresh: {
+                                    Task { await healthKitManager.refreshConnectionState() }
+                                }
+                            )
+                        }
 
                         HeartRateChartView(
                             points: healthKitManager.recentHeartRatePoints,
@@ -27,7 +51,7 @@ struct DashboardView: View {
                             watchConnected: healthKitManager.watchSeemsConnected
                         )
 
-                        if supportsSpO2 {
+                        if !healthKitManager.recentSpO2Points.isEmpty || healthKitManager.latestSpO2 != nil {
                             SpO2View(points: healthKitManager.recentSpO2Points, current: healthKitManager.latestSpO2)
                         }
                     }
@@ -40,14 +64,18 @@ struct DashboardView: View {
                 }
             }
             .navigationTitle("仪表盘")
-            .onAppear {
+            .task {
                 activeSession = drinkRepository.fetchActiveSession()
                 loadRestingHeartRate()
+                await healthKitManager.resumeIfPossible()
             }
             .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
                 evaluateAlerts()
             }
-            .sheet(isPresented: $showQuickLog) {
+            .sheet(isPresented: $showQuickLog, onDismiss: {
+                // 录入面板关掉后刷新列表和图表标记
+                logRevision += 1
+            }) {
                 if let session = activeSession {
                     QuickLogSheet(session: session, drinkRepository: drinkRepository)
                 }
@@ -56,6 +84,7 @@ struct DashboardView: View {
     }
 
     private var drinkMarkTimestamps: [Date] {
+        _ = logRevision // 建立依赖，录入后重新计算
         guard let session = activeSession, let logs = session.logs as? Set<DrinkLogEntity> else { return [] }
         return logs.compactMap(\.timestamp).sorted()
     }

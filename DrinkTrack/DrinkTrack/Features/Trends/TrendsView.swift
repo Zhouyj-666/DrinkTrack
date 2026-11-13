@@ -4,7 +4,7 @@ import SwiftUI
 struct TrendsView: View {
     @EnvironmentObject private var drinkRepository: DrinkRepository
     @State private var logs: [DrinkLogEntity] = []
-    @State private var archivedSessions: [DrinkSessionEntity] = []
+    @State private var sessions: [DrinkSessionEntity] = []
 
     var body: some View {
         NavigationStack {
@@ -14,7 +14,7 @@ struct TrendsView: View {
                         ContentUnavailableView(
                             "暂无数据",
                             systemImage: "chart.bar",
-                            description: Text("归档至少一次饮酒会话后，这里会展示你的饮酒频率、饮酒量趋势和健康对比报告")
+                            description: Text("记录至少一次饮酒后，这里会展示你的饮酒频率、饮酒量趋势和健康对比报告")
                         )
                         .padding(.top, 60)
                     } else {
@@ -27,7 +27,8 @@ struct TrendsView: View {
                 .padding()
             }
             .navigationTitle("趋势报告")
-            .onAppear(perform: load)
+            .task { load() }
+            .refreshable { load() }
         }
     }
 
@@ -35,13 +36,21 @@ struct TrendsView: View {
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("历史记录").font(.headline)
-            ForEach(archivedSessions.prefix(10), id: \.id) { session in
+            ForEach(sessions.prefix(10), id: \.objectID) { session in
                 NavigationLink {
                     SessionDetailView(session: session)
                 } label: {
                     HStack {
                         if let startedAt = session.startedAt {
                             Text(startedAt, style: .date)
+                        }
+                        if session.status == "active" {
+                            Text("进行中")
+                                .font(.caption2)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(DesignSystem.statusGood.opacity(0.15))
+                                .foregroundStyle(DesignSystem.statusGood)
+                                .clipShape(Capsule())
                         }
                         Spacer()
                         let count = (session.logs as? Set<DrinkLogEntity>)?.count ?? 0
@@ -59,8 +68,8 @@ struct TrendsView: View {
     }
 
     private func load() {
-        logs = drinkRepository.allArchivedLogs(since: Calendar.current.date(byAdding: .month, value: -3, to: Date()) ?? .distantPast)
-        archivedSessions = drinkRepository.fetchArchivedSessions()
+        let since = Calendar.current.date(byAdding: .month, value: -3, to: Date()) ?? .distantPast
+        logs = drinkRepository.allLogs(since: since)
+        sessions = drinkRepository.fetchAllSessions()
     }
 }
-

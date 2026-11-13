@@ -6,13 +6,40 @@ import Combine
 /// 采样频率说明（对应 FR-HK-01/02）：这里用 `startObserving` + `HKAnchoredObjectQuery`
 /// 在前台做准实时轮询；App 退到后台之后，iOS 系统会按自己的策略限制后台唤醒频率
 /// （文档里写的"每 10-15 分钟 1 次"是系统行为，不是我们能控制的下限，代码里不假装能绕过）。
+/// 健康数据连接状态。
+///
+/// ⚠️ 为什么不是简单的 `isAuthorized: Bool`：
+/// HealthKit **故意不告诉 App 读取权限是否被授予**（这是 Apple 的隐私设计——如果 App 能知道
+/// 「用户拒绝了心率权限」，本身就泄露了用户的健康信息）。
+/// `requestAuthorization(toShare:read:)` 即使用户在弹窗里全部点了「不允许」也会正常返回成功。
+///
+/// 所以唯一可靠的判断方式是：**实际跑一次查询，看能不能读到数据**。
+/// 读到了 → 一定有权限；读不到 → 可能没权限，也可能只是没有数据（没戴表 / 新手表 / 模拟器）。
+/// 这两种情况 App 无法区分，所以 UI 必须如实告诉用户这个歧义，而不是假装「已连接」。
+enum HealthConnectionState: Equatable {
+    /// 设备不支持 HealthKit（如 iPad、部分模拟器）
+    case unavailable
+    /// 还没弹过授权窗
+    case notRequested
+    /// 弹过授权窗，且确实读到了数据 —— 唯一能确认「真的连上了」的状态
+    case connected(lastSampleAt: Date)
+    /// 弹过授权窗，但一条数据都读不到。可能是被拒绝，也可能是真的没数据
+    case requestedButNoData
+
+    var isUsable: Bool {
+        if case .connected = self { return true }
+        return false
+    }
+}
+
 @MainActor
 final class HealthKitManager: ObservableObject {
     static let shared = HealthKitManager()
 
     private let healthStore = HKHealthStore()
 
-    @Published var isAuthorized = false
+    /// 真实的连接状态（取代原来那个永远为 true 的 isAuthorized）
+    @Published private(set) var connectionState: HealthConnectionState = .notRequested
     @Published var authorizationError: String?
 
     /// 手表是否在近期有数据写入（用于 FR-HK-01「手表未佩戴」提示判断的粗略依据）。
@@ -28,22 +55,97 @@ final class HealthKitManager: ObservableObject {
 
     private var heartRateQuery: HKQuery?
     private var spo2Query: HKQuery?
+    private var isSampling = false
+
+    /// 是否已经向用户弹过授权窗。HealthKit 不提供这个信息，只能自己记。
+    private var hasRequestedAuthorization: Bool {
+        get { UserDefaults.standard.bool(forKey: "hasRequestedHealthKitAuthorization") }
+        set { UserDefaults.standard.set(newValue, forKey: "hasRequestedHealthKitAuthorization") }
+    }
+
+    private init() {
+        if !isHealthDataAvailable {
+            connectionState = .unavailable
+        } else if hasRequestedAuthorization {
+            connectionState = .requestedButNoData // 等 refreshConnectionState() 探测后再更新
+        }
+    }
 
     // MARK: - FR-HK-06 权限管理
 
     func requestAuthorization() async {
         guard isHealthDataAvailable else {
-            authorizationError = "此设备不支持 HealthKit（需要 iPhone，模拟器上部分健康数据查询也会返回空结果）"
+            connectionState = .unavailable
+            authorizationError = "此设备不支持 HealthKit（iPad 和部分模拟器不支持）"
             return
         }
         do {
             try await healthStore.requestAuthorization(toShare: [], read: HealthKitTypes.readTypes)
-            isAuthorized = true
+            hasRequestedAuthorization = true
             authorizationError = nil
+            // 注意：走到这里**不代表用户同意了**，只代表弹窗流程走完了。
+            // 真实状态要靠下面的探测查询来确定。
             startForegroundSampling()
+            await refreshConnectionState()
         } catch {
-            isAuthorized = false
             authorizationError = error.localizedDescription
+        }
+    }
+
+    /// App 每次进入前台时调用：恢复采样 + 重新探测连接状态。
+    ///
+    /// 修复的 bug：原来 `startForegroundSampling()` 只在 `requestAuthorization()` 里调用一次，
+    /// App 重启后采样永远不会启动，仪表盘因此一直是空的。
+    func resumeIfPossible() async {
+        guard isHealthDataAvailable else {
+            connectionState = .unavailable
+            return
+        }
+        guard hasRequestedAuthorization else {
+            connectionState = .notRequested
+            return
+        }
+        startForegroundSampling()
+        await refreshConnectionState()
+    }
+
+    /// 用一次真实查询来探测「到底能不能读到数据」，这是唯一可靠的连接性判断。
+    func refreshConnectionState() async {
+        guard isHealthDataAvailable else {
+            connectionState = .unavailable
+            return
+        }
+        guard hasRequestedAuthorization else {
+            connectionState = .notRequested
+            return
+        }
+        // 查最近 7 天任意一条心率样本。窗口开大是故意的：
+        // 只要用户戴过表，7 天内一定有数据；查不到就说明大概率没授权。
+        if let latest = await fetchMostRecentSampleDate(
+            for: .heartRate, within: 7 * 24 * 3600
+        ) {
+            connectionState = .connected(lastSampleAt: latest)
+        } else {
+            connectionState = .requestedButNoData
+        }
+    }
+
+    private func fetchMostRecentSampleDate(
+        for identifier: HKQuantityTypeIdentifier, within seconds: TimeInterval
+    ) async -> Date? {
+        guard let type = HKQuantityType.quantityType(forIdentifier: identifier) else { return nil }
+        let predicate = HKQuery.predicateForSamples(
+            withStart: Date().addingTimeInterval(-seconds), end: nil
+        )
+        let store = healthStore
+        return await withCheckedContinuation { continuation in
+            let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+            let query = HKSampleQuery(
+                sampleType: type, predicate: predicate, limit: 1, sortDescriptors: [sort]
+            ) { _, samples, _ in
+                continuation.resume(returning: samples?.first?.endDate)
+            }
+            store.execute(query)
         }
     }
 
@@ -60,6 +162,8 @@ final class HealthKitManager: ObservableObject {
     // MARK: - FR-HK-01 心率实时采集
 
     func startForegroundSampling() {
+        guard !isSampling else { return } // 避免重复 execute 同一个 query
+        isSampling = true
         startHeartRateObserving()
         startSpO2Observing()
     }
@@ -67,6 +171,9 @@ final class HealthKitManager: ObservableObject {
     func stopForegroundSampling() {
         if let q = heartRateQuery { healthStore.stop(q) }
         if let q = spo2Query { healthStore.stop(q) }
+        heartRateQuery = nil
+        spo2Query = nil
+        isSampling = false
     }
 
     private func startHeartRateObserving() {
@@ -88,16 +195,44 @@ final class HealthKitManager: ObservableObject {
         heartRateQuery = query
     }
 
+    /// 心率曲线展示窗口：最近 2 小时（对应 FR-DASH-01）
+    private static let heartRateWindow: TimeInterval = 2 * 3600
+    /// 血氧曲线展示窗口：最近 1 小时（对应 FR-DASH-02）
+    private static let spo2Window: TimeInterval = 3600
+
     private func handleHeartRateSamples(_ samples: [HKSample]?, error: Error?) {
         guard let quantitySamples = samples as? [HKQuantitySample], error == nil else { return }
         let unit = HKUnit.count().unitDivided(by: .minute())
-        let points = quantitySamples.map {
+        let newPoints = quantitySamples.map {
             HealthSamplePoint(timestamp: $0.endDate, value: $0.quantity.doubleValue(for: unit))
-        }.sorted { $0.timestamp < $1.timestamp }
+        }
 
-        recentHeartRatePoints = points
-        latestHeartRate = points.last?.value
-        watchSeemsConnected = (points.last?.timestamp ?? .distantPast).timeIntervalSinceNow > -900
+        // ⚠️ 必须「累加」而不是「替换」：
+        // HKAnchoredObjectQuery 的 updateHandler 只回传**自上次锚点以来的新样本**，
+        // 不是全量。原来写成 `recentHeartRatePoints = points` 会导致第一次更新之后
+        // 整条曲线塌缩成只剩新来的那一两个点。
+        recentHeartRatePoints = Self.merged(
+            existing: recentHeartRatePoints, incoming: newPoints, window: Self.heartRateWindow
+        )
+        latestHeartRate = recentHeartRatePoints.last?.value
+        watchSeemsConnected = (recentHeartRatePoints.last?.timestamp ?? .distantPast)
+            .timeIntervalSinceNow > -900
+
+        if let latest = recentHeartRatePoints.last?.timestamp {
+            connectionState = .connected(lastSampleAt: latest)
+        }
+    }
+
+    /// 合并新旧样本：按时间戳去重、排序，并丢掉窗口之外的旧数据（防止无限增长）。
+    private static func merged(
+        existing: [HealthSamplePoint], incoming: [HealthSamplePoint], window: TimeInterval
+    ) -> [HealthSamplePoint] {
+        let cutoff = Date().addingTimeInterval(-window)
+        var byTimestamp: [Date: HealthSamplePoint] = [:]
+        for point in existing + incoming where point.timestamp >= cutoff {
+            byTimestamp[point.timestamp] = point
+        }
+        return byTimestamp.values.sorted { $0.timestamp < $1.timestamp }
     }
 
     // MARK: - FR-HK-02 血氧采集
@@ -123,12 +258,14 @@ final class HealthKitManager: ObservableObject {
 
     private func handleSpO2Samples(_ samples: [HKSample]?, error: Error?) {
         guard let quantitySamples = samples as? [HKQuantitySample], error == nil else { return }
-        let points = quantitySamples.map {
+        let newPoints = quantitySamples.map {
             HealthSamplePoint(timestamp: $0.endDate, value: $0.quantity.doubleValue(for: .percent()) * 100)
-        }.sorted { $0.timestamp < $1.timestamp }
-
-        recentSpO2Points = points
-        latestSpO2 = points.last?.value
+        }
+        // 同心率：累加而非替换，见 handleHeartRateSamples 的注释
+        recentSpO2Points = Self.merged(
+            existing: recentSpO2Points, incoming: newPoints, window: Self.spo2Window
+        )
+        latestSpO2 = recentSpO2Points.last?.value
     }
 
     // MARK: - FR-HK-03 HRV 采集（直接读取原生 SDNN，不做换算）

@@ -80,10 +80,23 @@ final class DrinkRepository: ObservableObject {
 
     // MARK: FR-TREND-* 长期趋势报告数据源
 
-    func allArchivedLogs(since: Date) -> [DrinkLogEntity] {
+    /// 取指定时间之后的所有饮酒记录。
+    ///
+    /// 注意这里**不过滤会话状态**：之前只查 `session.status == "archived"`，
+    /// 导致用户刚录入、还没点「结束会话」的记录在趋势页完全看不到——
+    /// 但那杯酒是真的喝了，没理由因为会话还开着就不算数。
+    func allLogs(since: Date) -> [DrinkLogEntity] {
         let request = NSFetchRequest<DrinkLogEntity>(entityName: "DrinkLog")
-        request.predicate = NSPredicate(format: "timestamp >= %@ AND session.status == %@", since as NSDate, "archived")
+        request.predicate = NSPredicate(format: "timestamp >= %@", since as NSDate)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \DrinkLogEntity.timestamp, ascending: true)]
+        return (try? context.fetch(request)) ?? []
+    }
+
+    /// 所有会话（含进行中），用于历史记录列表。
+    func fetchAllSessions(limit: Int = 200) -> [DrinkSessionEntity] {
+        let request = NSFetchRequest<DrinkSessionEntity>(entityName: "DrinkSession")
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \DrinkSessionEntity.startedAt, ascending: false)]
+        request.fetchLimit = limit
         return (try? context.fetch(request)) ?? []
     }
 }

@@ -12,6 +12,15 @@ build.log
 Thumbs.db
 desktop.ini
 
+# 本地工具和安装包：不入库
+# - Sideloadly/ 是解压出来的签名工具，含大量二进制 DLL
+# - sideloadlydaemon.log 和 pnp-apple.txt 含设备硬件指纹 / Apple ID 相关信息，
+#   仓库是公开的，这类东西绝对不能推上去
+Sideloadly/
+tools/
+_build-tools/pnp-apple.txt
+*.log
+
 # 说明：xcshareddata/ 下的 shared scheme **必须**提交，不能忽略——
 # GitHub Actions 上的 xcodebuild -scheme 依赖它。
 !**/xcshareddata/**

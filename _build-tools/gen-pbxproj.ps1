@@ -22,9 +22,9 @@ $swiftFiles = @(
     "Features/Onboarding/OnboardingCoordinator.swift",
     "Features/Onboarding/DisclaimerView.swift",
     "Features/Onboarding/PrivacyPolicyView.swift",
-    "Features/Onboarding/BasicInfoView.swift",
-    "Features/Onboarding/FriendCodeIntroView.swift",
+    "Features/Onboarding/AppIntroView.swift",
     "Features/Dashboard/SessionControlView.swift",
+    "Features/Dashboard/SessionLogListView.swift",
     "Features/Dashboard/HeartRateChartView.swift",
     "Features/Dashboard/SpO2View.swift",
     "Features/Dashboard/AlertToastView.swift",
@@ -42,8 +42,11 @@ $swiftFiles = @(
     "Features/Social/SessionDetailView.swift",
     "Features/Settings/SettingsView.swift",
     "Features/Settings/DataManagementView.swift",
+    "Features/Settings/ProfileView.swift",
+    "Features/Settings/HealthConnectionStatusView.swift",
     "Shared/DisclaimerStrings.swift",
     "Shared/DesignSystem.swift",
+    "Shared/NumericField.swift",
     "Shared/RootView.swift"
 )
 

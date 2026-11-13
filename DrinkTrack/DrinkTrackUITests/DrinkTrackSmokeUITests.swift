@@ -141,31 +141,19 @@ final class DrinkTrackSmokeUITests: XCTestCase {
             }
             tap(app.buttons["同意并继续"], "onboarding-accept-privacy")
 
-            // HealthKit explanation screen: skip the system prompt (simulator limitation).
-            let skipHK = app.buttons["暂不授权，仅手动记录"]
-            if skipHK.waitForExistence(timeout: 8) {
-                snap("onboarding-3-healthkit-explainer")
-                note("HealthKit: skipped system authorization on purpose (simulator has no Health data / prompt not automatable). Not treated as a failure.")
-                tap(skipHK, "onboarding-skip-healthkit")
+            // App intro screen. The onboarding flow was deliberately shortened after
+            // on-device testing: it used to force HealthKit authorization and a
+            // mandatory body-metrics form here. Both are now optional and live in the
+            // "我的" tab, so the intro screen is the last onboarding step.
+            let startButton = app.buttons["开始使用"]
+            if startButton.waitForExistence(timeout: 8) {
+                snap("onboarding-3-app-intro")
+                tap(startButton, "onboarding-start-using")
             } else {
-                snap("MISSING-healthkit-screen")
-                note("HealthKit explainer screen not found.")
+                snap("MISSING-app-intro")
+                note("App intro screen not found.")
+                XCTFail("App intro screen missing")
             }
-
-            // Basic info form.
-            let saveButton = app.buttons["保存并继续"]
-            if saveButton.waitForExistence(timeout: 8) {
-                snap("onboarding-4-basic-info")
-            }
-            tap(saveButton, "onboarding-save-basic-info")
-
-            // Friend code intro.
-            let enterButton = app.buttons["进入 DrinkTrack"]
-            if enterButton.waitForExistence(timeout: 8) {
-                sleep(1)
-                snap("onboarding-5-friend-code")
-            }
-            tap(enterButton, "onboarding-enter-app")
         } else {
             note("Onboarding disclaimer not shown at launch (already onboarded, or onboarding broken).")
             snap("no-onboarding-at-launch")
@@ -203,6 +191,29 @@ final class DrinkTrackSmokeUITests: XCTestCase {
                 let cancel = app.navigationBars.buttons["取消"]
                 if cancel.exists { note("Quick-log sheet still open; dismissing via Cancel."); cancel.tap(); sleep(1) }
                 snap("dashboard-after-log")
+
+                // REGRESSION GUARD: on-device testing found that a logged drink was
+                // invisible everywhere in the UI. The dashboard only drew logs as wine
+                // markers on the heart-rate chart, which renders a placeholder (and no
+                // markers) when there is no health data -- exactly the simulator case.
+                // The dashboard now carries a real "本次记录" list; assert it shows up.
+                let logList = app.staticTexts["本次记录"]
+                if logList.waitForExistence(timeout: 8) {
+                    snap("dashboard-log-list-visible")
+                    // The summary line proves at least one record was actually rendered.
+                    let summaryShown = app.staticTexts.containing(
+                        NSPredicate(format: "label CONTAINS %@", "标准饮品")
+                    ).firstMatch.waitForExistence(timeout: 5)
+                    if !summaryShown {
+                        snap("MISSING-log-summary")
+                        note("'本次记录' header is present but no logged drink row rendered.")
+                        XCTFail("Logged drink did not appear in the session list")
+                    }
+                } else {
+                    snap("MISSING-log-list")
+                    note("Dashboard session log list ('本次记录') not found after logging a drink.")
+                    XCTFail("Logged drink is not visible on the dashboard")
+                }
             }
             if tap(app.buttons["结束会话"], "dashboard-end-session", required: false) {
                 sleep(1)
@@ -235,25 +246,53 @@ final class DrinkTrackSmokeUITests: XCTestCase {
             }
         }
 
-        // Settings
-        if tap(tabBar.buttons["设置"], "tab-settings") {
+        // Profile ("我的") — this tab replaced the old "设置" tab. Body metrics and the
+        // health-connection status now live here; 设置 is a page pushed from inside it.
+        if tap(tabBar.buttons["我的"], "tab-profile") {
             sleep(1)
-            snap("tab-4-settings")
-            if tap(app.buttons["隐私政策"], "settings-privacy-policy", required: false) {
-                sleep(1)
-                snap("settings-privacy-policy")
-                goBack()
+            snap("tab-4-profile")
+
+            // Body metrics are keyboard-editable now (they used to be Stepper-only).
+            let weightField = app.textFields.element(boundBy: 1)
+            if weightField.exists && weightField.isHittable {
+                weightField.tap()
+                weightField.typeText("72")
+                snap("profile-weight-typed")
+                // Dismiss the number pad so later taps are not blocked by it.
+                app.toolbars.buttons.firstMatch.tap()
+                if app.keyboards.count > 0 { app.swipeDown() }
+            } else {
+                note("Weight text field not hittable; skipped keyboard-input check.")
             }
-            if tap(app.buttons["免责声明"], "settings-disclaimer", required: false) {
+
+            if tap(app.buttons["保存"], "profile-save", required: false) {
                 sleep(1)
-                snap("settings-disclaimer")
-                goBack()
+                snap("profile-saved")
             }
+
             app.swipeUp()
-            snap("tab-4-settings-scrolled")
-            if tap(app.buttons["数据管理"], "settings-data-management", required: false) {
+            snap("tab-4-profile-scrolled")
+
+            if tap(app.buttons["设置与隐私"], "profile-open-settings", required: false) {
                 sleep(1)
-                snap("settings-data-management")
+                snap("settings-root")
+                if tap(app.buttons["隐私政策"], "settings-privacy-policy", required: false) {
+                    sleep(1)
+                    snap("settings-privacy-policy")
+                    goBack()
+                }
+                if tap(app.buttons["免责声明"], "settings-disclaimer", required: false) {
+                    sleep(1)
+                    snap("settings-disclaimer")
+                    goBack()
+                }
+                app.swipeUp()
+                snap("settings-scrolled")
+                if tap(app.buttons["数据管理"], "settings-data-management", required: false) {
+                    sleep(1)
+                    snap("settings-data-management")
+                    goBack()
+                }
                 goBack()
             }
         }
