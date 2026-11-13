@@ -114,7 +114,7 @@ jobs:
             echo "Simulator: $SIM_DESC"
             echo "Plain launch: $PLAIN_LAUNCH"
             echo "UI test exit code: ${UITEST_EXIT:-not run}"
-            echo "HealthKit: system authorization intentionally skipped in simulator (expected limitation, not a failure)."
+            echo "HealthKit: authorization is no longer part of onboarding (moved to the 我的 tab); not exercised by this smoke test."
             echo "Crash logs found: $(ls "$SHOTS/crashes" | wc -l | tr -d ' ')"
           } | tee "$SHOTS/SUMMARY.txt"
           {

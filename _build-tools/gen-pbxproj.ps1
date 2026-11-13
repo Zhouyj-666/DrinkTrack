@@ -161,6 +161,36 @@ function Walk-Node($node) {
 
 $rootGroupId = Walk-Node $root
 
+# ---- 5b. Resolve every leaf's path EXACTLY the way Xcode would (by walking
+# the $root tree and concatenating each ancestor's directory name), then
+# confirm that path exists on disk. This is the check that would have caught
+# the "Model" group losing its path segment, which a text search for
+# `path = Foo.swift;` anywhere in the file cannot catch -- that string is
+# present either way, it just resolves to the wrong on-disk location.
+function Test-ResolvedPaths($node, $accumulatedPath) {
+    if ($node.Kind -eq 'group') {
+        $childPath = Join-Path $accumulatedPath $node.Name
+        foreach ($c in $node.Children) {
+            Test-ResolvedPaths $c $childPath
+        }
+    } elseif ($node.Kind -eq 'file') {
+        $full = Join-Path $accumulatedPath $node.Name
+        if (-not (Test-Path $full)) {
+            throw "Group-path resolution mismatch: pbxproj would look for '$($node.Name)' at '$full', which does not exist on disk. A parent group's `path` is probably missing."
+        }
+    } elseif ($node.Kind -eq 'xcversion') {
+        $full = Join-Path (Join-Path $accumulatedPath $node.Name) $node.ChildName
+        if (-not (Test-Path $full)) {
+            throw "Group-path resolution mismatch: pbxproj would look for the Core Data model at '$full', which does not exist on disk."
+        }
+    }
+}
+# $root's own name ("DrinkTrack") is itself a path segment relative to srcRoot's
+# parent (i.e. relative to the .xcodeproj's directory), so start resolution
+# from $ProjectDir, not from $srcRoot.
+Test-ResolvedPaths $root $ProjectDir
+Write-Host "Group-path resolution check passed: every file's full path (as the pbxproj group tree encodes it) exists on disk."
+
 # These IDs are intentionally FIXED (not sequential) so that adding/removing source
 # files never shifts them. The shared scheme at
 # DrinkTrack.xcodeproj/xcshareddata/xcschemes/DrinkTrack.xcscheme references
@@ -232,7 +262,6 @@ W ''
 
 W '/* Begin PBXGroup section */'
 foreach ($g in $groups) {
-    $isRoot = ($g.Id -eq $rootGroupId)
     W "		$($g.Id) /* $($g.Name) */ = {"
     W '			isa = PBXGroup;'
     W '			children = ('
@@ -240,11 +269,25 @@ foreach ($g in $groups) {
         W "				$cid,"
     }
     W '			);'
-    if ($isRoot) {
-        W "			path = $($g.Name);"
-    } else {
-        W "			name = $($g.Name);"
-    }
+    # Every group here - root or nested - maps 1:1 to a real directory on disk
+    # (our $swiftFiles manifest is built from actual relative paths), so every
+    # group MUST have `path`, not just `name`. A PBXGroup with only `name` and
+    # no `path` is a *virtual* group that contributes no path segment of its
+    # own - Xcode then resolves its children directly under the PARENT group's
+    # path, skipping this folder entirely. That exact bug is what broke the
+    # CI build: momc looked for the Core Data model at
+    # ".../DrinkTrack/DrinkTrack/DrinkTrack.xcdatamodeld" instead of
+    # ".../DrinkTrack/DrinkTrack/Model/DrinkTrack.xcdatamodeld" because the
+    # "Model" group had no `path`, and the same would have broken every other
+    # subfolder (HealthKit, Domain, Features/*, Shared, ...) once the build
+    # got far enough to need them.
+    #
+    # This was patched once before directly in the committed pbxproj (commit
+    # "Fix Xcode group paths so Core Data model and sources resolve") but NOT
+    # in this generator script - so the very next time this script regenerated
+    # the project (to register new Swift files), the bug came back. Fixing it
+    # here instead of in the output file is the only way it sticks.
+    W "			path = $($g.Name);"
     W '			sourceTree = "<group>";'
     W '		};'
 }
@@ -495,3 +538,36 @@ $text = $sb.ToString()
 [System.IO.File]::WriteAllText($OutFile, $text, (New-Object System.Text.UTF8Encoding($false)))
 Write-Host ("Generated: {0}" -f $OutFile)
 Write-Host ("Total object id count: {0}" -f $script:counter)
+
+# ---- 7. Validate the GENERATED TEXT ITSELF, not just the in-memory tree it came from.
+#
+# The Test-ResolvedPaths check above re-derives paths from the same $root tree that
+# built the pbxproj text -- it can never catch a bug in *how* that tree got serialized
+# (e.g. emitting `name = Foo;` instead of `path = Foo;`), because both the check and
+# the bug share the same upstream data. This happened for real: the "Model" group was
+# emitted with only `name`, no `path`; Test-ResolvedPaths still "passed" because it
+# never re-read the output, it just re-confirmed Model/PersistenceController.swift
+# exists on disk, which was never in question.
+#
+# So: read the file back and confirm every PBXGroup object (except the two that are
+# legitimately path-less -- the main group, which represents the project itself, and
+# the Products group, whose child uses BUILT_PRODUCTS_DIR, not a project-relative
+# path) declares a `path = `.
+$writtenText = [System.IO.File]::ReadAllText($OutFile)
+$groupBlocks = [regex]::Matches(
+    $writtenText,
+    '(?ms)^\t\t([0-9A-F]{24})(?:\s*/\*[^*]*\*/)?\s*=\s*\{\s*\n\s*isa = PBXGroup;.*?\n\t\t\};'
+)
+$pathlessAllowed = @($mainGroupId, $productsGroupId)
+$missingPath = @()
+foreach ($m in $groupBlocks) {
+    $id = $m.Groups[1].Value
+    if ($pathlessAllowed -contains $id) { continue }
+    if ($m.Value -notmatch '(?m)^\t\t\tpath = ') {
+        $missingPath += $id
+    }
+}
+if ($missingPath.Count -gt 0) {
+    throw "REGRESSION: the following PBXGroup objects in the WRITTEN FILE have no `path`, meaning Xcode will not descend into their on-disk folder: $($missingPath -join ', ')"
+}
+Write-Host ("Text-level validation passed: all {0} PBXGroup objects in the written file (excluding main/Products) declare a path." -f ($groupBlocks.Count - $pathlessAllowed.Count))

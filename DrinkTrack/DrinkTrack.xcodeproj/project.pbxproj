@@ -116,7 +116,7 @@
 				000000000000000000000005,
 				000000000000000000000008,
 			);
-			name = Model;
+			path = Model;
 			sourceTree = "<group>";
 		};
 		00000000000000000000000A /* HealthKit */ = {
@@ -125,7 +125,7 @@
 				00000000000000000000000B,
 				00000000000000000000000D,
 			);
-			name = HealthKit;
+			path = HealthKit;
 			sourceTree = "<group>";
 		};
 		00000000000000000000000F /* Domain */ = {
@@ -137,7 +137,7 @@
 				000000000000000000000016,
 				000000000000000000000018,
 			);
-			name = Domain;
+			path = Domain;
 			sourceTree = "<group>";
 		};
 		00000000000000000000001A /* Repositories */ = {
@@ -146,7 +146,7 @@
 				00000000000000000000001B,
 				00000000000000000000001D,
 			);
-			name = Repositories;
+			path = Repositories;
 			sourceTree = "<group>";
 		};
 		000000000000000000000020 /* Onboarding */ = {
@@ -157,7 +157,7 @@
 				000000000000000000000025,
 				000000000000000000000027,
 			);
-			name = Onboarding;
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		000000000000000000000029 /* Dashboard */ = {
@@ -170,7 +170,7 @@
 				000000000000000000000032,
 				000000000000000000000034,
 			);
-			name = Dashboard;
+			path = Dashboard;
 			sourceTree = "<group>";
 		};
 		000000000000000000000036 /* DrinkLogging */ = {
@@ -180,7 +180,7 @@
 				000000000000000000000039,
 				00000000000000000000003B,
 			);
-			name = DrinkLogging;
+			path = DrinkLogging;
 			sourceTree = "<group>";
 		};
 		00000000000000000000003D /* Trends */ = {
@@ -191,7 +191,7 @@
 				000000000000000000000042,
 				000000000000000000000044,
 			);
-			name = Trends;
+			path = Trends;
 			sourceTree = "<group>";
 		};
 		000000000000000000000046 /* Social */ = {
@@ -202,7 +202,7 @@
 				00000000000000000000004B,
 				00000000000000000000004D,
 			);
-			name = Social;
+			path = Social;
 			sourceTree = "<group>";
 		};
 		00000000000000000000004F /* Settings */ = {
@@ -213,7 +213,7 @@
 				000000000000000000000054,
 				000000000000000000000056,
 			);
-			name = Settings;
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		00000000000000000000001F /* Features */ = {
@@ -226,7 +226,7 @@
 				000000000000000000000046,
 				00000000000000000000004F,
 			);
-			name = Features;
+			path = Features;
 			sourceTree = "<group>";
 		};
 		000000000000000000000058 /* Shared */ = {
@@ -237,7 +237,7 @@
 				00000000000000000000005D,
 				00000000000000000000005F,
 			);
-			name = Shared;
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		000000000000000000000001 /* DrinkTrack */ = {
