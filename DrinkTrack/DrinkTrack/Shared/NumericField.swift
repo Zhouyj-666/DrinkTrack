@@ -36,6 +36,15 @@ struct NumericField: View {
                     // （否则输入 "7" 想打 "70" 时会被立刻纠正成最小值）
                     if !focused { clampAndSync() }
                 }
+                // 数字键盘(.numberPad)本身既没有「完成」键也没有回车键，
+                // 不加这个工具栏用户填完数字后收不起键盘，只能靠误触别处才能退出。
+                // CI 的真机/模拟器走查也是靠这个按钮验证"能正常退出键盘"的。
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("完成") { isFocused = false }
+                    }
+                }
 
             Text(unit)
                 .foregroundStyle(DesignSystem.secondaryInk)

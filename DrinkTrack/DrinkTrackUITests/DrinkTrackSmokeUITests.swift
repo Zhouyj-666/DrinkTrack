@@ -258,8 +258,17 @@ final class DrinkTrackSmokeUITests: XCTestCase {
                 weightField.tap()
                 weightField.typeText("72")
                 snap("profile-weight-typed")
-                // Dismiss the number pad so later taps are not blocked by it.
-                app.toolbars.buttons.firstMatch.tap()
+                // NumericField's .numberPad has no built-in Done/Return key, so it ships
+                // its own keyboard accessory toolbar with a "完成" button. Dismiss through
+                // that -- tapping elsewhere risks hitting the wrong control underneath.
+                let doneButton = app.toolbars.buttons["完成"]
+                if doneButton.waitForExistence(timeout: 5) {
+                    doneButton.tap()
+                } else {
+                    snap("MISSING-keyboard-done-button")
+                    note("NumericField's keyboard toolbar '完成' button not found; number pad may be unDismissable.")
+                    XCTFail("Numeric keyboard has no way to dismiss itself")
+                }
                 if app.keyboards.count > 0 { app.swipeDown() }
             } else {
                 note("Weight text field not hittable; skipped keyboard-input check.")
