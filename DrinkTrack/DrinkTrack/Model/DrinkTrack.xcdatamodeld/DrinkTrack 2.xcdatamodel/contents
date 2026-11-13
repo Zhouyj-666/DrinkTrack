@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23605" systemVersion="23E224" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="2">
+    <entity name="DrinkLog" representedClassName="DrinkLogEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="category" attributeType="String"/>
+        <attribute name="brand" optional="YES" attributeType="String"/>
+        <attribute name="volumeMl" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="standardDrinks" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="note" optional="YES" attributeType="String"/>
+        <attribute name="amountFen" optional="YES" attributeType="Integer 32" usesScalarValueType="NO"/>
+        <relationship name="session" maxCount="1" deletionRule="Nullify" destinationEntity="DrinkSession" inverseName="logs" inverseEntity="DrinkSession"/>
+    </entity>
+    <entity name="DrinkSession" representedClassName="DrinkSessionEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="startedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="endedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="status" attributeType="String" defaultValueString="active"/>
+        <attribute name="locationName" optional="YES" attributeType="String"/>
+        <relationship name="logs" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="DrinkLog" inverseName="session" inverseEntity="DrinkLog"/>
+        <relationship name="healthPoints" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="HealthDataPoint" inverseName="session" inverseEntity="HealthDataPoint"/>
+    </entity>
+    <entity name="FriendConnection" representedClassName="FriendConnectionEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="friendDisplayName" attributeType="String"/>
+        <attribute name="friendCode" attributeType="String"/>
+        <attribute name="status" attributeType="String" defaultValueString="pending"/>
+        <attribute name="connectedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="feedVisible" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="HealthDataPoint" representedClassName="HealthDataPointEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="heartRate" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="spo2" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="hrvSDNN" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="sleepStage" optional="YES" attributeType="String"/>
+        <attribute name="afibEventFlag" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <relationship name="session" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="DrinkSession" inverseName="healthPoints" inverseEntity="DrinkSession"/>
+    </entity>
+    <entity name="UserProfile" representedClassName="UserProfileEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="gender" attributeType="String" defaultValueString="other"/>
+        <attribute name="birthYear" attributeType="Integer 32" defaultValueString="1990" usesScalarValueType="YES"/>
+        <attribute name="weightKg" attributeType="Integer 32" defaultValueString="60" usesScalarValueType="YES"/>
+        <attribute name="restingHeartRate" attributeType="Integer 32" defaultValueString="65" usesScalarValueType="YES"/>
+        <attribute name="restingHRSource" attributeType="String" defaultValueString="manual"/>
+        <attribute name="friendCode" attributeType="String" defaultValueString=""/>
+        <attribute name="afibDisplayEnabled" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="iCloudSyncEnabled" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="disclaimerAcceptedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="privacyPolicyAcceptedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+</model>

@@ -41,6 +41,7 @@ final class HealthKitManager: ObservableObject {
     /// 真实的连接状态（取代原来那个永远为 true 的 isAuthorized）
     @Published private(set) var connectionState: HealthConnectionState = .notRequested
     @Published var authorizationError: String?
+    @Published private(set) var isRequestingAuthorization = false
 
     /// 手表是否在近期有数据写入（用于 FR-HK-01「手表未佩戴」提示判断的粗略依据）。
     @Published var watchSeemsConnected = false
@@ -74,9 +75,13 @@ final class HealthKitManager: ObservableObject {
     // MARK: - FR-HK-06 权限管理
 
     func requestAuthorization() async {
+        guard !isRequestingAuthorization else { return }
+        isRequestingAuthorization = true
+        defer { isRequestingAuthorization = false }
+
         guard isHealthDataAvailable else {
             connectionState = .unavailable
-            authorizationError = "此设备不支持 HealthKit（iPad 和部分模拟器不支持）"
+            authorizationError = "此设备不支持 HealthKit（iPad 和部分模拟器不支持）。你仍然可以手动记录饮酒。"
             return
         }
         do {
@@ -88,8 +93,38 @@ final class HealthKitManager: ObservableObject {
             startForegroundSampling()
             await refreshConnectionState()
         } catch {
-            authorizationError = error.localizedDescription
+            authorizationError = Self.friendlyAuthorizationMessage(for: error)
+            if !hasRequestedAuthorization {
+                connectionState = .notRequested
+            }
         }
+    }
+
+    /// Turn a HealthKit / signing failure into a message the user can actually act on.
+    /// Sideloaded builds often lose the HealthKit entitlement; the system sheet
+    /// never appears and the error used to be stored but never shown.
+    private static func friendlyAuthorizationMessage(for error: Error) -> String {
+        let nsError = error as NSError
+        let reason = nsError.localizedFailureReason ?? ""
+        let haystack = (error.localizedDescription + " " + reason + " " + String(describing: error)).lowercased()
+        if haystack.contains("entitlement") || haystack.contains("missing com.apple.developer.healthkit") {
+            return "这次安装没有带上「健康」权限，所以系统授权窗口不会出现。用个人 Apple ID 侧载重签时经常会这样。你仍然可以手动记录饮酒；若要读取心率和血氧，需要用带 HealthKit 权限的签名方式重新安装。"
+        }
+        if let hkError = error as? HKError {
+            switch hkError.code {
+            case .errorHealthDataUnavailable:
+                return "此设备当前无法使用健康数据。你仍然可以手动记录饮酒。"
+            case .errorHealthDataRestricted:
+                return "健康数据受到系统限制（例如屏幕使用时间或设备管理），无法授权。"
+            case .errorAuthorizationDenied:
+                return "系统拒绝了健康数据授权。请打开「健康」App → 头像 → 隐私 → App → DrinkTrack，打开心率、血氧、心率变异性和睡眠。"
+            case .errorUserCanceled:
+                return "你取消了授权。需要连接时可以再点一次「连接 Apple 健康」。"
+            default:
+                break
+            }
+        }
+        return "无法完成健康授权：\(error.localizedDescription)"
     }
 
     /// App 每次进入前台时调用：恢复采样 + 重新探测连接状态。

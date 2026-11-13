@@ -5,6 +5,8 @@ struct TrendsView: View {
     @EnvironmentObject private var drinkRepository: DrinkRepository
     @State private var logs: [DrinkLogEntity] = []
     @State private var sessions: [DrinkSessionEntity] = []
+    @State private var spendSummary: (monthTotalFen: Int, monthToDateFen: Int, sessionAverageFen: Int?, sessionCount: Int) = (0, 0, nil, 0)
+    @State private var spendTrackingEnabled = UserPreferences.spendTrackingEnabled
 
     var body: some View {
         NavigationStack {
@@ -20,6 +22,14 @@ struct TrendsView: View {
                     } else {
                         FrequencyChart(logs: logs)
                         VolumeTrendChart(logs: logs)
+                        if spendTrackingEnabled {
+                            MonthlySpendSummaryView(
+                                monthTotalFen: spendSummary.monthTotalFen,
+                                monthToDateFen: spendSummary.monthToDateFen,
+                                sessionAverageFen: spendSummary.sessionAverageFen,
+                                sessionCount: spendSummary.sessionCount
+                            )
+                        }
                         DrinkVsNonDrinkComparisonView(logs: logs)
                         historySection
                     }
@@ -41,8 +51,13 @@ struct TrendsView: View {
                     SessionDetailView(session: session)
                 } label: {
                     HStack {
-                        if let startedAt = session.startedAt {
-                            Text(startedAt, style: .date)
+                        VStack(alignment: .leading, spacing: 2) {
+                            if let startedAt = session.startedAt {
+                                Text(startedAt, style: .date)
+                            }
+                            Text("时长 \(sessionDurationText(session))")
+                                .font(.caption2)
+                                .foregroundStyle(DesignSystem.mutedInk)
                         }
                         if session.status == "active" {
                             Text("进行中")
@@ -67,9 +82,26 @@ struct TrendsView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
+    private func sessionDurationText(_ session: DrinkSessionEntity) -> String {
+        let start = session.startedAt ?? Date()
+        let end: Date
+        if let endedAt = session.endedAt, endedAt > start {
+            end = endedAt
+        } else if session.status == "active" {
+            end = Date()
+        } else {
+            let lastLog = ((session.logs as? Set<DrinkLogEntity>) ?? [])
+                .compactMap(\.timestamp).max()
+            end = lastLog ?? start
+        }
+        return UserPreferences.formatDuration(end.timeIntervalSince(start))
+    }
+
     private func load() {
         let since = Calendar.current.date(byAdding: .month, value: -3, to: Date()) ?? .distantPast
         logs = drinkRepository.allLogs(since: since)
         sessions = drinkRepository.fetchAllSessions()
+        spendTrackingEnabled = UserPreferences.spendTrackingEnabled
+        spendSummary = drinkRepository.monthSpendSummary()
     }
 }

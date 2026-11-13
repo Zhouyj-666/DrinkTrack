@@ -36,10 +36,12 @@ $swiftFiles = @(
     "Features/Trends/FrequencyChart.swift",
     "Features/Trends/VolumeTrendChart.swift",
     "Features/Trends/DrinkVsNonDrinkComparisonView.swift",
+    "Features/Trends/MonthlySpendSummaryView.swift",
     "Features/Social/FriendFeedView.swift",
     "Features/Social/FriendCodeView.swift",
     "Features/Social/ShareCardView.swift",
     "Features/Social/SessionDetailView.swift",
+    "Features/Social/SessionTimelineChart.swift",
     "Features/Settings/SettingsView.swift",
     "Features/Settings/DataManagementView.swift",
     "Features/Settings/ProfileView.swift",
@@ -47,7 +49,8 @@ $swiftFiles = @(
     "Shared/DisclaimerStrings.swift",
     "Shared/DesignSystem.swift",
     "Shared/NumericField.swift",
-    "Shared/RootView.swift"
+    "Shared/RootView.swift",
+    "Shared/UserPreferences.swift"
 )
 
 $plainOtherFiles = @(
@@ -57,7 +60,11 @@ $plainOtherFiles = @(
 )
 
 $xcdatamodeldRel = "Model/DrinkTrack.xcdatamodeld"
-$xcdatamodelChildName = "DrinkTrack.xcdatamodel"
+$xcdatamodelChildNames = @(
+    "DrinkTrack.xcdatamodel",
+    "DrinkTrack 2.xcdatamodel"
+)
+$xcdatamodelCurrentName = "DrinkTrack 2.xcdatamodel"
 
 # ---- 2. Verify every referenced file actually exists on disk ----
 foreach ($f in $swiftFiles) {
@@ -68,9 +75,19 @@ foreach ($f in $plainOtherFiles) {
     $full = Join-Path $srcRoot $f.Path
     if (-not (Test-Path $full)) { throw "Missing file: $full" }
 }
-$xcdatamodelFull = Join-Path $srcRoot (Join-Path $xcdatamodeldRel $xcdatamodelChildName)
-if (-not (Test-Path $xcdatamodelFull)) { throw "Missing Core Data model: $xcdatamodelFull" }
-Write-Host ("Verified {0} swift files + {1} other files + 1 Core Data model" -f $swiftFiles.Count, $plainOtherFiles.Count)
+foreach ($childName in $xcdatamodelChildNames) {
+    $xcdatamodelFull = Join-Path $srcRoot (Join-Path $xcdatamodeldRel $childName)
+    if (-not (Test-Path $xcdatamodelFull)) { throw "Missing Core Data model: $xcdatamodelFull" }
+}
+Write-Host ("Verified {0} swift files + {1} other files + {2} Core Data model versions" -f $swiftFiles.Count, $plainOtherFiles.Count, $xcdatamodelChildNames.Count)
+
+function Format-PbxValue($name) {
+    if ($name -match '[^A-Za-z0-9._]') {
+        $escaped = $name -replace '\\', '\\' -replace '"', '\"'
+        return ('"{0}"' -f $escaped)
+    }
+    return $name
+}
 
 # ---- 3. ID generator ----
 $script:counter = 0
@@ -116,7 +133,7 @@ for ($i = 0; $i -lt $modelParts.Length - 1; $i++) {
     $modelGroupNode = Get-OrCreateSubgroup $modelGroupNode $modelParts[$i]
 }
 $xcVersionNode = [ordered]@{
-    Name = $modelParts[-1]; Kind = 'xcversion'; RelPath = $xcdatamodeldRel; ChildName = $xcdatamodelChildName
+    Name = $modelParts[-1]; Kind = 'xcversion'; RelPath = $xcdatamodeldRel; ChildNames = $xcdatamodelChildNames; CurrentName = $xcdatamodelCurrentName
 }
 [void]$modelGroupNode.Children.Add($xcVersionNode)
 
@@ -149,10 +166,17 @@ function Walk-Node($node) {
         }
         return $id
     } elseif ($node.Kind -eq 'xcversion') {
-        $childFileRefId = New-Id
-        [void]$fileRefs.Add(@{ Id = $childFileRefId; Name = $node.ChildName; FileType = 'wrapper.xcdatamodel'; IsDataModelChild = $true })
+        $childIds = New-Object System.Collections.ArrayList
+        $currentId = $null
+        foreach ($childName in $node.ChildNames) {
+            $childFileRefId = New-Id
+            [void]$fileRefs.Add(@{ Id = $childFileRefId; Name = $childName; FileType = 'wrapper.xcdatamodel'; IsDataModelChild = $true })
+            [void]$childIds.Add(@{ Id = $childFileRefId; Name = $childName })
+            if ($childName -eq $node.CurrentName) { $currentId = $childFileRefId }
+        }
+        if (-not $currentId) { throw "Current Core Data model version not listed in children: $($node.CurrentName)" }
         $groupId = New-Id
-        [void]$xcVersionGroups.Add(@{ Id = $groupId; Name = $node.Name; ChildId = $childFileRefId })
+        [void]$xcVersionGroups.Add(@{ Id = $groupId; Name = $node.Name; Children = $childIds; CurrentId = $currentId; CurrentName = $node.CurrentName })
         $bfId = New-Id
         [void]$sourceBuildFiles.Add(@{ Id = $bfId; FileRefId = $groupId; Name = $node.Name; IsVersionGroup = $true })
         return $groupId
@@ -179,9 +203,11 @@ function Test-ResolvedPaths($node, $accumulatedPath) {
             throw "Group-path resolution mismatch: pbxproj would look for '$($node.Name)' at '$full', which does not exist on disk. A parent group's `path` is probably missing."
         }
     } elseif ($node.Kind -eq 'xcversion') {
-        $full = Join-Path (Join-Path $accumulatedPath $node.Name) $node.ChildName
-        if (-not (Test-Path $full)) {
-            throw "Group-path resolution mismatch: pbxproj would look for the Core Data model at '$full', which does not exist on disk."
+        foreach ($childName in $node.ChildNames) {
+            $full = Join-Path (Join-Path $accumulatedPath $node.Name) $childName
+            if (-not (Test-Path $full)) {
+                throw "Group-path resolution mismatch: pbxproj would look for the Core Data model at '$full', which does not exist on disk."
+            }
         }
     }
 }
@@ -238,12 +264,13 @@ W ''
 W '/* Begin PBXFileReference section */'
 W "		$appRefId /* DrinkTrack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DrinkTrack.app; sourceTree = BUILT_PRODUCTS_DIR; };"
 foreach ($fr in $fileRefs) {
+    $quotedName = Format-PbxValue $fr.Name
     if ($fr.FileType -eq 'sourcecode.swift') {
-        W "		$($fr.Id) /* $($fr.Name) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = $($fr.Name); sourceTree = `"<group>`"; };"
+        W "		$($fr.Id) /* $($fr.Name) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = $quotedName; sourceTree = `"<group>`"; };"
     } elseif ($fr.FileType -eq 'wrapper.xcdatamodel') {
-        W "		$($fr.Id) /* $($fr.Name) */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = $($fr.Name); sourceTree = `"<group>`"; };"
+        W "		$($fr.Id) /* $($fr.Name) */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = $quotedName; sourceTree = `"<group>`"; };"
     } else {
-        W "		$($fr.Id) /* $($fr.Name) */ = {isa = PBXFileReference; lastKnownFileType = $($fr.FileType); path = $($fr.Name); sourceTree = `"<group>`"; };"
+        W "		$($fr.Id) /* $($fr.Name) */ = {isa = PBXFileReference; lastKnownFileType = $($fr.FileType); path = $quotedName; sourceTree = `"<group>`"; };"
     }
 }
 W '/* End PBXFileReference section */'
@@ -312,14 +339,15 @@ W ''
 
 W '/* Begin XCVersionGroup section */'
 foreach ($vg in $xcVersionGroups) {
-    $childDisplayName = $vg.Name -replace '\.xcdatamodeld$', '.xcdatamodel'
     W "		$($vg.Id) /* $($vg.Name) */ = {"
     W '			isa = XCVersionGroup;'
     W '			children = ('
-    W "				$($vg.ChildId) /* $childDisplayName */,"
+    foreach ($child in $vg.Children) {
+        W "				$($child.Id) /* $($child.Name) */,"
+    }
     W '			);'
-    W "			currentVersion = $($vg.ChildId) /* $childDisplayName */;"
-    W "			path = $($vg.Name);"
+    W "			currentVersion = $($vg.CurrentId) /* $($vg.CurrentName) */;"
+    W "			path = $(Format-PbxValue $vg.Name);"
     W '			sourceTree = "<group>";'
     W '			versionGroupType = wrapper.xcdatamodel;'
     W '		};'

@@ -11,6 +11,7 @@ struct SessionDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
+                SessionTimelineChart(session: session)
                 Toggle("附加心率曲线截图", isOn: $includeHeartRateCurve)
                     .padding(.horizontal)
 

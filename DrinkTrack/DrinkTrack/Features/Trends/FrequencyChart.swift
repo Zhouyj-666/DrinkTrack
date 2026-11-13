@@ -31,6 +31,18 @@ struct FrequencyChart: View {
                     .foregroundStyle(DesignSystem.heartRateLine)
                     .cornerRadius(3)
             }
+            // Pin the visible domain to the selected calendar window (week / month
+            // / year). Without an explicit domain, SwiftUI Charts picks a "nice"
+            // Date scale — often hours — and a single short session's bar can
+            // stretch across several hours on the axis.
+            .chartXScale(domain: xDomain)
+            .chartXAxis {
+                AxisMarks(values: .stride(by: xStride, count: 1)) { _ in
+                    AxisGridLine().foregroundStyle(DesignSystem.gridline)
+                    AxisValueLabel(format: xLabelFormat, centered: true)
+                        .foregroundStyle(DesignSystem.mutedInk)
+                }
+            }
             .chartYAxis {
                 AxisMarks { _ in
                     AxisGridLine().foregroundStyle(DesignSystem.gridline)
@@ -46,15 +58,28 @@ struct FrequencyChart: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
+    private var xDomain: ClosedRange<Date> {
+        ChartDateDomain.range(for: range)
+    }
+
+    private var xStride: Calendar.Component {
+        switch range {
+        case .week: return .day
+        case .month: return .weekOfYear
+        case .year: return .month
+        }
+    }
+
+    private var xLabelFormat: Date.FormatStyle {
+        if range == .year {
+            return .dateTime.month(.abbreviated)
+        }
+        return .dateTime.month(.defaultDigits).day()
+    }
+
     private var dailyTotals: [DayTotal] {
         let calendar = Calendar.current
-        let cutoff: Date = {
-            switch range {
-            case .week: return calendar.date(byAdding: .day, value: -7, to: Date()) ?? .distantPast
-            case .month: return calendar.date(byAdding: .month, value: -1, to: Date()) ?? .distantPast
-            case .year: return calendar.date(byAdding: .year, value: -1, to: Date()) ?? .distantPast
-            }
-        }()
+        let cutoff = xDomain.lowerBound
         let filtered = logs.filter { log in
             guard let timestamp = log.timestamp else { return false }
             return timestamp >= cutoff
@@ -70,5 +95,33 @@ struct FrequencyChart: View {
             totals.append(DayTotal(day: day, totalML: totalML))
         }
         return totals.sorted { $0.day < $1.day }
+    }
+}
+
+/// Shared visible-window helper for the trends date axes.
+enum ChartDateDomain {
+    static func range(for frequencyRange: FrequencyChart.Range, now: Date = Date()) -> ClosedRange<Date> {
+        let calendar = Calendar.current
+        let todayStart = calendar.startOfDay(for: now)
+        let end = calendar.date(byAdding: .day, value: 1, to: todayStart) ?? now.addingTimeInterval(86400)
+        let start: Date
+        switch frequencyRange {
+        case .week:
+            start = calendar.date(byAdding: .day, value: -6, to: todayStart) ?? todayStart
+        case .month:
+            start = calendar.date(byAdding: .month, value: -1, to: todayStart) ?? todayStart
+        case .year:
+            start = calendar.date(byAdding: .year, value: -1, to: todayStart) ?? todayStart
+        }
+        return start...end
+    }
+
+    /// Last three months through the end of today, matching TrendsView's log window.
+    static func lastThreeMonths(now: Date = Date()) -> ClosedRange<Date> {
+        let calendar = Calendar.current
+        let todayStart = calendar.startOfDay(for: now)
+        let end = calendar.date(byAdding: .day, value: 1, to: todayStart) ?? now.addingTimeInterval(86400)
+        let start = calendar.date(byAdding: .month, value: -3, to: todayStart) ?? todayStart
+        return start...end
     }
 }

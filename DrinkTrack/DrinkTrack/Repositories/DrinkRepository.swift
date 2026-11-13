@@ -22,6 +22,21 @@ final class DrinkRepository: ObservableObject {
         return session
     }
 
+    /// FR-DR-06：一键开始——创建会话并立刻写入第一条记录（上次的种类和杯型，新用户默认啤酒 330ml）。
+    /// 不弹确认表单；用户可以稍后在会话里继续改或再加记录。
+    @discardableResult
+    func startSessionWithQuickLog() -> DrinkSessionEntity {
+        let session = startNewSession()
+        addDrinkLog(
+            to: session,
+            category: UserPreferences.lastDrinkCategory,
+            brand: nil,
+            volumeML: UserPreferences.lastDrinkVolumeML,
+            timestamp: Date()
+        )
+        return session
+    }
+
     func endSession(_ session: DrinkSessionEntity) {
         session.status = "archived"
         session.endedAt = Date()
@@ -44,10 +59,11 @@ final class DrinkRepository: ObservableObject {
         return (try? context.fetch(request)) ?? []
     }
 
-    // MARK: FR-DR-01~05 饮酒手工录入
+    // MARK: FR-DR-01~05 饮酒手工录入 / FR-DR-07 可选花费
 
     /// - Parameters:
     ///   - customABVFraction: 仅 `.other` 类目或用户想手动覆盖默认 ABV 时传入（小数形式）
+    ///   - amountFen: 可选花费，单位为分（1 元 = 100 分）。`nil` 表示这次没记花费。
     @discardableResult
     func addDrinkLog(
         to session: DrinkSessionEntity,
@@ -56,7 +72,8 @@ final class DrinkRepository: ObservableObject {
         volumeML: Double,
         timestamp: Date = Date(),
         note: String? = nil,
-        customABVFraction: Double? = nil
+        customABVFraction: Double? = nil,
+        amountFen: Int? = nil
     ) -> DrinkLogEntity {
         let log = DrinkLogEntity(context: context)
         log.id = UUID()
@@ -68,7 +85,11 @@ final class DrinkRepository: ObservableObject {
         log.standardDrinks = StandardDrinkConverter.standardDrinks(
             volumeML: volumeML, category: category, customABVFraction: customABVFraction
         ) ?? 0
+        if let amountFen {
+            log.setValue(amountFen, forKey: "amountFen")
+        }
         log.session = session
+        UserPreferences.rememberLastDrink(category: category, volumeML: volumeML)
         save()
         return log
     }
@@ -98,5 +119,27 @@ final class DrinkRepository: ObservableObject {
         request.sortDescriptors = [NSSortDescriptor(keyPath: \DrinkSessionEntity.startedAt, ascending: false)]
         request.fetchLimit = limit
         return (try? context.fetch(request)) ?? []
+    }
+
+    /// FR-DR-07 monthly spend: this calendar month's total, the same month-to-date
+    /// figure, and the average among sessions that recorded at least one amount.
+    func monthSpendSummary(now: Date = Date()) -> (monthTotalFen: Int, monthToDateFen: Int, sessionAverageFen: Int?, sessionCount: Int) {
+        let calendar = Calendar.current
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        let logs = allLogs(since: startOfMonth)
+        var total = 0
+        var sessionsWithSpend = Set<NSManagedObjectID>()
+        for log in logs {
+            guard let raw = log.value(forKey: "amountFen") as? NSNumber else { continue }
+            total += raw.intValue
+            if let sessionID = log.session?.objectID {
+                sessionsWithSpend.insert(sessionID)
+            }
+        }
+        let count = sessionsWithSpend.count
+        let average = count > 0 ? Int((Double(total) / Double(count)).rounded()) : nil
+        // 本月花费 and 本月至今花费 are the same number while the month is still
+        // in progress: we cannot know future days. Both are month-to-date.
+        return (total, total, average, count)
     }
 }

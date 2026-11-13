@@ -106,6 +106,12 @@ struct DrinkLogRow: View {
                         .font(.caption2)
                         .foregroundStyle(DesignSystem.mutedInk)
                 }
+                if UserPreferences.spendTrackingEnabled,
+                   let raw = log.value(forKey: "amountFen") as? NSNumber {
+                    Text(UserPreferences.formatYuan(fen: raw.intValue))
+                        .font(.caption2)
+                        .foregroundStyle(DesignSystem.secondaryInk)
+                }
                 if let timestamp = log.timestamp {
                     Text(timestamp, style: .time)
                         .font(.caption2)

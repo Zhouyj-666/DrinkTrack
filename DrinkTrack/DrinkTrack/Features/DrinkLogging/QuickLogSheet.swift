@@ -6,12 +6,13 @@ struct QuickLogSheet: View {
     @ObservedObject var drinkRepository: DrinkRepository
     @Environment(\.dismiss) private var dismiss
 
-    @State private var category: DrinkCategory = .beer
+    @State private var category: DrinkCategory = UserPreferences.lastDrinkCategory
     @State private var brand: String = ""
-    @State private var volumeML: Double = 500
+    @State private var volumeML: Double = UserPreferences.lastDrinkVolumeML
     @State private var customABVPercent: Double = 15 // 仅「其他」类目使用，展示层用整数百分比，换算前除以 100
     @State private var timestamp = Date()
     @State private var note: String = ""
+    @State private var amountYuanText: String = ""
     @State private var addedCount = 0
 
     var body: some View {
@@ -46,6 +47,23 @@ struct QuickLogSheet: View {
                         Label("单条记录超过 1000ml，请确认数值正确", systemImage: "exclamationmark.triangle")
                             .font(.caption)
                             .foregroundStyle(DesignSystem.statusWarning)
+                    }
+                }
+
+                if UserPreferences.spendTrackingEnabled {
+                    Section {
+                        HStack {
+                            Text("金额")
+                            TextField("未填写", text: $amountYuanText)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                            Text("元")
+                                .foregroundStyle(DesignSystem.secondaryInk)
+                        }
+                    } header: {
+                        Text("花费（可选）")
+                    } footer: {
+                        Text("可不填。花费只保存在本机，只有你自己能看到，不会出现在好友动态或分享卡片里。")
                     }
                 }
 
@@ -93,11 +111,13 @@ struct QuickLogSheet: View {
             volumeML: volumeML,
             timestamp: timestamp,
             note: note.isEmpty ? nil : note,
-            customABVFraction: category == .other ? customABVPercent / 100 : nil
+            customABVFraction: category == .other ? customABVPercent / 100 : nil,
+            amountFen: UserPreferences.parseYuanToFen(amountYuanText)
         )
         addedCount += 1
         timestamp = Date()
         note = ""
+        amountYuanText = ""
     }
 }
 

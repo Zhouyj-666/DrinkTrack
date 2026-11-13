@@ -252,6 +252,21 @@ final class DrinkTrackSmokeUITests: XCTestCase {
             sleep(1)
             snap("tab-4-profile")
 
+            // Body metrics live in a collapsed "个人信息" group. Expand it first
+            // so the weight field is actually on screen.
+            let personalInfo = app.descendants(matching: .any)["personal-info-group"]
+            if personalInfo.waitForExistence(timeout: 4) {
+                personalInfo.tap()
+                sleep(1)
+                snap("tab-4-profile-personal-info-expanded")
+            } else if app.buttons["个人信息"].waitForExistence(timeout: 2) {
+                app.buttons["个人信息"].tap()
+                sleep(1)
+                snap("tab-4-profile-personal-info-expanded")
+            } else {
+                note("Personal info disclosure group not found; weight field may stay collapsed.")
+            }
+
             // Body metrics are keyboard-editable now (they used to be Stepper-only).
             let weightField = app.textFields.element(boundBy: 1)
             if weightField.exists && weightField.isHittable {

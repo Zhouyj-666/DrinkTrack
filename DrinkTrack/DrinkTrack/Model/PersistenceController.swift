@@ -17,8 +17,14 @@ final class PersistenceController {
 
     init(inMemory: Bool = false) {
         container = NSPersistentContainer(name: "DrinkTrack")
-        if inMemory {
-            container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
+        if let description = container.persistentStoreDescriptions.first {
+            // Lightweight migration: adding optional attributes (e.g. DrinkLog.amountFen)
+            // must not wipe an existing on-device store.
+            description.shouldMigrateStoreAutomatically = true
+            description.shouldInferMappingModelAutomatically = true
+            if inMemory {
+                description.url = URL(fileURLWithPath: "/dev/null")
+            }
         }
         container.loadPersistentStores { _, error in
             if let error = error as NSError? {
@@ -44,7 +50,7 @@ final class PersistenceController {
         }
     }
 
-    /// §6.1 数据一键清除：删除所有实体的数据，但不触碰 HealthKit 里的原始数据
+    /// §6.1 数据一键清除：删除所有实体的本地数据，但不会删除 HealthKit 里的原始数据
     /// （HealthKit 的数据属于用户，由系统管理，App 无权也不应删除）。
     func eraseAllLocalData() throws {
         let entityNames = container.managedObjectModel.entities.compactMap { $0.name }

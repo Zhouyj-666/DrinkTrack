@@ -35,6 +35,14 @@ struct VolumeTrendChart: View {
             }
             .chartForegroundStyleScale(domain: DrinkCategory.allCases.map(\.displayName),
                                         range: DrinkCategory.allCases.map { DesignSystem.color(for: $0) })
+            .chartXScale(domain: ChartDateDomain.lastThreeMonths())
+            .chartXAxis {
+                AxisMarks(values: .stride(by: .weekOfYear)) { _ in
+                    AxisGridLine().foregroundStyle(DesignSystem.gridline)
+                    AxisValueLabel(format: .dateTime.month(.defaultDigits).day(), centered: true)
+                        .foregroundStyle(DesignSystem.mutedInk)
+                }
+            }
             .frame(height: 180)
             .chartLegend(position: .bottom, spacing: 8)
 

@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreData
 
-/// §5.6 法律合规框架 + §6.1 数据存储隐私的设置入口。
+/// §5.6 法律合规框架 + §6.1 数据存储与隐私的设置入口。
 struct SettingsView: View {
     @EnvironmentObject private var healthKitManager: HealthKitManager
     @Environment(\.managedObjectContext) private var context
@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var afibEnabled = false
     @State private var showAFibDisclaimer = false
     @State private var profile: UserProfileEntity?
+    @State private var spendTrackingEnabled = UserPreferences.spendTrackingEnabled
 
     var body: some View {
         // 注意：这里**不能**再包一层 NavigationStack。
@@ -18,6 +19,17 @@ struct SettingsView: View {
                 // 健康连接状态不在这里重复展示——它在「我的」页顶部，
                 // 用 HealthConnectionStatusView 如实反映真实可读性，
                 // 而不是像以前那样显示一个永远为「已授权」的假状态。
+                Section {
+                    Toggle("记录花费", isOn: $spendTrackingEnabled)
+                        .onChange(of: spendTrackingEnabled) { _, newValue in
+                            UserPreferences.spendTrackingEnabled = newValue
+                        }
+                } header: {
+                    Text("花费")
+                } footer: {
+                    Text("关闭后，录入时不再显示金额栏，趋势页也不再展示花费摘要。已经记下的花费仍保存在本机，不会出现在好友动态或分享卡片里。")
+                }
+
                 Section {
                     Toggle("显示异常心律 (AFib) 事件", isOn: Binding(
                         get: { afibEnabled },
@@ -78,6 +90,7 @@ struct SettingsView: View {
         request.fetchLimit = 1
         profile = try? context.fetch(request).first
         afibEnabled = profile?.afibDisplayEnabled ?? FeatureFlags.afibDisplayDefaultEnabled
+        spendTrackingEnabled = UserPreferences.spendTrackingEnabled
     }
 
     private func persistAFibFlag(_ enabled: Bool) {

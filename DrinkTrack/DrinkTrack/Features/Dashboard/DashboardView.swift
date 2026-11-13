@@ -36,6 +36,8 @@ struct DashboardView: View {
                         if !healthKitManager.connectionState.isUsable {
                             HealthConnectionStatusView(
                                 state: healthKitManager.connectionState,
+                                authorizationError: healthKitManager.authorizationError,
+                                isRequesting: healthKitManager.isRequestingAuthorization,
                                 onRequestAuthorization: {
                                     Task { await healthKitManager.requestAuthorization() }
                                 },
