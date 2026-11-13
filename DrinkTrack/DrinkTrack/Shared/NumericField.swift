@@ -40,9 +40,11 @@ struct NumericField: View {
                 // 不加这个工具栏用户填完数字后收不起键盘，只能靠误触别处才能退出。
                 // CI 的真机/模拟器走查也是靠这个按钮验证"能正常退出键盘"的。
                 .toolbar {
-                    ToolbarItemGroup(placement: .keyboard) {
-                        Spacer()
-                        Button("完成") { isFocused = false }
+                    if isFocused {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("完成") { isFocused = false }
+                        }
                     }
                 }
 
