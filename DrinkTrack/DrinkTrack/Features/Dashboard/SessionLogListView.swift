@@ -87,6 +87,12 @@ struct DrinkLogRow: View {
                             .foregroundStyle(DesignSystem.secondaryInk)
                     }
                 }
+                if let place = log.locationName, !place.isEmpty {
+                    Label(place, systemImage: "mappin.and.ellipse")
+                        .font(.caption2)
+                        .foregroundStyle(DesignSystem.mutedInk)
+                        .lineLimit(1)
+                }
                 if let note = log.note, !note.isEmpty {
                     Text(note)
                         .font(.caption)

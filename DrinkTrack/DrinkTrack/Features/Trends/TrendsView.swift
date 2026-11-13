@@ -55,9 +55,10 @@ struct TrendsView: View {
                             if let startedAt = session.startedAt {
                                 Text(startedAt, style: .date)
                             }
-                            Text("时长 \(sessionDurationText(session))")
+                            Text(sessionSubtitle(session))
                                 .font(.caption2)
                                 .foregroundStyle(DesignSystem.mutedInk)
+                                .lineLimit(1)
                         }
                         if session.status == "active" {
                             Text("进行中")
@@ -82,6 +83,14 @@ struct TrendsView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
+    private func sessionSubtitle(_ session: DrinkSessionEntity) -> String {
+        var text = "时长 \(sessionDurationText(session))"
+        if let place = session.locationName, !place.isEmpty {
+            text += " · \(place)"
+        }
+        return text
+    }
+
     private func sessionDurationText(_ session: DrinkSessionEntity) -> String {
         let start = session.startedAt ?? Date()
         let end: Date
@@ -98,8 +107,9 @@ struct TrendsView: View {
     }
 
     private func load() {
-        let since = Calendar.current.date(byAdding: .month, value: -3, to: Date()) ?? .distantPast
-        logs = drinkRepository.allLogs(since: since)
+        // Load the widest window any chart offers (the 年 range), not just 3 months,
+        // otherwise the 年 view silently shows only the last quarter.
+        logs = drinkRepository.allLogs(since: ChartDateDomain.earliestStart())
         sessions = drinkRepository.fetchAllSessions()
         spendTrackingEnabled = UserPreferences.spendTrackingEnabled
         spendSummary = drinkRepository.monthSpendSummary()

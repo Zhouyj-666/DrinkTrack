@@ -28,7 +28,7 @@ struct SpO2View: View {
                 }
                 .chartYScale(domain: 85...100)
                 .chartXAxis {
-                    AxisMarks { _ in AxisValueLabel().foregroundStyle(DesignSystem.mutedInk) }
+                    AxisMarks(values: .automatic(desiredCount: 5)) { _ in AxisValueLabel().foregroundStyle(DesignSystem.mutedInk) }
                 }
                 .frame(height: 100)
             }

@@ -70,18 +70,8 @@ enum DrinkCategory: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    /// §6.4 预设常见品牌（用于 FR-DR-03 搜索候选）。本地预置，不做联网搜索。
+    /// 该类目最常见的几款，用于录入页的快捷候选。完整列表和搜索见 BrandLibrary。
     var presetBrands: [String] {
-        switch self {
-        case .baijiu: return ["茅台", "五粮液", "泸州老窖", "汾酒", "剑南春"]
-        case .beer: return ["百威", "青岛", "雪花", "喜力", "科罗娜"]
-        case .redWine: return ["拉菲", "奔富", "张裕", "长城"]
-        case .sake: return ["獭祭", "月桂冠", "菊正宗"]
-        case .spirits: return ["轩尼诗", "芝华士", "伏特加", "龙舌兰"]
-        case .cocktail: return ["Mojito", "Margarita", "Cosmopolitan", "Daiquiri", "Negroni",
-                                 "Old Fashioned", "Pina Colada", "Whiskey Sour", "Martini", "Manhattan"]
-        case .riceWine: return []
-        case .other: return []
-        }
+        BrandLibrary.items(in: self).prefix(8).map(\.name)
     }
 }

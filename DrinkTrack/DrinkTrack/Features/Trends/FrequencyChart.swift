@@ -1,57 +1,51 @@
 import SwiftUI
 import Charts
 
-/// FR-TREND-01：饮酒频率——周/月/年视图的饮酒天数条形图 + 单日总剂量标注。
+/// FR-TREND-01：饮酒频率——周/月/3个月/年视图的饮酒量条形图 + 饮酒天数统计。
+/// 周、月、3个月按天出柱；年视图按月汇总，否则 365 根柱子会挤成细线。
 struct FrequencyChart: View {
     let logs: [DrinkLogEntity]
-    @State private var range: Range = .month
+    @State private var range: TrendRange = .month
 
-    enum Range: String, CaseIterable { case week = "周", month = "月", year = "年" }
-
-    private struct DayTotal: Identifiable {
-        var id: Date { day }
-        let day: Date
+    private struct BucketTotal: Identifiable {
+        var id: Date { start }
+        let start: Date
         let totalML: Double
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("饮酒频率").font(.headline)
-                Spacer()
-                Picker("", selection: $range) {
-                    ForEach(Range.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 180)
-            }
+            Text("饮酒频率").font(.headline)
+            TrendRangePicker(selection: $range)
 
-            Chart(dailyTotals) { item in
-                BarMark(x: .value("日期", item.day, unit: .day), y: .value("总量(ml)", item.totalML))
+            Chart(bucketTotals) { item in
+                BarMark(x: .value("日期", item.start, unit: range.bucket), y: .value("总量(ml)", item.totalML))
                     .foregroundStyle(DesignSystem.heartRateLine)
                     .cornerRadius(3)
             }
-            // Pin the visible domain to the selected calendar window (week / month
-            // / year). Without an explicit domain, SwiftUI Charts picks a "nice"
-            // Date scale — often hours — and a single short session's bar can
-            // stretch across several hours on the axis.
+            // Pin the visible domain to the selected calendar window. Without an
+            // explicit domain, SwiftUI Charts picks a "nice" Date scale — often
+            // hours — and a single short session's bar stretches across the axis.
             .chartXScale(domain: xDomain)
             .chartXAxis {
-                AxisMarks(values: .stride(by: xStride, count: 1)) { _ in
+                AxisMarks(values: axisPlan.values) { _ in
                     AxisGridLine().foregroundStyle(DesignSystem.gridline)
-                    AxisValueLabel(format: xLabelFormat, centered: true)
+                    AxisTick().foregroundStyle(DesignSystem.gridline)
+                    AxisValueLabel(format: axisPlan.format, centered: axisPlan.centered)
                         .foregroundStyle(DesignSystem.mutedInk)
                 }
             }
             .chartYAxis {
-                AxisMarks { _ in
+                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
                     AxisGridLine().foregroundStyle(DesignSystem.gridline)
                     AxisValueLabel().foregroundStyle(DesignSystem.mutedInk)
                 }
             }
             .frame(height: 160)
 
-            Text("共 \(dailyTotals.count) 个饮酒日").font(.caption).foregroundStyle(DesignSystem.secondaryInk)
+            Text("共 \(drinkingDayCount) 个饮酒日 · \(range.bucketCaption) · 单位 ml")
+                .font(.caption)
+                .foregroundStyle(DesignSystem.secondaryInk)
         }
         .padding()
         .background(DesignSystem.chartSurface)
@@ -62,66 +56,33 @@ struct FrequencyChart: View {
         ChartDateDomain.range(for: range)
     }
 
-    private var xStride: Calendar.Component {
-        switch range {
-        case .week: return .day
-        case .month: return .weekOfYear
-        case .year: return .month
-        }
+    private var axisPlan: TrendAxisPlan {
+        TrendAxisPlan.plan(for: range, domain: xDomain)
     }
 
-    private var xLabelFormat: Date.FormatStyle {
-        if range == .year {
-            return .dateTime.month(.abbreviated)
-        }
-        return .dateTime.month(.defaultDigits).day()
-    }
-
-    private var dailyTotals: [DayTotal] {
-        let calendar = Calendar.current
-        let cutoff = xDomain.lowerBound
-        let filtered = logs.filter { log in
+    private var logsInWindow: [DrinkLogEntity] {
+        let domain = xDomain
+        return logs.filter { log in
             guard let timestamp = log.timestamp else { return false }
-            return timestamp >= cutoff
+            return timestamp >= domain.lowerBound && timestamp < domain.upperBound
         }
-        let grouped = Dictionary(grouping: filtered) { log in
-            calendar.startOfDay(for: log.timestamp ?? cutoff)
-        }
-        var totals: [DayTotal] = []
-        for (day, dayLogs) in grouped {
-            let totalML = dayLogs.reduce(0.0) { partial, log in
-                partial + log.volumeMl
-            }
-            totals.append(DayTotal(day: day, totalML: totalML))
-        }
-        return totals.sorted { $0.day < $1.day }
-    }
-}
-
-/// Shared visible-window helper for the trends date axes.
-enum ChartDateDomain {
-    static func range(for frequencyRange: FrequencyChart.Range, now: Date = Date()) -> ClosedRange<Date> {
-        let calendar = Calendar.current
-        let todayStart = calendar.startOfDay(for: now)
-        let end = calendar.date(byAdding: .day, value: 1, to: todayStart) ?? now.addingTimeInterval(86400)
-        let start: Date
-        switch frequencyRange {
-        case .week:
-            start = calendar.date(byAdding: .day, value: -6, to: todayStart) ?? todayStart
-        case .month:
-            start = calendar.date(byAdding: .month, value: -1, to: todayStart) ?? todayStart
-        case .year:
-            start = calendar.date(byAdding: .year, value: -1, to: todayStart) ?? todayStart
-        }
-        return start...end
     }
 
-    /// Last three months through the end of today, matching TrendsView's log window.
-    static func lastThreeMonths(now: Date = Date()) -> ClosedRange<Date> {
+    private var drinkingDayCount: Int {
         let calendar = Calendar.current
-        let todayStart = calendar.startOfDay(for: now)
-        let end = calendar.date(byAdding: .day, value: 1, to: todayStart) ?? now.addingTimeInterval(86400)
-        let start = calendar.date(byAdding: .month, value: -3, to: todayStart) ?? todayStart
-        return start...end
+        return Set(logsInWindow.compactMap { $0.timestamp.map { calendar.startOfDay(for: $0) } }).count
+    }
+
+    private var bucketTotals: [BucketTotal] {
+        let calendar = Calendar.current
+        let component = range.bucket
+        let grouped = Dictionary(grouping: logsInWindow) { log -> Date in
+            let timestamp = log.timestamp ?? Date()
+            return calendar.dateInterval(of: component, for: timestamp)?.start ?? calendar.startOfDay(for: timestamp)
+        }
+        return grouped.map { start, bucketLogs in
+            BucketTotal(start: start, totalML: bucketLogs.reduce(0.0) { $0 + $1.volumeMl })
+        }
+        .sorted { $0.start < $1.start }
     }
 }

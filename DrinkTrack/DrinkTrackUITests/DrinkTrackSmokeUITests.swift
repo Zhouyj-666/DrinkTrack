@@ -225,6 +225,15 @@ final class DrinkTrackSmokeUITests: XCTestCase {
         if tap(tabBar.buttons["趋势"], "tab-trends") {
             sleep(1)
             snap("tab-2-trends")
+            // Axis-label regression check: the 3-month and year ranges used to
+            // print one "M/d" label per week and overlap. Capture each range.
+            for rangeLabel in ["3个月", "年", "周"] {
+                let segment = app.buttons[rangeLabel].firstMatch
+                if tap(segment, "trends-range-" + rangeLabel, timeout: 4, required: false) {
+                    sleep(1)
+                    snap("tab-2-trends-range-" + rangeLabel)
+                }
+            }
             app.swipeUp()
             snap("tab-2-trends-scrolled")
         }

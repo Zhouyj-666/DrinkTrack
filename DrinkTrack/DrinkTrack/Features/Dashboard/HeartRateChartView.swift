@@ -47,7 +47,7 @@ struct HeartRateChartView: View {
                     }
                 }
                 .chartXAxis {
-                    AxisMarks { _ in
+                    AxisMarks(values: .automatic(desiredCount: 5)) { _ in
                         AxisValueLabel().foregroundStyle(DesignSystem.mutedInk)
                     }
                 }

@@ -17,6 +17,7 @@ $swiftFiles = @(
     "Domain/StandardDrinkConverter.swift",
     "Domain/AlertThresholdEngine.swift",
     "Domain/SessionAutoArchiver.swift",
+    "Domain/BrandLibrary.swift",
     "Repositories/DrinkRepository.swift",
     "Repositories/FriendRepository.swift",
     "Features/Onboarding/OnboardingCoordinator.swift",
@@ -32,7 +33,9 @@ $swiftFiles = @(
     "Features/DrinkLogging/QuickLogSheet.swift",
     "Features/DrinkLogging/DrinkCategoryPicker.swift",
     "Features/DrinkLogging/VolumeInputView.swift",
+    "Features/DrinkLogging/BrandLibraryView.swift",
     "Features/Trends/TrendsView.swift",
+    "Features/Trends/TrendAxis.swift",
     "Features/Trends/FrequencyChart.swift",
     "Features/Trends/VolumeTrendChart.swift",
     "Features/Trends/DrinkVsNonDrinkComparisonView.swift",
@@ -50,7 +53,8 @@ $swiftFiles = @(
     "Shared/DesignSystem.swift",
     "Shared/NumericField.swift",
     "Shared/RootView.swift",
-    "Shared/UserPreferences.swift"
+    "Shared/UserPreferences.swift",
+    "Shared/LocationProvider.swift"
 )
 
 $plainOtherFiles = @(
@@ -62,9 +66,10 @@ $plainOtherFiles = @(
 $xcdatamodeldRel = "Model/DrinkTrack.xcdatamodeld"
 $xcdatamodelChildNames = @(
     "DrinkTrack.xcdatamodel",
-    "DrinkTrack 2.xcdatamodel"
+    "DrinkTrack 2.xcdatamodel",
+    "DrinkTrack 3.xcdatamodel"
 )
-$xcdatamodelCurrentName = "DrinkTrack 2.xcdatamodel"
+$xcdatamodelCurrentName = "DrinkTrack 3.xcdatamodel"
 
 # ---- 2. Verify every referenced file actually exists on disk ----
 foreach ($f in $swiftFiles) {

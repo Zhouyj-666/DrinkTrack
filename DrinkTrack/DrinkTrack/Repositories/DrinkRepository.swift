@@ -37,6 +37,14 @@ final class DrinkRepository: ObservableObject {
         return session
     }
 
+    /// 修改本场地点（会话详情页可编辑）。空字符串表示清除。
+    func updateLocation(of session: DrinkSessionEntity, to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        session.locationName = trimmed.isEmpty ? nil : trimmed
+        if !trimmed.isEmpty { UserPreferences.rememberLocation(trimmed) }
+        save()
+    }
+
     func endSession(_ session: DrinkSessionEntity) {
         session.status = "archived"
         session.endedAt = Date()
@@ -73,7 +81,8 @@ final class DrinkRepository: ObservableObject {
         timestamp: Date = Date(),
         note: String? = nil,
         customABVFraction: Double? = nil,
-        amountFen: Int? = nil
+        amountFen: Int? = nil,
+        locationName: String? = nil
     ) -> DrinkLogEntity {
         let log = DrinkLogEntity(context: context)
         log.id = UUID()
@@ -87,6 +96,20 @@ final class DrinkRepository: ObservableObject {
         ) ?? 0
         if let amountFen {
             log.setValue(amountFen, forKey: "amountFen")
+        }
+        // Store the ABV actually used for the standard-drink figure, so a brand's
+        // 53% (rather than the category's typical 42%) is visible later.
+        if let abv = customABVFraction ?? category.typicalABVFraction {
+            log.setValue(abv * 100, forKey: "abvPercent")
+        }
+        // FR-DR-05 地点（可选）：记在这一条上；会话还没有地点时，顺手作为本场地点。
+        let trimmedLocation = locationName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !trimmedLocation.isEmpty {
+            log.setValue(trimmedLocation, forKey: "locationName")
+            if (session.locationName ?? "").isEmpty {
+                session.locationName = trimmedLocation
+            }
+            UserPreferences.rememberLocation(trimmedLocation)
         }
         log.session = session
         UserPreferences.rememberLastDrink(category: category, volumeML: volumeML)

@@ -37,6 +37,7 @@ struct DataManagementView: View {
     private func eraseAll() {
         do {
             try PersistenceController.shared.eraseAllLocalData()
+            UserPreferences.clearRecentLocations()
             resultMessage = "已清除本机所有数据"
         } catch {
             resultMessage = "清除失败：\(error.localizedDescription)"

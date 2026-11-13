@@ -8,6 +8,8 @@ struct DashboardView: View {
     @Environment(\.managedObjectContext) private var context
 
     @State private var activeSession: DrinkSessionEntity?
+    /// 最近 12 小时内结束的上一场，用于「上一场」小结卡片（查看详情 / 生成分享卡）。
+    @State private var lastEndedSession: DrinkSessionEntity?
     @State private var showQuickLog = false
     @State private var activeAlertMessage: String?
     @State private var restingHeartRate: Double = 65
@@ -24,6 +26,15 @@ struct DashboardView: View {
                             activeSession: $activeSession,
                             showQuickLog: $showQuickLog
                         )
+
+                        if activeSession == nil, let last = lastEndedSession {
+                            NavigationLink {
+                                SessionDetailView(session: last)
+                            } label: {
+                                LastSessionCard(session: last)
+                            }
+                            .buttonStyle(.plain)
+                        }
 
                         // 录入的记录现在第一时间可见（修复「记录不显示」）
                         if activeSession != nil {
@@ -68,8 +79,12 @@ struct DashboardView: View {
             .navigationTitle("仪表盘")
             .task {
                 activeSession = drinkRepository.fetchActiveSession()
+                loadLastEndedSession()
                 loadRestingHeartRate()
                 await healthKitManager.resumeIfPossible()
+            }
+            .onChange(of: activeSession) { _, _ in
+                loadLastEndedSession()
             }
             .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
                 evaluateAlerts()
@@ -89,6 +104,16 @@ struct DashboardView: View {
         _ = logRevision // 建立依赖，录入后重新计算
         guard let session = activeSession, let logs = session.logs as? Set<DrinkLogEntity> else { return [] }
         return logs.compactMap(\.timestamp).sorted()
+    }
+
+    private func loadLastEndedSession() {
+        guard let last = drinkRepository.fetchArchivedSessions(limit: 1).first,
+              let endedAt = last.endedAt,
+              Date().timeIntervalSince(endedAt) < 12 * 3600 else {
+            lastEndedSession = nil
+            return
+        }
+        lastEndedSession = last
     }
 
     private func loadRestingHeartRate() {
@@ -113,5 +138,51 @@ struct DashboardView: View {
         if let alert = AlertThresholdEngine.evaluateSpO2(recentSpO2: spo2Samples) {
             activeAlertMessage = alert.message
         }
+    }
+}
+
+/// 仪表盘上的「上一场」小结：结束会话后马上能看到本场摘要，点进去生成分享卡。
+private struct LastSessionCard: View {
+    @ObservedObject var session: DrinkSessionEntity
+
+    private var logs: [DrinkLogEntity] {
+        Array((session.logs as? Set<DrinkLogEntity>) ?? [])
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.seal")
+                .font(.title2)
+                .foregroundStyle(DesignSystem.statusGood)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("上一场已结束").font(.subheadline.weight(.medium))
+                Text(summary)
+                    .font(.caption)
+                    .foregroundStyle(DesignSystem.secondaryInk)
+                    .lineLimit(1)
+            }
+            Spacer()
+            Text("查看 / 分享")
+                .font(.caption)
+                .foregroundStyle(DesignSystem.heartRateLine)
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(DesignSystem.mutedInk)
+        }
+        .padding()
+        .background(DesignSystem.chartSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var summary: String {
+        let start = session.startedAt ?? Date()
+        let end = session.endedAt ?? start
+        let standard = logs.reduce(0.0) { $0 + $1.standardDrinks }
+        var text = String(format: "%d 杯 · ≈%.1f 标准饮品 · ", logs.count, standard)
+        text += UserPreferences.formatDuration(end.timeIntervalSince(start))
+        if let place = session.locationName, !place.isEmpty {
+            text += " · " + place
+        }
+        return text
     }
 }

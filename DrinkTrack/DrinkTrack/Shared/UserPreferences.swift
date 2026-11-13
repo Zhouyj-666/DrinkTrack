@@ -39,6 +39,33 @@ enum UserPreferences {
         set { UserDefaults.standard.set(newValue, forKey: lastVolumeKey) }
     }
 
+    private static let recentLocationsKey = "recentLocationNames"
+    private static let shareShowsLocationKey = "shareCardShowsLocation"
+
+    /// FR-DR-05: the last few place names the user typed or filled, newest first,
+    /// offered as one-tap chips in the quick-log sheet. Stored only on device.
+    static var recentLocations: [String] {
+        UserDefaults.standard.stringArray(forKey: recentLocationsKey) ?? []
+    }
+
+    static func rememberLocation(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        var list = recentLocations.filter { $0 != trimmed }
+        list.insert(trimmed, at: 0)
+        UserDefaults.standard.set(Array(list.prefix(6)), forKey: recentLocationsKey)
+    }
+
+    static func clearRecentLocations() {
+        UserDefaults.standard.removeObject(forKey: recentLocationsKey)
+    }
+
+    /// Share cards hide the place by default; the user opts in per card.
+    static var shareCardShowsLocation: Bool {
+        get { UserDefaults.standard.bool(forKey: shareShowsLocationKey) }
+        set { UserDefaults.standard.set(newValue, forKey: shareShowsLocationKey) }
+    }
+
     static func rememberLastDrink(category: DrinkCategory, volumeML: Double) {
         lastDrinkCategory = category
         lastDrinkVolumeML = volumeML
