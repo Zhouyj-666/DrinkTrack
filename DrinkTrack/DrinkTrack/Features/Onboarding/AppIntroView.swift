@@ -74,7 +74,7 @@ struct AppIntroView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Label("随时可选，不填也能用", systemImage: "info.circle")
                             .font(.footnote.weight(.medium))
-                        Text("连接 Apple 健康、填写身高体重等基础信息，都可以之后在「我的」页里完成。基础信息只用来让心率预警更贴合你本人，不会分享给任何人。")
+                        Text("连接 Apple 健康、填写身高体重等基础信息，都可以之后在「我的」页里完成。基础信息只用来让会话提示更贴合你本人，不会分享给任何人。")
                             .font(.caption)
                             .foregroundStyle(DesignSystem.secondaryInk)
                             .fixedSize(horizontal: false, vertical: true)

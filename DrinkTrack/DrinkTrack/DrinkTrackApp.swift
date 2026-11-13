@@ -5,7 +5,7 @@ struct DrinkTrackApp: App {
     @StateObject private var healthKitManager = HealthKitManager.shared
     @StateObject private var drinkRepository = DrinkRepository()
     private let persistence = PersistenceController.shared
-    private let friendRepository: FriendRepository = MockFriendRepository()
+    @StateObject private var friendRepository = LocalFriendRepository()
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @Environment(\.scenePhase) private var scenePhase

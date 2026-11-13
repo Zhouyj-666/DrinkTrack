@@ -83,17 +83,30 @@ struct ProfileView: View {
                     }
                     .accessibilityIdentifier("personal-info-group")
                 } footer: {
-                    Text("点开后可以填写或修改。这些信息只用来让心率预警的基线更贴合你本人，不会展示给好友，也不会上传到任何服务器。不填也能正常使用。安静心率不填时按 65 bpm 的通用值计算。")
+                    Text("点开后可以填写或修改。这些信息只用来让会话提示的参考线更贴合你本人，不会展示给好友，也不会上传到任何服务器。不填也能正常使用。安静心率不填时，心率提示按 65 bpm 的通用值计算。")
                 }
 
-                Section("好友") {
+                Section {
                     HStack {
                         Text("我的好友码")
                         Spacer()
                         Text(profile?.friendCode ?? "—")
                             .font(.system(.body, design: .monospaced))
                             .foregroundStyle(DesignSystem.secondaryInk)
+                        if let code = profile?.friendCode, !code.isEmpty {
+                            Button {
+                                UIPasteboard.general.string = code
+                            } label: {
+                                Image(systemName: "doc.on.doc")
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel("复制好友码")
+                        }
                     }
+                } header: {
+                    Text("好友")
+                } footer: {
+                    Text("可在「好友」页查看二维码、分享，或把对方的码保存到本机。本版本名单只存在这台手机上。")
                 }
 
                 Section {
@@ -140,35 +153,13 @@ struct ProfileView: View {
     }
 
     private func loadProfile() {
-        let request = NSFetchRequest<UserProfileEntity>(entityName: "UserProfile")
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \UserProfileEntity.createdAt, ascending: false)]
-        request.fetchLimit = 1
-        let existing = try? context.fetch(request).first
-
-        let target = existing ?? makeDefaultProfile()
+        let target = UserProfileStore.ensureProfile(in: context)
         profile = target
         gender = target.gender ?? "other"
         birthYear = Int(target.birthYear)
         weightKg = Int(target.weightKg)
         restingHeartRate = Int(target.restingHeartRate)
         restingHRSource = target.restingHRSource ?? "manual"
-    }
-
-    /// 首次进入时建一条空档案（好友码在这里生成），但所有身体数据留空，不强迫填写。
-    private func makeDefaultProfile() -> UserProfileEntity {
-        let profile = UserProfileEntity(context: context)
-        profile.id = UUID()
-        profile.gender = "other"
-        profile.birthYear = 0
-        profile.weightKg = 0
-        profile.restingHeartRate = 0
-        profile.restingHRSource = "manual"
-        profile.friendCode = String(format: "%06d", Int.random(in: 0...999999))
-        profile.afibDisplayEnabled = FeatureFlags.afibDisplayDefaultEnabled
-        profile.iCloudSyncEnabled = false
-        profile.createdAt = Date()
-        try? context.save()
-        return profile
     }
 
     private func saveProfile() {

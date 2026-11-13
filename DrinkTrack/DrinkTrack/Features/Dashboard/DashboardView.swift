@@ -11,7 +11,9 @@ struct DashboardView: View {
     /// 最近 12 小时内结束的上一场，用于「上一场」小结卡片（查看详情 / 生成分享卡）。
     @State private var lastEndedSession: DrinkSessionEntity?
     @State private var showQuickLog = false
-    @State private var activeAlertMessage: String?
+    @State private var activeAlert: AlertThresholdEngine.AlertResult?
+    @State private var sessionAlerts: [AlertThresholdEngine.AlertResult] = []
+    @State private var hrvBaseline: Double?
     @State private var restingHeartRate: Double = 65
     /// 录入后自增，用来强制刷新依赖会话关系的派生数据（Core Data 关系变更不会自动发布）
     @State private var logRevision = 0
@@ -40,6 +42,7 @@ struct DashboardView: View {
                         if activeSession != nil {
                             SessionLogListView(session: activeSession)
                                 .id(logRevision)
+                            SessionAlertsCard(alerts: sessionAlerts)
                         }
 
                         // 健康数据没连上时，把状态和自查方法摆在显眼处，
@@ -71,23 +74,42 @@ struct DashboardView: View {
                     .padding()
                 }
 
-                if let message = activeAlertMessage {
-                    AlertToastView(message: message) { activeAlertMessage = nil }
+                if let alert = activeAlert {
+                    AlertBannerView(alert: alert) { activeAlert = nil }
                         .padding(.bottom, 24)
                 }
             }
             .navigationTitle("仪表盘")
             .task {
                 activeSession = drinkRepository.fetchActiveSession()
+                loadSessionAlerts()
                 loadLastEndedSession()
                 loadRestingHeartRate()
                 await healthKitManager.resumeIfPossible()
+                await refreshHRVBaseline()
+                evaluateAlerts()
             }
             .onChange(of: activeSession) { _, _ in
+                loadSessionAlerts()
                 loadLastEndedSession()
-            }
-            .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
                 evaluateAlerts()
+            }
+            .onChange(of: healthKitManager.recentHeartRatePoints.count) { _, _ in
+                evaluateAlerts()
+            }
+            .onChange(of: healthKitManager.recentSpO2Points.count) { _, _ in
+                evaluateAlerts()
+            }
+            .onReceive(Timer.publish(every: 30, on: .main, in: .common).autoconnect()) { _ in
+                Task {
+                    if activeSession != nil, UserPreferences.sessionAlertsEnabled, UserPreferences.hrvAlertsEnabled {
+                        _ = await healthKitManager.fetchLatestHRV()
+                        if hrvBaseline == nil {
+                            hrvBaseline = await healthKitManager.fetchSevenDayHRVAverage()
+                        }
+                    }
+                    evaluateAlerts()
+                }
             }
             .sheet(isPresented: $showQuickLog, onDismiss: {
                 // 录入面板关掉后刷新列表和图表标记
@@ -119,24 +141,61 @@ struct DashboardView: View {
     private func loadRestingHeartRate() {
         let request = NSFetchRequest<UserProfileEntity>(entityName: "UserProfile")
         request.fetchLimit = 1
-        if let profile = try? context.fetch(request).first {
+        if let profile = try? context.fetch(request).first, profile.restingHeartRate > 0 {
             restingHeartRate = Double(profile.restingHeartRate)
+        } else {
+            restingHeartRate = AlertThresholdEngine.defaultRestingHeartRate
         }
     }
 
-    /// §6.2 被动预警判定：每分钟跑一次，而不是用持续运行的高频定时器。
-    private func evaluateAlerts() {
-        guard activeSession != nil else { return }
+    private func loadSessionAlerts() {
+        if let session = activeSession {
+            sessionAlerts = drinkRepository.alerts(for: session)
+        } else {
+            sessionAlerts = []
+            activeAlert = nil
+        }
+    }
 
-        let hrSamples = healthKitManager.recentHeartRatePoints.map { (timestamp: $0.timestamp, bpm: $0.value) }
-        if let alert = AlertThresholdEngine.evaluateHeartRate(recentHeartRates: hrSamples, restingHeartRate: restingHeartRate) {
-            activeAlertMessage = alert.message
-            return
+    private func refreshHRVBaseline() async {
+        guard healthKitManager.connectionState.isUsable else { return }
+        hrvBaseline = await healthKitManager.fetchSevenDayHRVAverage()
+        _ = await healthKitManager.fetchLatestHRV()
+    }
+
+    /// §6.2 被动提示判定：有新采样或每 30 秒检查一次。同类提示 30 分钟内不重复弹出。
+    private func evaluateAlerts() {
+        guard let session = activeSession else { return }
+        guard UserPreferences.sessionAlertsEnabled else { return }
+
+        var candidates: [AlertThresholdEngine.AlertResult] = []
+
+        if UserPreferences.heartRateAlertsEnabled {
+            let hrSamples = healthKitManager.recentHeartRatePoints.map { (timestamp: $0.timestamp, bpm: $0.value) }
+            if let alert = AlertThresholdEngine.evaluateHeartRate(recentHeartRates: hrSamples, restingHeartRate: restingHeartRate) {
+                candidates.append(alert)
+            }
         }
 
-        let spo2Samples = healthKitManager.recentSpO2Points.map { (timestamp: $0.timestamp, percent: $0.value) }
-        if let alert = AlertThresholdEngine.evaluateSpO2(recentSpO2: spo2Samples) {
-            activeAlertMessage = alert.message
+        if UserPreferences.spo2AlertsEnabled {
+            let spo2Samples = healthKitManager.recentSpO2Points.map { (timestamp: $0.timestamp, percent: $0.value) }
+            if let alert = AlertThresholdEngine.evaluateSpO2(recentSpO2: spo2Samples) {
+                candidates.append(alert)
+            }
+        }
+
+        if UserPreferences.hrvAlertsEnabled,
+           let current = healthKitManager.latestHRV,
+           let baseline = hrvBaseline,
+           let alert = AlertThresholdEngine.evaluateHRV(currentSDNN: current, baseline7DayAverage: baseline) {
+            candidates.append(alert)
+        }
+
+        for alert in candidates {
+            if drinkRepository.appendAlert(alert, to: session) {
+                sessionAlerts = drinkRepository.alerts(for: session)
+                activeAlert = alert
+            }
         }
     }
 }
@@ -182,6 +241,10 @@ private struct LastSessionCard: View {
         text += UserPreferences.formatDuration(end.timeIntervalSince(start))
         if let place = session.locationName, !place.isEmpty {
             text += " · " + place
+        }
+        let alertCount = AlertThresholdEngine.decode(session.value(forKey: "alertsJSON") as? String).count
+        if alertCount > 0 {
+            text += " · \(alertCount) 条提示"
         }
         return text
     }

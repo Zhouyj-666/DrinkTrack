@@ -144,7 +144,27 @@ final class DrinkRepository: ObservableObject {
         return (try? context.fetch(request)) ?? []
     }
 
-    /// FR-DR-07 monthly spend: this calendar month's total, the same month-to-date
+    /// 把一条会话提示追加到本场（写入 DrinkSession.alertsJSON）。同类提示在 30 分钟内不重复记录。
+    @discardableResult
+    func appendAlert(_ alert: AlertThresholdEngine.AlertResult, to session: DrinkSessionEntity, cooldownMinutes: Double = 30) -> Bool {
+        var alerts = alerts(for: session)
+        if let last = alerts.last(where: { $0.kind == alert.kind }),
+           alert.triggeredAt.timeIntervalSince(last.triggeredAt) < cooldownMinutes * 60 {
+            return false
+        }
+        alerts.append(alert)
+        if let json = AlertThresholdEngine.encode(alerts) {
+            session.setValue(json, forKey: "alertsJSON")
+            save()
+        }
+        return true
+    }
+
+    func alerts(for session: DrinkSessionEntity) -> [AlertThresholdEngine.AlertResult] {
+        AlertThresholdEngine.decode(session.value(forKey: "alertsJSON") as? String)
+    }
+
+        /// FR-DR-07 monthly spend: this calendar month's total, the same month-to-date
     /// figure, and the average among sessions that recorded at least one amount.
     func monthSpendSummary(now: Date = Date()) -> (monthTotalFen: Int, monthToDateFen: Int, sessionAverageFen: Int?, sessionCount: Int) {
         let calendar = Calendar.current

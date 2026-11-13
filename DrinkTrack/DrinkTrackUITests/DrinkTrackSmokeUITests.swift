@@ -309,6 +309,11 @@ final class DrinkTrackSmokeUITests: XCTestCase {
             if tap(app.buttons["设置与隐私"], "profile-open-settings", required: false) {
                 sleep(1)
                 snap("settings-root")
+                if tap(app.buttons["会话中的身体提示"], "settings-alert-rules", required: false) {
+                    sleep(1)
+                    snap("settings-alert-rules")
+                    goBack()
+                }
                 if tap(app.buttons["隐私政策"], "settings-privacy-policy", required: false) {
                     sleep(1)
                     snap("settings-privacy-policy")

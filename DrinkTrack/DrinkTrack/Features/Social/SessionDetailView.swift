@@ -10,12 +10,15 @@ struct SessionDetailView: View {
     @State private var showLocationOnCard = UserPreferences.shareCardShowsLocation
     @State private var locationDraft = ""
     @State private var renderedImage: Image?
+    @State private var sessionAlerts: [AlertThresholdEngine.AlertResult] = []
     @FocusState private var locationFocused: Bool
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
                 SessionTimelineChart(session: session)
+
+                SessionAlertsCard(alerts: sessionAlerts)
 
                 locationEditor
 
@@ -36,6 +39,18 @@ struct SessionDetailView: View {
 
                 ShareCardView(session: session, includeHeartRateCurve: includeHeartRateCurve, showLocation: showLocationOnCard)
                     .frame(maxWidth: ShareCardView.renderWidth)
+
+                if let renderedImage {
+                    ShareLink(
+                        item: renderedImage,
+                        preview: SharePreview("DrinkTrack 饮酒打卡", image: renderedImage)
+                    ) {
+                        Label("分享这张卡片", systemImage: "square.and.arrow.up")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .padding(.bottom, 16)
+                }
             }
             .padding(.horizontal)
         }
@@ -53,6 +68,7 @@ struct SessionDetailView: View {
         }
         .onAppear {
             locationDraft = session.locationName ?? ""
+            sessionAlerts = AlertThresholdEngine.decode(session.value(forKey: "alertsJSON") as? String)
             renderShareImage()
         }
         .onChange(of: includeHeartRateCurve) { _, _ in renderShareImage() }

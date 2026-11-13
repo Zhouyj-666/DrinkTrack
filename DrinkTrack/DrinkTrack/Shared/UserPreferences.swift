@@ -41,6 +41,10 @@ enum UserPreferences {
 
     private static let recentLocationsKey = "recentLocationNames"
     private static let shareShowsLocationKey = "shareCardShowsLocation"
+    private static let sessionAlertsKey = "sessionAlertsEnabled"
+    private static let heartRateAlertsKey = "heartRateAlertsEnabled"
+    private static let spo2AlertsKey = "spo2AlertsEnabled"
+    private static let hrvAlertsKey = "hrvAlertsEnabled"
 
     /// FR-DR-05: the last few place names the user typed or filled, newest first,
     /// offered as one-tap chips in the quick-log sheet. Stored only on device.
@@ -58,6 +62,41 @@ enum UserPreferences {
 
     static func clearRecentLocations() {
         UserDefaults.standard.removeObject(forKey: recentLocationsKey)
+    }
+
+    /// 清除本机偏好里和记录相关的项（地点、上次酒种杯型、分享地点开关）。
+    /// 花费和会话提示的开关保留，当作设置而不是记录。
+    static func clearLocalPreferences() {
+        clearRecentLocations()
+        UserDefaults.standard.removeObject(forKey: lastCategoryKey)
+        UserDefaults.standard.removeObject(forKey: lastVolumeKey)
+        UserDefaults.standard.removeObject(forKey: shareShowsLocationKey)
+    }
+
+    /// 会话中的身体提示总开关，默认开启。
+    static var sessionAlertsEnabled: Bool {
+        get { bool(forKey: sessionAlertsKey, defaultValue: true) }
+        set { UserDefaults.standard.set(newValue, forKey: sessionAlertsKey) }
+    }
+
+    static var heartRateAlertsEnabled: Bool {
+        get { bool(forKey: heartRateAlertsKey, defaultValue: true) }
+        set { UserDefaults.standard.set(newValue, forKey: heartRateAlertsKey) }
+    }
+
+    static var spo2AlertsEnabled: Bool {
+        get { bool(forKey: spo2AlertsKey, defaultValue: true) }
+        set { UserDefaults.standard.set(newValue, forKey: spo2AlertsKey) }
+    }
+
+    static var hrvAlertsEnabled: Bool {
+        get { bool(forKey: hrvAlertsKey, defaultValue: true) }
+        set { UserDefaults.standard.set(newValue, forKey: hrvAlertsKey) }
+    }
+
+    private static func bool(forKey key: String, defaultValue: Bool) -> Bool {
+        if UserDefaults.standard.object(forKey: key) == nil { return defaultValue }
+        return UserDefaults.standard.bool(forKey: key)
     }
 
     /// Share cards hide the place by default; the user opts in per card.

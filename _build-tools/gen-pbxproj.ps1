@@ -20,6 +20,7 @@ $swiftFiles = @(
     "Domain/BrandLibrary.swift",
     "Repositories/DrinkRepository.swift",
     "Repositories/FriendRepository.swift",
+    "Repositories/DataExporter.swift",
     "Features/Onboarding/OnboardingCoordinator.swift",
     "Features/Onboarding/DisclaimerView.swift",
     "Features/Onboarding/PrivacyPolicyView.swift",
@@ -29,6 +30,7 @@ $swiftFiles = @(
     "Features/Dashboard/HeartRateChartView.swift",
     "Features/Dashboard/SpO2View.swift",
     "Features/Dashboard/AlertToastView.swift",
+    "Features/Dashboard/SessionAlertsCard.swift",
     "Features/Dashboard/DashboardView.swift",
     "Features/DrinkLogging/QuickLogSheet.swift",
     "Features/DrinkLogging/DrinkCategoryPicker.swift",
@@ -47,6 +49,7 @@ $swiftFiles = @(
     "Features/Social/SessionTimelineChart.swift",
     "Features/Settings/SettingsView.swift",
     "Features/Settings/DataManagementView.swift",
+    "Features/Settings/AlertSettingsView.swift",
     "Features/Settings/ProfileView.swift",
     "Features/Settings/HealthConnectionStatusView.swift",
     "Shared/DisclaimerStrings.swift",
@@ -54,7 +57,8 @@ $swiftFiles = @(
     "Shared/NumericField.swift",
     "Shared/RootView.swift",
     "Shared/UserPreferences.swift",
-    "Shared/LocationProvider.swift"
+    "Shared/LocationProvider.swift",
+    "Shared/QRCodeImage.swift"
 )
 
 $plainOtherFiles = @(
@@ -67,9 +71,10 @@ $xcdatamodeldRel = "Model/DrinkTrack.xcdatamodeld"
 $xcdatamodelChildNames = @(
     "DrinkTrack.xcdatamodel",
     "DrinkTrack 2.xcdatamodel",
-    "DrinkTrack 3.xcdatamodel"
+    "DrinkTrack 3.xcdatamodel",
+    "DrinkTrack 4.xcdatamodel"
 )
-$xcdatamodelCurrentName = "DrinkTrack 3.xcdatamodel"
+$xcdatamodelCurrentName = "DrinkTrack 4.xcdatamodel"
 
 # ---- 2. Verify every referenced file actually exists on disk ----
 foreach ($f in $swiftFiles) {
@@ -510,7 +515,7 @@ $targetCommonSettings = @'
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkTrack/Info.plist;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

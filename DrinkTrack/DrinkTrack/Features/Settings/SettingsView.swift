@@ -20,6 +20,16 @@ struct SettingsView: View {
                 // 用 HealthConnectionStatusView 如实反映真实可读性，
                 // 而不是像以前那样显示一个永远为「已授权」的假状态。
                 Section {
+                    NavigationLink("会话中的身体提示") {
+                        AlertSettingsView()
+                    }
+                } header: {
+                    Text("会话提示")
+                } footer: {
+                    Text("进行中的会话里，满足设定条件时会在 App 里提示原因和参考线。默认开启，可逐项关闭。不会发送系统通知。")
+                }
+
+                Section {
                     Toggle("记录花费", isOn: $spendTrackingEnabled)
                         .onChange(of: spendTrackingEnabled) { _, newValue in
                             UserPreferences.spendTrackingEnabled = newValue
