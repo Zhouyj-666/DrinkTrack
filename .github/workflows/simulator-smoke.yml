@@ -2,16 +2,16 @@ name: Simulator Smoke Test
 
 # Builds DrinkTrack for the iOS Simulator, launches it, walks through the main
 # screens with XCUITest and uploads screenshots as the "simulator-screenshots"
-# artifact. Runs only on the simulator-smoke-test branch (or manually), so the
-# IPA workflow on main (build.yml) is untouched.
+# artifact.
 #
 # HealthKit note: the simulator has no real Health data and the Health permission
-# sheet cannot be driven reliably in CI, so the UI test taps the in-app
-# "skip authorization" button. HealthKit being denied/unavailable is expected
-# here and is NOT treated as a failure.
+# sheet cannot be driven reliably in CI. HealthKit authorization is no longer part
+# of the mandatory onboarding flow (it moved to the "我的" tab, see AppIntroView),
+# so the UI test does not need to dismiss it during the walkthrough.
 on:
+  # Any branch, not just simulator-smoke-test: a feature branch must be able to
+  # verify its UI before merging, same reasoning as build.yml.
   push:
-    branches: [ simulator-smoke-test ]
   workflow_dispatch:
 
 jobs:

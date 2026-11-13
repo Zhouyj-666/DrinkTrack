@@ -7,8 +7,9 @@ name: Build DrinkTrack IPA
 #   - push 到 main 分支自动触发
 #   - 也可以在 GitHub 网页上 Actions 标签页手动点 "Run workflow"
 on:
+  # 任意分支推送都编译：功能分支必须能在合进 main 之前就验证，
+  # 否则就只能把没编译过的代码推到 main 才知道行不行。
   push:
-    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
