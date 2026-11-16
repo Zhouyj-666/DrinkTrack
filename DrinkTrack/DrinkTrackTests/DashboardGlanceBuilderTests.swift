@@ -6,7 +6,7 @@ final class DashboardGlanceBuilderTests: XCTestCase {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 8 * 3600)!
         calendar.firstWeekday = 2
-        let now = calendar.date(from: DateComponents(year: 2026, month: 11, day: 16, hour: 18))!
+        let now = calendar.date(from: DateComponents(year: 2026, month: 11, day: 18, hour: 18))!
         let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)!.start
         let lastWeek = calendar.date(byAdding: .day, value: -3, to: startOfWeek)!
         let thisWeek = calendar.date(byAdding: .hour, value: 5, to: startOfWeek)!
