@@ -18,6 +18,8 @@ struct QuickLogSheet: View {
     @State private var note: String = ""
     @State private var amountYuanText: String = ""
     @State private var locationName: String = ""
+    @State private var locationLatitude: Double? = nil
+    @State private var locationLongitude: Double? = nil
     @State private var addedCount = 0
     @StateObject private var locationProvider = LocationProvider()
 
@@ -64,11 +66,17 @@ struct QuickLogSheet: View {
                 }
 
                 Section {
-                    LocationInputField(locationName: $locationName, provider: locationProvider)
+                    LocationInputField(
+                        locationName: $locationName,
+                        latitude: $locationLatitude,
+                        longitude: $locationLongitude,
+                        provider: locationProvider,
+                        knownCoordinate: { drinkRepository.knownCoordinate(forPlaceName: $0) }
+                    )
                 } header: {
                     Text("地点（可选）")
                 } footer: {
-                    Text("只保存地名文字，不保存经纬度，也不会出现在好友动态里。分享卡片默认不显示地点。")
+                    Text("点「用当前位置」时，会在本机保存地名和坐标，用来在「喝酒地图」里显示；手动输入的地点只保存名称，仍会出现在地点列表里。不会在后台定位。分享卡片默认不显示地点，也永远不会带上坐标。")
                 }
 
                 if UserPreferences.spendTrackingEnabled {
@@ -124,6 +132,10 @@ struct QuickLogSheet: View {
             .onAppear {
                 if locationName.isEmpty, let existing = session.locationName {
                     locationName = existing
+                    if let pair = LocationCoordinate.pair(from: session) ?? drinkRepository.knownCoordinate(forPlaceName: existing) {
+                        locationLatitude = pair.0
+                        locationLongitude = pair.1
+                    }
                 }
             }
             .onChange(of: category) { _, newCategory in
@@ -166,7 +178,9 @@ struct QuickLogSheet: View {
             note: note.isEmpty ? nil : note,
             customABVFraction: abvPercent / 100,
             amountFen: UserPreferences.parseYuanToFen(amountYuanText),
-            locationName: locationName
+            locationName: locationName,
+            latitude: locationLatitude,
+            longitude: locationLongitude
         )
         addedCount += 1
         timestamp = Date()
@@ -288,72 +302,5 @@ struct BrandResultRow: View {
                 .foregroundStyle(DesignSystem.secondaryInk)
         }
         .contentShape(Rectangle())
-    }
-}
-
-/// FR-DR-05：地点输入。手动输入、点「用当前位置」或点最近用过的地点。
-private struct LocationInputField: View {
-    @Binding var locationName: String
-    @ObservedObject var provider: LocationProvider
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "mappin.and.ellipse")
-                    .foregroundStyle(DesignSystem.secondaryInk)
-                TextField("例如：家里、三里屯某酒吧", text: $locationName)
-                if !locationName.isEmpty {
-                    Button {
-                        locationName = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(DesignSystem.mutedInk)
-                    }
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel("清除地点")
-                }
-            }
-
-            HStack {
-                Button {
-                    provider.fillCurrentPlace { name in
-                        locationName = name
-                    }
-                } label: {
-                    if provider.state == .locating {
-                        HStack(spacing: 6) {
-                            ProgressView()
-                            Text("正在定位…")
-                        }
-                    } else {
-                        Label("用当前位置", systemImage: "location")
-                    }
-                }
-                .buttonStyle(.bordered)
-                .disabled(provider.state == .locating)
-                .font(.footnote)
-
-                Spacer()
-            }
-
-            if case .failed(let message) = provider.state {
-                Text(message)
-                    .font(.caption)
-                    .foregroundStyle(DesignSystem.statusWarning)
-            }
-
-            let recents = UserPreferences.recentLocations.filter { $0 != locationName }
-            if !recents.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack {
-                        ForEach(recents, id: \.self) { name in
-                            Button(name) { locationName = name }
-                                .font(.caption)
-                                .buttonStyle(.bordered)
-                        }
-                    }
-                }
-            }
-        }
     }
 }

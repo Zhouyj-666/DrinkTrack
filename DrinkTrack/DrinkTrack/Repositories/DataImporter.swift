@@ -188,6 +188,7 @@ enum DataImporter {
                 session.locationName = place
                 places.append(place)
             }
+            applyCoordinates(sessionPayload, to: session)
             if let alerts = sessionPayload["alerts"] as? [[String: Any]],
                let encoded = encodeAlerts(alerts) {
                 session.setValue(encoded, forKey: "alertsJSON")
@@ -211,6 +212,7 @@ enum DataImporter {
                     log.setValue(place, forKey: "locationName")
                     places.append(place)
                 }
+                applyCoordinates(logPayload, to: log)
                 if let abv = doubleValue(logPayload["abvPercent"]) {
                     log.setValue(abv, forKey: "abvPercent")
                 }
@@ -387,6 +389,15 @@ enum DataImporter {
         request.predicate = NSPredicate(format: "status == %@", "active")
         request.fetchLimit = 1
         return request
+    }
+
+
+    private static func applyCoordinates(_ payload: [String: Any], to object: NSManagedObject) {
+        let pair = LocationCoordinate.validated(
+            latitude: doubleValue(payload["latitude"]),
+            longitude: doubleValue(payload["longitude"])
+        )
+        LocationCoordinate.apply(pair, to: object)
     }
 
     // MARK: - Scalars

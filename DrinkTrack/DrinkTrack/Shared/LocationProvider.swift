@@ -1,11 +1,24 @@
 import Foundation
 import CoreLocation
 
+/// A place the user just confirmed with 「用当前位置」: a display name plus
+/// the coordinates actually returned for that one request.
+struct ResolvedPlace: Equatable {
+    let name: String
+    let latitude: Double?
+    let longitude: Double?
+
+    var hasCoordinate: Bool {
+        LocationCoordinate.validated(latitude: latitude, longitude: longitude) != nil
+    }
+}
+
 /// FR-DR-05：录入时「用当前位置」一键填地点。
 ///
-/// - 只在用户点按钮时才申请「使用 App 期间」定位权限，不在启动时弹窗。
-/// - 只取一次位置（requestLocation），反查成「区 + 街道/地标」这样的文字后就丢掉坐标，
-///   不保存经纬度，也不在后台定位。
+/// - 只在用户点按钮时才申请「使用 App 期间」定位权限，不在启动时弹窗，
+///   打开「喝酒地图」也不会申请定位。
+/// - 只取一次位置（requestLocation），反查成「区 + 街道/地标」这样的文字，
+///   并一并交出这次的经纬度，供本机地图使用。不在后台定位。
 /// - 失败（拒绝授权、无信号、反查失败）时给出中文原因，手动输入不受影响。
 @MainActor
 final class LocationProvider: NSObject, ObservableObject, CLLocationManagerDelegate {
@@ -19,7 +32,7 @@ final class LocationProvider: NSObject, ObservableObject, CLLocationManagerDeleg
 
     private let manager = CLLocationManager()
     private let geocoder = CLGeocoder()
-    private var completion: ((String) -> Void)?
+    private var completion: ((ResolvedPlace) -> Void)?
 
     override init() {
         super.init()
@@ -27,8 +40,8 @@ final class LocationProvider: NSObject, ObservableObject, CLLocationManagerDeleg
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
     }
 
-    /// 请求一次当前位置，成功后把地名回调给调用方。
-    func fillCurrentPlace(_ completion: @escaping (String) -> Void) {
+    /// 请求一次当前位置，成功后把地名和坐标回调给调用方。
+    func fillCurrentPlace(_ completion: @escaping (ResolvedPlace) -> Void) {
         self.completion = completion
         switch manager.authorizationStatus {
         case .notDetermined:
@@ -51,6 +64,7 @@ final class LocationProvider: NSObject, ObservableObject, CLLocationManagerDeleg
                 self.manager.requestLocation()
             case .denied, .restricted:
                 self.state = .failed("没有获得定位权限，可以直接手动输入地点。")
+                self.completion = nil
             default:
                 break
             }
@@ -67,6 +81,7 @@ final class LocationProvider: NSObject, ObservableObject, CLLocationManagerDeleg
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         Task { @MainActor in
             self.state = .failed("暂时没能获取到位置，可以直接手动输入地点。")
+            self.completion = nil
         }
     }
 
@@ -74,8 +89,12 @@ final class LocationProvider: NSObject, ObservableObject, CLLocationManagerDeleg
         do {
             let placemarks = try await geocoder.reverseGeocodeLocation(location, preferredLocale: Locale(identifier: "zh_CN"))
             if let name = placemarks.first.map(Self.displayName(for:)), !name.isEmpty {
+                let coordinate = LocationCoordinate.validated(
+                    latitude: location.coordinate.latitude,
+                    longitude: location.coordinate.longitude
+                )
                 state = .idle
-                completion?(name)
+                completion?(ResolvedPlace(name: name, latitude: coordinate?.0, longitude: coordinate?.1))
             } else {
                 state = .failed("没能识别出这个位置的地名，可以直接手动输入。")
             }

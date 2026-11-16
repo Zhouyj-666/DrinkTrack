@@ -38,10 +38,28 @@ final class DrinkRepository: ObservableObject {
     }
 
     /// 修改本场地点（会话详情页可编辑）。空字符串表示清除。
-    func updateLocation(of session: DrinkSessionEntity, to name: String) {
+    /// 若带上坐标，会写到本场，并把同一地点名称、但还没有坐标的旧记录补上，方便出现在地图上。
+    func updateLocation(
+        of session: DrinkSessionEntity,
+        to name: String,
+        latitude: Double? = nil,
+        longitude: Double? = nil
+    ) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        session.locationName = trimmed.isEmpty ? nil : trimmed
-        if !trimmed.isEmpty { UserPreferences.rememberLocation(trimmed) }
+        if trimmed.isEmpty {
+            session.locationName = nil
+            LocationCoordinate.apply(nil, to: session)
+            save()
+            return
+        }
+        session.locationName = trimmed
+        let coordinate = LocationCoordinate.validated(latitude: latitude, longitude: longitude)
+            ?? knownCoordinate(forPlaceName: trimmed)
+        LocationCoordinate.apply(coordinate, to: session)
+        UserPreferences.rememberLocation(trimmed)
+        if let coordinate {
+            backfillCoordinates(forPlaceName: trimmed, latitude: coordinate.0, longitude: coordinate.1)
+        }
         save()
     }
 
@@ -72,6 +90,7 @@ final class DrinkRepository: ObservableObject {
     /// - Parameters:
     ///   - customABVFraction: 仅 `.other` 类目或用户想手动覆盖默认 ABV 时传入（小数形式）
     ///   - amountFen: 可选花费，单位为分（1 元 = 100 分）。`nil` 表示这次没记花费。
+    ///   - latitude / longitude: 仅在用户点「用当前位置」或沿用同一地点已有坐标时传入。
     @discardableResult
     func addDrinkLog(
         to session: DrinkSessionEntity,
@@ -82,7 +101,9 @@ final class DrinkRepository: ObservableObject {
         note: String? = nil,
         customABVFraction: Double? = nil,
         amountFen: Int? = nil,
-        locationName: String? = nil
+        locationName: String? = nil,
+        latitude: Double? = nil,
+        longitude: Double? = nil
     ) -> DrinkLogEntity {
         let log = DrinkLogEntity(context: context)
         log.id = UUID()
@@ -105,11 +126,20 @@ final class DrinkRepository: ObservableObject {
         // FR-DR-05 地点（可选）：记在这一条上；会话还没有地点时，顺手作为本场地点。
         let trimmedLocation = locationName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !trimmedLocation.isEmpty {
+            let coordinate = LocationCoordinate.validated(latitude: latitude, longitude: longitude)
+                ?? knownCoordinate(forPlaceName: trimmedLocation)
             log.setValue(trimmedLocation, forKey: "locationName")
+            LocationCoordinate.apply(coordinate, to: log)
             if (session.locationName ?? "").isEmpty {
                 session.locationName = trimmedLocation
+                LocationCoordinate.apply(coordinate, to: session)
+            } else if session.locationName == trimmedLocation, LocationCoordinate.pair(from: session) == nil, let coordinate {
+                LocationCoordinate.apply(coordinate, to: session)
             }
             UserPreferences.rememberLocation(trimmedLocation)
+            if let coordinate {
+                backfillCoordinates(forPlaceName: trimmedLocation, latitude: coordinate.0, longitude: coordinate.1)
+            }
         }
         log.session = session
         UserPreferences.rememberLastDrink(category: category, volumeML: volumeML)
@@ -121,6 +151,96 @@ final class DrinkRepository: ObservableObject {
         guard context.hasChanges else { return }
         try? context.save()
         NotificationCenter.default.post(name: .drinkTrackDataDidChange, object: nil)
+    }
+
+    // MARK: Places / 喝酒地图
+
+    /// Exact-name lookup for a coordinate the user already granted via current location.
+    func knownCoordinate(forPlaceName name: String) -> (Double, Double)? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        let logRequest = NSFetchRequest<DrinkLogEntity>(entityName: "DrinkLog")
+        logRequest.predicate = NSPredicate(format: "locationName == %@ AND latitude != nil AND longitude != nil", trimmed)
+        logRequest.sortDescriptors = [NSSortDescriptor(keyPath: \DrinkLogEntity.timestamp, ascending: false)]
+        logRequest.fetchLimit = 1
+        if let log = try? context.fetch(logRequest).first, let pair = LocationCoordinate.pair(from: log) {
+            return pair
+        }
+
+        let sessionRequest = NSFetchRequest<DrinkSessionEntity>(entityName: "DrinkSession")
+        sessionRequest.predicate = NSPredicate(format: "locationName == %@ AND latitude != nil AND longitude != nil", trimmed)
+        sessionRequest.sortDescriptors = [NSSortDescriptor(keyPath: \DrinkSessionEntity.startedAt, ascending: false)]
+        sessionRequest.fetchLimit = 1
+        if let session = try? context.fetch(sessionRequest).first, let pair = LocationCoordinate.pair(from: session) {
+            return pair
+        }
+        return nil
+    }
+
+    /// Fill coordinates on same-named records that still have none. Existing
+    /// coordinates are left untouched so a later reading does not rewrite history.
+    func backfillCoordinates(forPlaceName name: String, latitude: Double, longitude: Double) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, LocationCoordinate.isValid(latitude: latitude, longitude: longitude) else { return }
+        let pair = (latitude, longitude)
+
+        let logRequest = NSFetchRequest<DrinkLogEntity>(entityName: "DrinkLog")
+        logRequest.predicate = NSPredicate(format: "locationName == %@ AND (latitude == nil OR longitude == nil)", trimmed)
+        for log in (try? context.fetch(logRequest)) ?? [] {
+            LocationCoordinate.apply(pair, to: log)
+        }
+
+        let sessionRequest = NSFetchRequest<DrinkSessionEntity>(entityName: "DrinkSession")
+        sessionRequest.predicate = NSPredicate(format: "locationName == %@ AND (latitude == nil OR longitude == nil)", trimmed)
+        for session in (try? context.fetch(sessionRequest)) ?? [] {
+            LocationCoordinate.apply(pair, to: session)
+        }
+    }
+
+    /// Groups the user's own sessions and logs by exact place name.
+    /// Name-only places stay in the list even when they have no coordinates.
+    func placeSummaries() -> [PlaceSummary] {
+        let sessions = fetchAllSessions(limit: 1000)
+        var buckets: [String: PlaceAccumulator] = [:]
+
+        for session in sessions {
+            let sessionPlace = Self.trimmed(session.locationName)
+            let sessionCoordinate = LocationCoordinate.pair(from: session)
+            let logs = ((session.logs as? Set<DrinkLogEntity>) ?? []).sorted {
+                ($0.timestamp ?? .distantPast) < ($1.timestamp ?? .distantPast)
+            }
+            var attributed = Set<String>()
+
+            for log in logs {
+                let logPlace = Self.trimmed(log.value(forKey: "locationName") as? String)
+                guard let place = logPlace ?? sessionPlace else { continue }
+                let coordinate = LocationCoordinate.pair(from: log)
+                    ?? (place == sessionPlace ? sessionCoordinate : nil)
+                var acc = buckets[place] ?? PlaceAccumulator(name: place)
+                acc.addLog(log, coordinate: coordinate)
+                if attributed.insert(place).inserted {
+                    acc.addSession(session)
+                }
+                buckets[place] = acc
+            }
+
+            if let sessionPlace, attributed.contains(sessionPlace) == false {
+                var acc = buckets[sessionPlace] ?? PlaceAccumulator(name: sessionPlace)
+                acc.addSession(session)
+                acc.consider(coordinate: sessionCoordinate, at: session.startedAt)
+                buckets[sessionPlace] = acc
+            }
+        }
+
+        return buckets.values
+            .map { $0.summary() }
+            .sorted { ($0.lastAt ?? .distantPast) > ($1.lastAt ?? .distantPast) }
+    }
+
+    private static func trimmed(_ raw: String?) -> String? {
+        let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return value.isEmpty ? nil : value
     }
 
     // MARK: FR-TREND-* 长期趋势报告数据源

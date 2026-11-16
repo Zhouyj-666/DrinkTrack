@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>3</string>
+	<string>4</string>
 
 	<!-- FR-HK-06 权限管理：系统授权弹窗展示的文案 -->
 	<key>NSHealthShareUsageDescription</key>
@@ -29,7 +29,7 @@
 
 	<!-- FR-DR-05 地点（可选），调用系统定位服务 -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>用于在你录入饮酒记录时可选地标注当前地点，定位失败时不影响记录，不会对外展示你的精确位置。</string>
+	<string>用于在你录入饮酒记录时可选地标注当前地点，并在本机地图上显示你标过的位置。只会在你点「用当前位置」时定位一次，不在后台定位，也不会把精确坐标放到分享卡片上。</string>
 
 	<key>UIApplicationSceneManifest</key>
 	<dict>

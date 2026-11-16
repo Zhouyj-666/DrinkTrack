@@ -9,9 +9,11 @@ struct SessionDetailView: View {
     @State private var includeHeartRateCurve = true
     @State private var showLocationOnCard = UserPreferences.shareCardShowsLocation
     @State private var locationDraft = ""
+    @State private var locationLatitude: Double? = nil
+    @State private var locationLongitude: Double? = nil
     @State private var renderedImage: Image?
     @State private var sessionAlerts: [AlertThresholdEngine.AlertResult] = []
-    @FocusState private var locationFocused: Bool
+    @StateObject private var locationProvider = LocationProvider()
 
     var body: some View {
         ScrollView {
@@ -29,7 +31,7 @@ struct SessionDetailView: View {
                     Toggle("附加本场心率走势", isOn: $includeHeartRateCurve)
                     Toggle("在卡片上显示地点", isOn: $showLocationOnCard)
                         .disabled((session.locationName ?? "").isEmpty)
-                    Text("卡片不会包含花费；心率只显示走势，不显示数值。")
+                    Text("卡片不会包含花费或坐标；心率只显示走势，不显示数值。地点默认关闭，打开后也只显示地名。")
                         .font(.caption2)
                         .foregroundStyle(DesignSystem.mutedInk)
                 }
@@ -67,7 +69,7 @@ struct SessionDetailView: View {
             }
         }
         .onAppear {
-            locationDraft = session.locationName ?? ""
+            loadLocationDraft()
             sessionAlerts = AlertThresholdEngine.decode(session.value(forKey: "alertsJSON") as? String)
             renderShareImage()
         }
@@ -80,30 +82,64 @@ struct SessionDetailView: View {
 
     private var locationEditor: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("地点").font(.headline)
             HStack {
-                Image(systemName: "mappin.and.ellipse")
-                    .foregroundStyle(DesignSystem.secondaryInk)
-                TextField("未填写，可补充", text: $locationDraft)
-                    .focused($locationFocused)
-                    .submitLabel(.done)
-                    .onSubmit(saveLocation)
-                if locationDraft != (session.locationName ?? "") {
+                Text("地点").font(.headline)
+                Spacer()
+                if locationNeedsSave {
                     Button("保存", action: saveLocation)
                         .buttonStyle(.bordered)
                         .font(.footnote)
                 }
             }
+            LocationInputField(
+                locationName: $locationDraft,
+                latitude: $locationLatitude,
+                longitude: $locationLongitude,
+                provider: locationProvider,
+                knownCoordinate: { drinkRepository.knownCoordinate(forPlaceName: $0) },
+                onResolved: saveLocation
+            )
         }
         .padding()
         .background(DesignSystem.chartSurface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    private func saveLocation() {
-        drinkRepository.updateLocation(of: session, to: locationDraft)
+    private var locationNeedsSave: Bool {
+        let trimmed = locationDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed != (session.locationName ?? "") { return true }
+        let existing = LocationCoordinate.pair(from: session)
+        let current = LocationCoordinate.validated(latitude: locationLatitude, longitude: locationLongitude)
+        switch (existing, current) {
+        case (nil, nil):
+            return false
+        case let (old?, new?):
+            return old != new
+        default:
+            return true
+        }
+    }
+
+    private func loadLocationDraft() {
         locationDraft = session.locationName ?? ""
-        locationFocused = false
+        if let pair = LocationCoordinate.pair(from: session)
+            ?? drinkRepository.knownCoordinate(forPlaceName: locationDraft) {
+            locationLatitude = pair.0
+            locationLongitude = pair.1
+        } else {
+            locationLatitude = nil
+            locationLongitude = nil
+        }
+    }
+
+    private func saveLocation() {
+        drinkRepository.updateLocation(
+            of: session,
+            to: locationDraft,
+            latitude: locationLatitude,
+            longitude: locationLongitude
+        )
+        loadLocationDraft()
         renderShareImage()
     }
 

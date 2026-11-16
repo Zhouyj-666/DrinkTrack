@@ -2,7 +2,7 @@ import XCTest
 
 /// DrinkTrack simulator smoke test (CI only).
 ///
-/// Walks through onboarding and the four main tabs, saving a screenshot at every
+/// Walks through onboarding and the main tabs, saving a screenshot at every
 /// step. It deliberately skips the HealthKit system permission prompt by tapping
 /// the in-app "skip" button, because the simulator has no real Health data and the
 /// Health permission sheet is not something CI can reliably drive. Any missing
@@ -237,6 +237,20 @@ final class DrinkTrackSmokeUITests: XCTestCase {
             }
             app.swipeUp()
             snap("tab-2-trends-scrolled")
+        }
+
+        // Drinking map. Do not tap 「用当前位置」; that would request system
+        // location permission. Opening the map of saved pins must not.
+        if tap(tabBar.buttons["地图"], "tab-map") {
+            sleep(2)
+            snap("tab-map")
+            let empty = app.staticTexts["还没有地点记录"]
+            if empty.waitForExistence(timeout: 3) {
+                snap("tab-map-empty")
+            } else {
+                app.swipeUp()
+                snap("tab-map-list")
+            }
         }
 
         // Friends

@@ -31,9 +31,9 @@ enum DataExporter {
             "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0",
             "schemaVersion": DataImporter.supportedSchemaVersion,
             "exportedAt": iso(Date()),
-            "note": "本文件由小酌场（SipSession）在本机生成。含饮酒记录、会话、可选花费和地点、本场提示和个人基础信息；不含 Apple 健康里的原始心率/血氧样本。",
-            "profile": profileJSON(context: context),
+            "note": "本文件由小酌场（SipSession）在本机生成。含饮酒记录、会话、可选花费和地点（若你曾用「用当前位置」，还会包含对应的经纬度）、本场提示和个人基础信息；不含 Apple 健康里的原始心率/血氧样本。分享卡片不会带上坐标。",
             "sessions": sessionsJSON(context: context),
+            "profile": profileJSON(context: context),
             "friends": friendsJSON(context: context)
         ]
         let data = try JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
@@ -73,6 +73,7 @@ enum DataExporter {
             if let started = session.startedAt { body["startedAt"] = iso(started) }
             if let ended = session.endedAt { body["endedAt"] = iso(ended) }
             if let place = session.locationName, !place.isEmpty { body["locationName"] = place }
+            attachCoordinates(LocationCoordinate.pair(from: session), to: &body)
             return body
         }
     }
@@ -90,6 +91,7 @@ enum DataExporter {
         if let place = log.value(forKey: "locationName") as? String, !place.isEmpty {
             body["locationName"] = place
         }
+        attachCoordinates(LocationCoordinate.pair(from: log), to: &body)
         if let abv = log.value(forKey: "abvPercent") as? NSNumber {
             body["abvPercent"] = abv.doubleValue
         }
@@ -98,6 +100,12 @@ enum DataExporter {
             body["amountYuan"] = Double(fen.intValue) / 100.0
         }
         return body
+    }
+
+    private static func attachCoordinates(_ pair: (Double, Double)?, to body: inout [String: Any]) {
+        guard let pair else { return }
+        body["latitude"] = pair.0
+        body["longitude"] = pair.1
     }
 
     private static func alertsJSON(_ session: DrinkSessionEntity) -> [[String: Any]] {
@@ -139,7 +147,7 @@ enum DataExporter {
         let logs = (try? context.fetch(request)) ?? []
 
         var lines: [String] = []
-        lines.append(["时间", "酒种类", "品牌", "容量ml", "酒精度%", "标准饮品", "地点", "花费元", "备注", "会话开始", "会话状态"].joined(separator: ","))
+        lines.append(["时间", "酒种类", "品牌", "容量ml", "酒精度%", "标准饮品", "地点", "纬度", "经度", "花费元", "备注", "会话开始", "会话状态"].joined(separator: ","))
         for log in logs {
             let category = log.category.flatMap(DrinkCategory.init(rawValue:))?.displayName ?? (log.category ?? "")
             let brand = log.brand ?? ""
@@ -153,6 +161,9 @@ enum DataExporter {
             } else {
                 yuan = ""
             }
+            // Prefer the log's own coordinates; if this log has no place of its own,
+            // inherit the session coordinate when the session place is used as fallback.
+            let resolved = LocationCoordinate.pair(from: log) ?? inheritedSessionCoordinate(for: log)
             let started = log.session?.startedAt.map(iso) ?? ""
             let status = log.session?.status ?? ""
             let fields = [
@@ -163,6 +174,8 @@ enum DataExporter {
                 abv,
                 formatNumber(log.standardDrinks),
                 place,
+                resolved.map { formatCoordinate($0.0) } ?? "",
+                resolved.map { formatCoordinate($0.1) } ?? "",
                 yuan,
                 log.note ?? "",
                 started,
@@ -174,6 +187,16 @@ enum DataExporter {
         let body = "\u{FEFF}" + lines.joined(separator: "\r\n")
         let data = Data(body.utf8)
         return try write(data: data, fileName: fileName(prefix: "小酌场-记录", ext: "csv"))
+    }
+
+    private static func inheritedSessionCoordinate(for log: DrinkLogEntity) -> (Double, Double)? {
+        guard let session = log.session else { return nil }
+        let logPlace = (log.value(forKey: "locationName") as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let sessionPlace = (session.locationName ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !logPlace.isEmpty, logPlace != sessionPlace {
+            return nil
+        }
+        return LocationCoordinate.pair(from: session)
     }
 
     // MARK: - Files
@@ -204,6 +227,10 @@ enum DataExporter {
             return String(format: "%.0f", value)
         }
         return String(format: "%.2f", value)
+    }
+
+    private static func formatCoordinate(_ value: Double) -> String {
+        String(format: "%.6f", value)
     }
 
     private static func csvEscape(_ field: String) -> String {
