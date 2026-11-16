@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// FR-DR-02：酒种类选择，横向滑动选择（8 种预设）。
+/// FR-DR-02：酒种类选择，横向滑动选择（含白酒、啤酒、黄酒、烧酒、预调酒等常见种类）。
 struct DrinkCategoryPicker: View {
     @Binding var selection: DrinkCategory
 

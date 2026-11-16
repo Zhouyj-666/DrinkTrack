@@ -100,6 +100,7 @@ final class DrinkTrackSmokeUITests: XCTestCase {
     func testSmokeWalkthrough() throws {
         continueAfterFailure = true
         app = XCUIApplication()
+        app.launchArguments += ["-SkipBrandSplash"]
 
         addUIInterruptionMonitor(withDescription: "System alerts") { [weak self] alert in
             self?.note("System alert appeared: \(alert.label)")

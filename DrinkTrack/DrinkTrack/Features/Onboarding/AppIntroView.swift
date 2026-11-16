@@ -20,7 +20,7 @@ struct AppIntroView: View {
             Feature(
                 icon: "wineglass.fill",
                 title: "记录你喝了什么",
-                detail: "选酒种、填杯数，自动换算成标准饮品数，8 种常见酒类都有预设杯型。",
+                detail: "选酒种、填杯数，自动换算成标准饮品数，常见酒类都有预设杯型，也可以在品牌库里搜。",
                 tint: DesignSystem.categorical[1]
             ),
             Feature(

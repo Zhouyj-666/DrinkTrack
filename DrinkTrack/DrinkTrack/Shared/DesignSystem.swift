@@ -37,7 +37,7 @@ enum DesignSystem {
     static let statusSerious = Color(hex: "#ec835a")
     static let statusCritical = Color(hex: "#d03b3b")
 
-    // MARK: Categorical（按固定顺序分配，8 种酒类正好对应 8 个槽位，顺序取自 palette.md）
+    // MARK: Categorical（按固定顺序分配，色板仍是 8 槽，超过的酒类按模循环，顺序取自 palette.md）
     static let categorical: [Color] = [
         Color(light: "#2a78d6", dark: "#3987e5"), // 1 blue
         Color(light: "#eb6834", dark: "#d95926"), // 2 orange

@@ -24,7 +24,9 @@ DrinkTrack/DrinkTrack/Assets.xcassets/AppIcon.appiconset/AppIcon.png
 
 ## 开屏图
 
-开屏由 `LaunchScreen.storyboard` 全屏铺 `LaunchPortrait` / `LaunchLandscape` 图片，不再使用原来的「蓝底 + 线稿酒杯」和 `LaunchLogo`。
+开屏由 `LaunchScreenV2.storyboard` 全屏铺独立打包的 `LaunchPortraitV2` / `LaunchLandscapeV2` PNG（不经过 Asset Catalog），避免系统开屏图在 storyboard 里解析不到图、只剩酒红底。资源目录里仍保留 `LaunchPortrait` / `LaunchLandscape`，给启动后的应用内开屏使用。storyboard 改名是为了刷新 iOS 对同一 Bundle ID 的开屏缓存；若覆盖安装后仍看到旧开屏，可能需要删掉 App 再装一次（会清空本机数据，装前请先导出备份）。应用内开屏会再显示约 1 秒合成稿，然后淡入主界面，这样冷启动时也能真正看到图。
+
+不再使用原来的「蓝底 + 线稿酒杯」和 `LaunchLogo`。
 
 图片不是直接放大 720×1280 / 1280×720 的交付 JPG，而是按交付稿合成的更高分辨率版本：
 

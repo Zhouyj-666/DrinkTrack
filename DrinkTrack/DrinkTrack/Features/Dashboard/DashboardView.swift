@@ -8,7 +8,7 @@ struct DashboardView: View {
     @Environment(\.managedObjectContext) private var context
 
     @State private var activeSession: DrinkSessionEntity?
-    /// 最近 12 小时内结束的上一场，用于「上一场」小结卡片（查看详情 / 生成分享卡）。
+    /// 最近一场已结束的会话，用于小结卡片（查看详情 / 生成分享卡）。12 小时内仍显示「上一场已结束」。
     @State private var lastEndedSession: DrinkSessionEntity?
     @State private var showQuickLog = false
     @State private var activeAlert: AlertThresholdEngine.AlertResult?
@@ -17,6 +17,15 @@ struct DashboardView: View {
     @State private var restingHeartRate: Double = 65
     /// 录入后自增，用来强制刷新依赖会话关系的派生数据（Core Data 关系变更不会自动发布）
     @State private var logRevision = 0
+    @State private var glanceTodayVolume: Double = 0
+    @State private var glanceTodayStandard: Double = 0
+    @State private var glanceWeekVolume: Double = 0
+    @State private var glanceWeekStandard: Double = 0
+    @State private var glanceWeekSessions: Int = 0
+    @State private var glanceMonthSpendFen: Int = 0
+    @State private var glanceMonthSpendCount: Int = 0
+    @State private var glanceTopCategory: DrinkCategory?
+    @State private var glanceMix: [(DrinkCategory, Double)] = []
 
     var body: some View {
         NavigationStack {
@@ -26,7 +35,22 @@ struct DashboardView: View {
                         SessionControlView(
                             drinkRepository: drinkRepository,
                             activeSession: $activeSession,
-                            showQuickLog: $showQuickLog
+                            showQuickLog: $showQuickLog,
+                            latestHeartRate: healthKitManager.latestHeartRate
+                        )
+                        .id(logRevision)
+
+                        DashboardGlanceView(
+                            todayVolumeML: glanceTodayVolume,
+                            todayStandard: glanceTodayStandard,
+                            weekVolumeML: glanceWeekVolume,
+                            weekStandard: glanceWeekStandard,
+                            weekSessionCount: glanceWeekSessions,
+                            monthSpendFen: glanceMonthSpendFen,
+                            monthSpendCount: glanceMonthSpendCount,
+                            showSpend: UserPreferences.spendTrackingEnabled,
+                            topCategory: glanceTopCategory,
+                            mix: glanceMix
                         )
 
                         if activeSession == nil, let last = lastEndedSession {
@@ -84,6 +108,7 @@ struct DashboardView: View {
                 activeSession = drinkRepository.fetchActiveSession()
                 loadSessionAlerts()
                 loadLastEndedSession()
+                loadGlance()
                 loadRestingHeartRate()
                 await healthKitManager.resumeIfPossible()
                 await refreshHRVBaseline()
@@ -92,7 +117,14 @@ struct DashboardView: View {
             .onChange(of: activeSession) { _, _ in
                 loadSessionAlerts()
                 loadLastEndedSession()
+                loadGlance()
                 evaluateAlerts()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .drinkTrackDataDidChange)) { _ in
+                activeSession = drinkRepository.fetchActiveSession()
+                loadSessionAlerts()
+                loadLastEndedSession()
+                loadGlance()
             }
             .onChange(of: healthKitManager.recentHeartRatePoints.count) { _, _ in
                 evaluateAlerts()
@@ -114,6 +146,8 @@ struct DashboardView: View {
             .sheet(isPresented: $showQuickLog, onDismiss: {
                 // 录入面板关掉后刷新列表和图表标记
                 logRevision += 1
+                loadGlance()
+                loadLastEndedSession()
             }) {
                 if let session = activeSession {
                     QuickLogSheet(session: session, drinkRepository: drinkRepository)
@@ -129,13 +163,30 @@ struct DashboardView: View {
     }
 
     private func loadLastEndedSession() {
-        guard let last = drinkRepository.fetchArchivedSessions(limit: 1).first,
-              let endedAt = last.endedAt,
-              Date().timeIntervalSince(endedAt) < 12 * 3600 else {
-            lastEndedSession = nil
-            return
-        }
-        lastEndedSession = last
+        lastEndedSession = drinkRepository.fetchArchivedSessions(limit: 1).first
+    }
+
+    private func loadGlance() {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? calendar.startOfDay(for: now)
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? startOfWeek
+        let logs = drinkRepository.allLogs(since: min(startOfWeek, startOfMonth))
+        let result = DashboardGlanceBuilder.metrics(
+            logs: logs,
+            sessions: drinkRepository.fetchAllSessions(limit: 400),
+            now: now,
+            calendar: calendar
+        )
+        glanceTodayVolume = result.todayVolumeML
+        glanceTodayStandard = result.todayStandard
+        glanceWeekVolume = result.weekVolumeML
+        glanceWeekStandard = result.weekStandard
+        glanceWeekSessions = result.weekSessionCount
+        glanceMonthSpendFen = result.monthSpendFen
+        glanceMonthSpendCount = result.monthSpendCount
+        glanceTopCategory = result.topCategory
+        glanceMix = result.mix
     }
 
     private func loadRestingHeartRate() {
@@ -214,7 +265,7 @@ private struct LastSessionCard: View {
                 .font(.title2)
                 .foregroundStyle(DesignSystem.statusGood)
             VStack(alignment: .leading, spacing: 2) {
-                Text("上一场已结束").font(.subheadline.weight(.medium))
+                Text(isRecent ? "上一场已结束" : "最近一场").font(.subheadline.weight(.medium))
                 Text(summary)
                     .font(.caption)
                     .foregroundStyle(DesignSystem.secondaryInk)
@@ -233,11 +284,25 @@ private struct LastSessionCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
+    private var isRecent: Bool {
+        guard let endedAt = session.endedAt else { return false }
+        return Date().timeIntervalSince(endedAt) < 12 * 3600
+    }
+
     private var summary: String {
         let start = session.startedAt ?? Date()
         let end = session.endedAt ?? start
+        let volume = logs.reduce(0.0) { $0 + $1.volumeMl }
         let standard = logs.reduce(0.0) { $0 + $1.standardDrinks }
-        var text = String(format: "%d 杯 · ≈%.1f 标准饮品 · ", logs.count, standard)
+        var text = ""
+        if !isRecent {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "zh_CN")
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .short
+            text += formatter.string(from: end) + " · "
+        }
+        text += String(format: "%d 杯 · %.0f ml · ≈%.1f 标准饮品 · ", logs.count, volume, standard)
         text += UserPreferences.formatDuration(end.timeIntervalSince(start))
         if let place = session.locationName, !place.isEmpty {
             text += " · " + place

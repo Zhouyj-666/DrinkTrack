@@ -29,6 +29,7 @@ enum DataExporter {
             "app": "SipSession",
             "displayName": "小酌场",
             "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0",
+            "schemaVersion": DataImporter.supportedSchemaVersion,
             "exportedAt": iso(Date()),
             "note": "本文件由小酌场（SipSession）在本机生成。含饮酒记录、会话、可选花费和地点、本场提示和个人基础信息；不含 Apple 健康里的原始心率/血氧样本。",
             "profile": profileJSON(context: context),

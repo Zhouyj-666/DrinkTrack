@@ -9,19 +9,35 @@ struct DrinkTrackApp: App {
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @Environment(\.scenePhase) private var scenePhase
+    @State private var showBrandSplash = !Self.shouldSkipBrandSplash
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if hasCompletedOnboarding {
-                    RootView(friendRepository: friendRepository)
-                } else {
-                    OnboardingCoordinator(onFinished: { hasCompletedOnboarding = true })
+            ZStack {
+                Group {
+                    if hasCompletedOnboarding {
+                        RootView(friendRepository: friendRepository)
+                    } else {
+                        OnboardingCoordinator(onFinished: { hasCompletedOnboarding = true })
+                    }
+                }
+
+                if showBrandSplash {
+                    BrandSplashView()
+                        .transition(.opacity)
+                        .zIndex(1)
                 }
             }
             .environment(\.managedObjectContext, persistence.viewContext)
             .environmentObject(healthKitManager)
             .environmentObject(drinkRepository)
+            .task {
+                guard showBrandSplash else { return }
+                try? await Task.sleep(for: .milliseconds(1200))
+                withAnimation(.easeOut(duration: 0.35)) {
+                    showBrandSplash = false
+                }
+            }
         }
         // FR-DASH-04：每次 App 变为 active（冷启动或从后台回到前台）都做一次自动归档扫描，
         // 而不是只在第一次出现时跑一次（.onAppear 只在视图首次出现时触发一次，无法覆盖
@@ -35,5 +51,12 @@ struct DrinkTrackApp: App {
                 Task { await healthKitManager.resumeIfPossible() }
             }
         }
+    }
+    /// UI tests and debug launches can skip the branded splash so walkthroughs
+    /// do not wait on the animation. Also skip when running under XCTest.
+    private static var shouldSkipBrandSplash: Bool {
+        if CommandLine.arguments.contains("-SkipBrandSplash") { return true }
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil { return true }
+        return false
     }
 }

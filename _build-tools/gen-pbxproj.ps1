@@ -58,14 +58,21 @@ $swiftFiles = @(
     "Shared/RootView.swift",
     "Shared/UserPreferences.swift",
     "Shared/LocationProvider.swift",
-    "Shared/QRCodeImage.swift"
+    "Shared/QRCodeImage.swift",
+    "Shared/BrandSplashView.swift",
+    "Features/Dashboard/DashboardGlanceView.swift",
+    "Repositories/DataImporter.swift"
 )
 
 $plainOtherFiles = @(
     @{ Path = "Info.plist"; Type = "text.plist.xml" },
     @{ Path = "DrinkTrack.entitlements"; Type = "text.plist.entitlements" },
     @{ Path = "Assets.xcassets"; Type = "folder.assetcatalog" },
-    @{ Path = "LaunchScreen.storyboard"; Type = "file.storyboard" }
+    @{ Path = "LaunchScreenV2.storyboard"; Type = "file.storyboard" },
+    @{ Path = "LaunchImages/LaunchPortraitV2@2x.png"; Type = "image.png" },
+    @{ Path = "LaunchImages/LaunchPortraitV2@3x.png"; Type = "image.png" },
+    @{ Path = "LaunchImages/LaunchLandscapeV2@2x.png"; Type = "image.png" },
+    @{ Path = "LaunchImages/LaunchLandscapeV2@3x.png"; Type = "image.png" }
 )
 
 $xcdatamodeldRel = "Model/DrinkTrack.xcdatamodeld"
@@ -171,7 +178,7 @@ function Walk-Node($node) {
         if ($node.FileType -eq 'sourcecode.swift') {
             $bfId = New-Id
             [void]$sourceBuildFiles.Add(@{ Id = $bfId; FileRefId = $id; Name = $node.Name })
-        } elseif ($node.FileType -eq 'folder.assetcatalog' -or $node.FileType -eq 'file.storyboard') {
+        } elseif ($node.FileType -eq 'folder.assetcatalog' -or $node.FileType -eq 'file.storyboard' -or $node.FileType -eq 'image.png') {
             $bfId = New-Id
             [void]$resourceBuildFiles.Add(@{ Id = $bfId; FileRefId = $id; Name = $node.Name })
         }
@@ -512,7 +519,7 @@ $targetCommonSettings = @'
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DrinkTrack/DrinkTrack.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkTrack/Info.plist;
