@@ -36,7 +36,8 @@ struct DashboardView: View {
                             drinkRepository: drinkRepository,
                             activeSession: $activeSession,
                             showQuickLog: $showQuickLog,
-                            latestHeartRate: healthKitManager.latestHeartRate
+                            latestHeartRate: healthKitManager.latestInSessionHeartRate,
+                            latestSpO2: healthKitManager.latestInSessionSpO2
                         )
                         .id(logRevision)
 
@@ -86,13 +87,19 @@ struct DashboardView: View {
                         }
 
                         HeartRateChartView(
-                            points: healthKitManager.recentHeartRatePoints,
+                            points: healthKitManager.chartHeartRatePoints,
                             drinkMarks: drinkMarkTimestamps,
-                            watchConnected: healthKitManager.watchSeemsConnected
+                            watchConnected: healthKitManager.watchSeemsConnected,
+                            isInSession: healthKitManager.isChartInSession
                         )
 
-                        if !healthKitManager.recentSpO2Points.isEmpty || healthKitManager.latestSpO2 != nil {
-                            SpO2View(points: healthKitManager.recentSpO2Points, current: healthKitManager.latestSpO2)
+                        if !healthKitManager.chartSpO2Points.isEmpty || healthKitManager.latestInSessionSpO2 != nil {
+                            SpO2View(
+                                points: healthKitManager.chartSpO2Points,
+                                current: healthKitManager.isChartInSession
+                                    ? healthKitManager.latestInSessionSpO2
+                                    : healthKitManager.latestSpO2
+                            )
                         }
                     }
                     .padding()
@@ -106,15 +113,18 @@ struct DashboardView: View {
             .navigationTitle("仪表盘")
             .task {
                 activeSession = drinkRepository.fetchActiveSession()
+                healthKitManager.setActiveSessionWindow(startedAt: activeSession?.startedAt)
                 loadSessionAlerts()
                 loadLastEndedSession()
                 loadGlance()
                 loadRestingHeartRate()
                 await healthKitManager.resumeIfPossible()
                 await refreshHRVBaseline()
+                await refreshRestingHeartRateFromHealth()
                 evaluateAlerts()
             }
-            .onChange(of: activeSession) { _, _ in
+            .onChange(of: activeSession) { _, session in
+                healthKitManager.setActiveSessionWindow(startedAt: session?.startedAt)
                 loadSessionAlerts()
                 loadLastEndedSession()
                 loadGlance()
@@ -196,6 +206,15 @@ struct DashboardView: View {
             restingHeartRate = Double(profile.restingHeartRate)
         } else {
             restingHeartRate = AlertThresholdEngine.defaultRestingHeartRate
+        }
+    }
+
+    /// Prefer a real HealthKit resting-HR average when one exists, without
+    /// inventing a value when Health is off or has no samples.
+    private func refreshRestingHeartRateFromHealth() async {
+        guard healthKitManager.connectionState.isUsable else { return }
+        if let avg = await healthKitManager.fetchRestingHeartRateAverage(), avg > 0 {
+            restingHeartRate = avg
         }
     }
 

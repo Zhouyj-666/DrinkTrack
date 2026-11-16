@@ -32,6 +32,7 @@ struct DrinkTrackApp: App {
             .environmentObject(healthKitManager)
             .environmentObject(drinkRepository)
             .task {
+                PhoneWatchBridge.shared.start(repository: drinkRepository, health: healthKitManager)
                 guard showBrandSplash else { return }
                 try? await Task.sleep(for: .milliseconds(1200))
                 withAnimation(.easeOut(duration: 0.35)) {
@@ -49,6 +50,7 @@ struct DrinkTrackApp: App {
             if newPhase == .active {
                 SessionAutoArchiver.runAutoArchiveSweep(context: persistence.viewContext)
                 Task { await healthKitManager.resumeIfPossible() }
+                PhoneWatchBridge.shared.publishSnapshot()
             }
         }
     }

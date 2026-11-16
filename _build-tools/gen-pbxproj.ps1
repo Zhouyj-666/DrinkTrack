@@ -61,7 +61,8 @@ $swiftFiles = @(
     "Shared/QRCodeImage.swift",
     "Shared/BrandSplashView.swift",
     "Features/Dashboard/DashboardGlanceView.swift",
-    "Repositories/DataImporter.swift"
+    "Repositories/DataImporter.swift",
+    "WatchConnectivity/PhoneWatchBridge.swift"
 )
 
 $plainOtherFiles = @(
@@ -84,6 +85,24 @@ $xcdatamodelChildNames = @(
 )
 $xcdatamodelCurrentName = "DrinkTrack 4.xcdatamodel"
 
+# Watch companion and files shared with the iPhone target live next to the
+# iPhone source folder (siblings of DrinkTrack/ under the .xcodeproj dir).
+# Keep them OUT of $swiftFiles so later iPhone-only file adds cannot wipe
+# the Watch target when this script is re-run.
+$sharedRoot = Join-Path $ProjectDir "SharedWatch"
+$watchRoot = Join-Path $ProjectDir "DrinkTrackWatch"
+$sharedSwiftFiles = @(
+    "SessionSyncPayload.swift"
+)
+$watchSwiftFiles = @(
+    "DrinkTrackWatchApp.swift",
+    "WatchRootView.swift",
+    "WatchSessionStore.swift"
+)
+$watchResourceFiles = @(
+    @{ Path = "Assets.xcassets"; Type = "folder.assetcatalog" }
+)
+
 # ---- 2. Verify every referenced file actually exists on disk ----
 foreach ($f in $swiftFiles) {
     $full = Join-Path $srcRoot $f
@@ -97,7 +116,19 @@ foreach ($childName in $xcdatamodelChildNames) {
     $xcdatamodelFull = Join-Path $srcRoot (Join-Path $xcdatamodeldRel $childName)
     if (-not (Test-Path $xcdatamodelFull)) { throw "Missing Core Data model: $xcdatamodelFull" }
 }
-Write-Host ("Verified {0} swift files + {1} other files + {2} Core Data model versions" -f $swiftFiles.Count, $plainOtherFiles.Count, $xcdatamodelChildNames.Count)
+foreach ($f in $sharedSwiftFiles) {
+    $full = Join-Path $sharedRoot $f
+    if (-not (Test-Path $full)) { throw "Missing shared file: $full" }
+}
+foreach ($f in $watchSwiftFiles) {
+    $full = Join-Path $watchRoot $f
+    if (-not (Test-Path $full)) { throw "Missing Watch file: $full" }
+}
+foreach ($f in $watchResourceFiles) {
+    $full = Join-Path $watchRoot $f.Path
+    if (-not (Test-Path $full)) { throw "Missing Watch resource: $full" }
+}
+Write-Host ("Verified {0} swift files + {1} other files + {2} Core Data model versions + {3} shared + {4} Watch files" -f $swiftFiles.Count, $plainOtherFiles.Count, $xcdatamodelChildNames.Count, $sharedSwiftFiles.Count, ($watchSwiftFiles.Count + $watchResourceFiles.Count))
 
 function Format-PbxValue($name) {
     if ($name -match '[^A-Za-z0-9._]') {
@@ -256,6 +287,55 @@ $projectDebugConfigId   = 'FFFFFFFF0000000000000009'
 $projectReleaseConfigId = 'FFFFFFFF000000000000000D'
 $projectConfigListId    = 'FFFFFFFF000000000000000E'
 
+# Watch target IDs are also fixed so regenerating the iPhone file list never
+# shifts the Watch product, embed phase, or target dependency.
+$watchAppRefId            = 'FFFFFFFF0000000000000010'
+$watchTargetId            = 'FFFFFFFF0000000000000011'
+$watchSourcesPhaseId      = 'FFFFFFFF0000000000000012'
+$watchResourcesPhaseId    = 'FFFFFFFF0000000000000013'
+$watchFrameworksPhaseId   = 'FFFFFFFF0000000000000014'
+$watchDebugConfigId       = 'FFFFFFFF0000000000000015'
+$watchReleaseConfigId     = 'FFFFFFFF0000000000000016'
+$watchConfigListId        = 'FFFFFFFF0000000000000017'
+$watchEmbedPhaseId        = 'FFFFFFFF0000000000000018'
+$watchEmbedBuildFileId    = 'FFFFFFFF0000000000000019'
+$watchDependencyId        = 'FFFFFFFF000000000000001A'
+$watchProxyId             = 'FFFFFFFF000000000000001B'
+
+# Register shared + Watch file refs and build files. Shared Swift is compiled
+# into BOTH targets (two PBXBuildFile entries, one fileRef).
+$watchSourceBuildFiles = New-Object System.Collections.ArrayList
+$watchResourceBuildFiles = New-Object System.Collections.ArrayList
+$sharedFileRefIds = New-Object System.Collections.ArrayList
+$watchGroupChildIds = New-Object System.Collections.ArrayList
+
+$sharedGroupId = New-Id
+foreach ($f in $sharedSwiftFiles) {
+    $id = New-Id
+    [void]$fileRefs.Add(@{ Id = $id; Name = $f; FileType = 'sourcecode.swift' })
+    [void]$sharedFileRefIds.Add(@{ Id = $id; Name = $f })
+    $iphoneBf = New-Id
+    [void]$sourceBuildFiles.Add(@{ Id = $iphoneBf; FileRefId = $id; Name = $f })
+    $watchBf = New-Id
+    [void]$watchSourceBuildFiles.Add(@{ Id = $watchBf; FileRefId = $id; Name = $f })
+}
+
+$watchGroupId = New-Id
+foreach ($f in $watchSwiftFiles) {
+    $id = New-Id
+    [void]$fileRefs.Add(@{ Id = $id; Name = $f; FileType = 'sourcecode.swift' })
+    [void]$watchGroupChildIds.Add(@{ Id = $id; Name = $f })
+    $bf = New-Id
+    [void]$watchSourceBuildFiles.Add(@{ Id = $bf; FileRefId = $id; Name = $f })
+}
+foreach ($f in $watchResourceFiles) {
+    $id = New-Id
+    [void]$fileRefs.Add(@{ Id = $id; Name = $f.Path; FileType = $f.Type })
+    [void]$watchGroupChildIds.Add(@{ Id = $id; Name = $f.Path })
+    $bf = New-Id
+    [void]$watchResourceBuildFiles.Add(@{ Id = $bf; FileRefId = $id; Name = $f.Path })
+}
+
 # ---- 6. Emit text ----
 $sb = New-Object System.Text.StringBuilder
 function W($s) { [void]$sb.AppendLine($s) }
@@ -276,11 +356,19 @@ foreach ($bf in $sourceBuildFiles) {
 foreach ($bf in $resourceBuildFiles) {
     W "		$($bf.Id) /* $($bf.Name) in Resources */ = {isa = PBXBuildFile; fileRef = $($bf.FileRefId) /* $($bf.Name) */; };"
 }
+foreach ($bf in $watchSourceBuildFiles) {
+    W "		$($bf.Id) /* $($bf.Name) in Sources */ = {isa = PBXBuildFile; fileRef = $($bf.FileRefId) /* $($bf.Name) */; };"
+}
+foreach ($bf in $watchResourceBuildFiles) {
+    W "		$($bf.Id) /* $($bf.Name) in Resources */ = {isa = PBXBuildFile; fileRef = $($bf.FileRefId) /* $($bf.Name) */; };"
+}
+W "		$watchEmbedBuildFileId /* DrinkTrackWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = $watchAppRefId /* DrinkTrackWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };"
 W '/* End PBXBuildFile section */'
 W ''
 
 W '/* Begin PBXFileReference section */'
 W "		$appRefId /* DrinkTrack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DrinkTrack.app; sourceTree = BUILT_PRODUCTS_DIR; };"
+W "		$watchAppRefId /* DrinkTrackWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DrinkTrackWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };"
 foreach ($fr in $fileRefs) {
     $quotedName = Format-PbxValue $fr.Name
     if ($fr.FileType -eq 'sourcecode.swift') {
@@ -296,6 +384,13 @@ W ''
 
 W '/* Begin PBXFrameworksBuildPhase section */'
 W "		$frameworksPhaseId /* Frameworks */ = {"
+W '			isa = PBXFrameworksBuildPhase;'
+W '			buildActionMask = 2147483647;'
+W '			files = ('
+W '			);'
+W '			runOnlyForDeploymentPostprocessing = 0;'
+W '		};'
+W "		$watchFrameworksPhaseId /* Frameworks */ = {"
 W '			isa = PBXFrameworksBuildPhase;'
 W '			buildActionMask = 2147483647;'
 W '			files = ('
@@ -336,10 +431,31 @@ foreach ($g in $groups) {
     W '			sourceTree = "<group>";'
     W '		};'
 }
+W "		$sharedGroupId /* SharedWatch */ = {"
+W '			isa = PBXGroup;'
+W '			children = ('
+foreach ($c in $sharedFileRefIds) {
+    W "				$($c.Id) /* $($c.Name) */,"
+}
+W '			);'
+W '			path = SharedWatch;'
+W '			sourceTree = "<group>";'
+W '		};'
+W "		$watchGroupId /* DrinkTrackWatch */ = {"
+W '			isa = PBXGroup;'
+W '			children = ('
+foreach ($c in $watchGroupChildIds) {
+    W "				$($c.Id) /* $($c.Name) */,"
+}
+W '			);'
+W '			path = DrinkTrackWatch;'
+W '			sourceTree = "<group>";'
+W '		};'
 W "		$productsGroupId /* Products */ = {"
 W '			isa = PBXGroup;'
 W '			children = ('
 W "				$appRefId /* DrinkTrack.app */,"
+W "				$watchAppRefId /* DrinkTrackWatch.app */,"
 W '			);'
 W '			name = Products;'
 W '			sourceTree = "<group>";'
@@ -348,6 +464,8 @@ W "		$mainGroupId = {"
 W '			isa = PBXGroup;'
 W '			children = ('
 W "				$rootGroupId /* DrinkTrack */,"
+W "				$sharedGroupId /* SharedWatch */,"
+W "				$watchGroupId /* DrinkTrackWatch */,"
 W "				$productsGroupId /* Products */,"
 W '			);'
 W '			sourceTree = "<group>";'
@@ -381,14 +499,33 @@ W '			buildPhases = ('
 W "				$sourcesPhaseId /* Sources */,"
 W "				$frameworksPhaseId /* Frameworks */,"
 W "				$resourcesPhaseId /* Resources */,"
+W "				$watchEmbedPhaseId /* Embed Watch Content */,"
+W '			);'
+W '			buildRules = ('
+W '			);'
+W '			dependencies = ('
+W "				$watchDependencyId /* PBXTargetDependency */,"
+W '			);'
+W '			name = DrinkTrack;'
+W '			productName = DrinkTrack;'
+W "			productReference = $appRefId /* DrinkTrack.app */;"
+W '			productType = "com.apple.product-type.application";'
+W '		};'
+W "		$watchTargetId /* DrinkTrackWatch */ = {"
+W '			isa = PBXNativeTarget;'
+W "			buildConfigurationList = $watchConfigListId /* Build configuration list for PBXNativeTarget `"DrinkTrackWatch`" */;"
+W '			buildPhases = ('
+W "				$watchSourcesPhaseId /* Sources */,"
+W "				$watchFrameworksPhaseId /* Frameworks */,"
+W "				$watchResourcesPhaseId /* Resources */,"
 W '			);'
 W '			buildRules = ('
 W '			);'
 W '			dependencies = ('
 W '			);'
-W '			name = DrinkTrack;'
-W '			productName = DrinkTrack;'
-W "			productReference = $appRefId /* DrinkTrack.app */;"
+W '			name = DrinkTrackWatch;'
+W '			productName = DrinkTrackWatch;'
+W "			productReference = $watchAppRefId /* DrinkTrackWatch.app */;"
 W '			productType = "com.apple.product-type.application";'
 W '		};'
 W '/* End PBXNativeTarget section */'
@@ -404,6 +541,9 @@ W '				LastUpgradeCheck = 1530;'
 W '				TargetAttributes = {'
 W "					$targetId = {"
 W '						CreatedOnToolsVersion = 15.3;'
+W '					};'
+W "					$watchTargetId = {"
+W '						CreatedOnToolsVersion = 16.0;'
 W '					};'
 W '				};'
 W '			};'
@@ -421,6 +561,7 @@ W '			projectDirPath = "";'
 W '			projectRoot = "";'
 W '			targets = ('
 W "				$targetId /* DrinkTrack */,"
+W "				$watchTargetId /* DrinkTrackWatch */,"
 W '			);'
 W '		};'
 W '/* End PBXProject section */'
@@ -451,7 +592,62 @@ foreach ($bf in $sourceBuildFiles) {
 W '			);'
 W '			runOnlyForDeploymentPostprocessing = 0;'
 W '		};'
+W "		$watchResourcesPhaseId /* Resources */ = {"
+W '			isa = PBXResourcesBuildPhase;'
+W '			buildActionMask = 2147483647;'
+W '			files = ('
+foreach ($bf in $watchResourceBuildFiles) {
+    W "				$($bf.Id) /* $($bf.Name) in Resources */,"
+}
+W '			);'
+W '			runOnlyForDeploymentPostprocessing = 0;'
+W '		};'
+W "		$watchSourcesPhaseId /* Sources */ = {"
+W '			isa = PBXSourcesBuildPhase;'
+W '			buildActionMask = 2147483647;'
+W '			files = ('
+foreach ($bf in $watchSourceBuildFiles) {
+    W "				$($bf.Id) /* $($bf.Name) in Sources */,"
+}
+W '			);'
+W '			runOnlyForDeploymentPostprocessing = 0;'
+W '		};'
 W '/* End PBXSourcesBuildPhase section */'
+W ''
+
+W '/* Begin PBXCopyFilesBuildPhase section */'
+W "		$watchEmbedPhaseId /* Embed Watch Content */ = {"
+W '			isa = PBXCopyFilesBuildPhase;'
+W '			buildActionMask = 2147483647;'
+W '			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";'
+W '			dstSubfolderSpec = 16;'
+W '			files = ('
+W "				$watchEmbedBuildFileId /* DrinkTrackWatch.app in Embed Watch Content */,"
+W '			);'
+W '			name = "Embed Watch Content";'
+W '			runOnlyForDeploymentPostprocessing = 0;'
+W '		};'
+W '/* End PBXCopyFilesBuildPhase section */'
+W ''
+
+W '/* Begin PBXTargetDependency section */'
+W "		$watchDependencyId /* PBXTargetDependency */ = {"
+W '			isa = PBXTargetDependency;'
+W "			target = $watchTargetId /* DrinkTrackWatch */;"
+W "			targetProxy = $watchProxyId /* PBXContainerItemProxy */;"
+W '		};'
+W '/* End PBXTargetDependency section */'
+W ''
+
+W '/* Begin PBXContainerItemProxy section */'
+W "		$watchProxyId /* PBXContainerItemProxy */ = {"
+W '			isa = PBXContainerItemProxy;'
+W "			containerPortal = $projectId /* Project object */;"
+W '			proxyType = 1;'
+W "			remoteGlobalIDString = $watchTargetId;"
+W '			remoteInfo = DrinkTrackWatch;'
+W '		};'
+W '/* End PBXContainerItemProxy section */'
 W ''
 
 $commonProjectSettings = @'
@@ -519,7 +715,7 @@ $targetCommonSettings = @'
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DrinkTrack/DrinkTrack.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkTrack/Info.plist;
@@ -551,6 +747,52 @@ W $targetCommonSettings
 W '			};'
 W '			name = Release;'
 W '		};'
+
+# Build the visible brand name from code points so this script can stay
+# ASCII-only (Windows PowerShell 5 misreads BOM-less UTF-8 and would
+# otherwise corrupt the pbxproj).
+$brandDisplayName = -join @([char]0x5C0F, [char]0x914C, [char]0x573A)
+
+$watchCommonSettings = @'
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "BRAND_DISPLAY_NAME";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.drinktrack.app;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.drinktrack.app.watchkitapp;
+				PRODUCT_NAME = DrinkTrackWatch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+'@
+$watchCommonSettings = $watchCommonSettings.Replace('BRAND_DISPLAY_NAME', $brandDisplayName)
+
+W "		$watchDebugConfigId /* Debug */ = {"
+W '			isa = XCBuildConfiguration;'
+W '			buildSettings = {'
+W $watchCommonSettings
+W '			};'
+W '			name = Debug;'
+W '		};'
+W "		$watchReleaseConfigId /* Release */ = {"
+W '			isa = XCBuildConfiguration;'
+W '			buildSettings = {'
+W $watchCommonSettings
+W '			};'
+W '			name = Release;'
+W '		};'
 W '/* End XCBuildConfiguration section */'
 W ''
 
@@ -569,6 +811,15 @@ W '			isa = XCConfigurationList;'
 W '			buildConfigurations = ('
 W "				$targetDebugConfigId /* Debug */,"
 W "				$targetReleaseConfigId /* Release */,"
+W '			);'
+W '			defaultConfigurationIsVisible = 0;'
+W '			defaultConfigurationName = Release;'
+W '		};'
+W "		$watchConfigListId /* Build configuration list for PBXNativeTarget `"DrinkTrackWatch`" */ = {"
+W '			isa = XCConfigurationList;'
+W '			buildConfigurations = ('
+W "				$watchDebugConfigId /* Debug */,"
+W "				$watchReleaseConfigId /* Release */,"
 W '			);'
 W '			defaultConfigurationIsVisible = 0;'
 W '			defaultConfigurationName = Release;'

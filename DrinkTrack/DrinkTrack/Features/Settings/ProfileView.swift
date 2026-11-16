@@ -48,6 +48,19 @@ struct ProfileView: View {
                 }
 
                 Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Apple Watch", systemImage: "applewatch")
+                            .font(.subheadline.weight(.medium))
+                        Text("手表上的「小酌场」可以查看本场、记一杯，也可以开始或结束会话。数据通过 iPhone 上的小酌场同步。用个人 Apple ID 侧载时，手表 App 通常装不上，这是签名限制，不是功能没做。若要用手表和健康数据，需要用带正式签名的方式安装，例如加入 Apple 开发者计划后，用 Xcode 或 TestFlight 安装。")
+                            .font(.caption)
+                            .foregroundStyle(DesignSystem.secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                } header: {
+                    Text("手表")
+                }
+
+                Section {
                     DisclosureGroup(isExpanded: $isPersonalInfoExpanded) {
                         Picker("性别", selection: $gender) {
                             ForEach(genders, id: \.0) { Text($0.1).tag($0.0) }

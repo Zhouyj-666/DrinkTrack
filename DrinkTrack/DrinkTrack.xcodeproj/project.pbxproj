@@ -62,16 +62,25 @@
 		00000000000000000000007B /* LocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007A /* LocationProvider.swift */; };
 		00000000000000000000007D /* QRCodeImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007C /* QRCodeImage.swift */; };
 		00000000000000000000007F /* BrandSplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007E /* BrandSplashView.swift */; };
-		000000000000000000000083 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000082 /* Assets.xcassets */; };
-		000000000000000000000085 /* LaunchScreenV2.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000084 /* LaunchScreenV2.storyboard */; };
-		000000000000000000000088 /* LaunchPortraitV2@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000087 /* LaunchPortraitV2@2x.png */; };
-		00000000000000000000008A /* LaunchPortraitV2@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000089 /* LaunchPortraitV2@3x.png */; };
-		00000000000000000000008C /* LaunchLandscapeV2@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000008B /* LaunchLandscapeV2@2x.png */; };
-		00000000000000000000008E /* LaunchLandscapeV2@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000008D /* LaunchLandscapeV2@3x.png */; };
+		000000000000000000000082 /* PhoneWatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000081 /* PhoneWatchBridge.swift */; };
+		000000000000000000000094 /* SessionSyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000093 /* SessionSyncPayload.swift */; };
+		000000000000000000000086 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000085 /* Assets.xcassets */; };
+		000000000000000000000088 /* LaunchScreenV2.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000087 /* LaunchScreenV2.storyboard */; };
+		00000000000000000000008B /* LaunchPortraitV2@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000008A /* LaunchPortraitV2@2x.png */; };
+		00000000000000000000008D /* LaunchPortraitV2@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000008C /* LaunchPortraitV2@3x.png */; };
+		00000000000000000000008F /* LaunchLandscapeV2@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000008E /* LaunchLandscapeV2@2x.png */; };
+		000000000000000000000091 /* LaunchLandscapeV2@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000090 /* LaunchLandscapeV2@3x.png */; };
+		000000000000000000000095 /* SessionSyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000093 /* SessionSyncPayload.swift */; };
+		000000000000000000000098 /* DrinkTrackWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000097 /* DrinkTrackWatchApp.swift */; };
+		00000000000000000000009A /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000099 /* WatchRootView.swift */; };
+		00000000000000000000009C /* WatchSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009B /* WatchSessionStore.swift */; };
+		00000000000000000000009E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009D /* Assets.xcassets */; };
+		FFFFFFFF0000000000000019 /* DrinkTrackWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = FFFFFFFF0000000000000010 /* DrinkTrackWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		FFFFFFFF000000000000000A /* DrinkTrack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DrinkTrack.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FFFFFFFF0000000000000010 /* DrinkTrackWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DrinkTrackWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000002 /* DrinkTrackApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkTrackApp.swift; sourceTree = "<group>"; };
 		000000000000000000000005 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		000000000000000000000007 /* DrinkTrack.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = DrinkTrack.xcdatamodel; sourceTree = "<group>"; };
@@ -130,18 +139,31 @@
 		00000000000000000000007A /* LocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationProvider.swift; sourceTree = "<group>"; };
 		00000000000000000000007C /* QRCodeImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCodeImage.swift; sourceTree = "<group>"; };
 		00000000000000000000007E /* BrandSplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandSplashView.swift; sourceTree = "<group>"; };
-		000000000000000000000080 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		000000000000000000000081 /* DrinkTrack.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DrinkTrack.entitlements; sourceTree = "<group>"; };
-		000000000000000000000082 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		000000000000000000000084 /* LaunchScreenV2.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreenV2.storyboard; sourceTree = "<group>"; };
-		000000000000000000000087 /* LaunchPortraitV2@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchPortraitV2@2x.png"; sourceTree = "<group>"; };
-		000000000000000000000089 /* LaunchPortraitV2@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchPortraitV2@3x.png"; sourceTree = "<group>"; };
-		00000000000000000000008B /* LaunchLandscapeV2@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchLandscapeV2@2x.png"; sourceTree = "<group>"; };
-		00000000000000000000008D /* LaunchLandscapeV2@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchLandscapeV2@3x.png"; sourceTree = "<group>"; };
+		000000000000000000000081 /* PhoneWatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneWatchBridge.swift; sourceTree = "<group>"; };
+		000000000000000000000083 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		000000000000000000000084 /* DrinkTrack.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DrinkTrack.entitlements; sourceTree = "<group>"; };
+		000000000000000000000085 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		000000000000000000000087 /* LaunchScreenV2.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreenV2.storyboard; sourceTree = "<group>"; };
+		00000000000000000000008A /* LaunchPortraitV2@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchPortraitV2@2x.png"; sourceTree = "<group>"; };
+		00000000000000000000008C /* LaunchPortraitV2@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchPortraitV2@3x.png"; sourceTree = "<group>"; };
+		00000000000000000000008E /* LaunchLandscapeV2@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchLandscapeV2@2x.png"; sourceTree = "<group>"; };
+		000000000000000000000090 /* LaunchLandscapeV2@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchLandscapeV2@3x.png"; sourceTree = "<group>"; };
+		000000000000000000000093 /* SessionSyncPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSyncPayload.swift; sourceTree = "<group>"; };
+		000000000000000000000097 /* DrinkTrackWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkTrackWatchApp.swift; sourceTree = "<group>"; };
+		000000000000000000000099 /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
+		00000000000000000000009B /* WatchSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSessionStore.swift; sourceTree = "<group>"; };
+		00000000000000000000009D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		FFFFFFFF0000000000000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FFFFFFFF0000000000000014 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -295,13 +317,21 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
-		000000000000000000000086 /* LaunchImages */ = {
+		000000000000000000000080 /* WatchConnectivity */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000087,
-				000000000000000000000089,
-				00000000000000000000008B,
-				00000000000000000000008D,
+				000000000000000000000081,
+			);
+			path = WatchConnectivity;
+			sourceTree = "<group>";
+		};
+		000000000000000000000089 /* LaunchImages */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000008A,
+				00000000000000000000008C,
+				00000000000000000000008E,
+				000000000000000000000090,
 			);
 			path = LaunchImages;
 			sourceTree = "<group>";
@@ -317,18 +347,39 @@
 				000000000000000000000028,
 				00000000000000000000006F,
 				000000000000000000000080,
-				000000000000000000000081,
-				000000000000000000000082,
+				000000000000000000000083,
 				000000000000000000000084,
-				000000000000000000000086,
+				000000000000000000000085,
+				000000000000000000000087,
+				000000000000000000000089,
 			);
 			path = DrinkTrack;
+			sourceTree = "<group>";
+		};
+		000000000000000000000092 /* SharedWatch */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000093 /* SessionSyncPayload.swift */,
+			);
+			path = SharedWatch;
+			sourceTree = "<group>";
+		};
+		000000000000000000000096 /* DrinkTrackWatch */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000097 /* DrinkTrackWatchApp.swift */,
+				000000000000000000000099 /* WatchRootView.swift */,
+				00000000000000000000009B /* WatchSessionStore.swift */,
+				00000000000000000000009D /* Assets.xcassets */,
+			);
+			path = DrinkTrackWatch;
 			sourceTree = "<group>";
 		};
 		FFFFFFFF000000000000000B /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				FFFFFFFF000000000000000A /* DrinkTrack.app */,
+				FFFFFFFF0000000000000010 /* DrinkTrackWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -337,6 +388,8 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000001 /* DrinkTrack */,
+				000000000000000000000092 /* SharedWatch */,
+				000000000000000000000096 /* DrinkTrackWatch */,
 				FFFFFFFF000000000000000B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -367,14 +420,33 @@
 				FFFFFFFF0000000000000003 /* Sources */,
 				FFFFFFFF0000000000000005 /* Frameworks */,
 				FFFFFFFF0000000000000004 /* Resources */,
+				FFFFFFFF0000000000000018 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FFFFFFFF000000000000001A /* PBXTargetDependency */,
+			);
+			name = DrinkTrack;
+			productName = DrinkTrack;
+			productReference = FFFFFFFF000000000000000A /* DrinkTrack.app */;
+			productType = "com.apple.product-type.application";
+		};
+		FFFFFFFF0000000000000011 /* DrinkTrackWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FFFFFFFF0000000000000017 /* Build configuration list for PBXNativeTarget "DrinkTrackWatch" */;
+			buildPhases = (
+				FFFFFFFF0000000000000012 /* Sources */,
+				FFFFFFFF0000000000000014 /* Frameworks */,
+				FFFFFFFF0000000000000013 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = DrinkTrack;
-			productName = DrinkTrack;
-			productReference = FFFFFFFF000000000000000A /* DrinkTrack.app */;
+			name = DrinkTrackWatch;
+			productName = DrinkTrackWatch;
+			productReference = FFFFFFFF0000000000000010 /* DrinkTrackWatch.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -389,6 +461,9 @@
 				TargetAttributes = {
 					FFFFFFFF0000000000000001 = {
 						CreatedOnToolsVersion = 15.3;
+					};
+					FFFFFFFF0000000000000011 = {
+						CreatedOnToolsVersion = 16.0;
 					};
 				};
 			};
@@ -406,6 +481,7 @@
 			projectRoot = "";
 			targets = (
 				FFFFFFFF0000000000000001 /* DrinkTrack */,
+				FFFFFFFF0000000000000011 /* DrinkTrackWatch */,
 			);
 		};
 /* End PBXProject section */
@@ -415,12 +491,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				000000000000000000000083 /* Assets.xcassets in Resources */,
-				000000000000000000000085 /* LaunchScreenV2.storyboard in Resources */,
-				000000000000000000000088 /* LaunchPortraitV2@2x.png in Resources */,
-				00000000000000000000008A /* LaunchPortraitV2@3x.png in Resources */,
-				00000000000000000000008C /* LaunchLandscapeV2@2x.png in Resources */,
-				00000000000000000000008E /* LaunchLandscapeV2@3x.png in Resources */,
+				000000000000000000000086 /* Assets.xcassets in Resources */,
+				000000000000000000000088 /* LaunchScreenV2.storyboard in Resources */,
+				00000000000000000000008B /* LaunchPortraitV2@2x.png in Resources */,
+				00000000000000000000008D /* LaunchPortraitV2@3x.png in Resources */,
+				00000000000000000000008F /* LaunchLandscapeV2@2x.png in Resources */,
+				000000000000000000000091 /* LaunchLandscapeV2@3x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -486,10 +562,63 @@
 				00000000000000000000007B /* LocationProvider.swift in Sources */,
 				00000000000000000000007D /* QRCodeImage.swift in Sources */,
 				00000000000000000000007F /* BrandSplashView.swift in Sources */,
+				000000000000000000000082 /* PhoneWatchBridge.swift in Sources */,
+				000000000000000000000094 /* SessionSyncPayload.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FFFFFFFF0000000000000013 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00000000000000000000009E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FFFFFFFF0000000000000012 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000095 /* SessionSyncPayload.swift in Sources */,
+				000000000000000000000098 /* DrinkTrackWatchApp.swift in Sources */,
+				00000000000000000000009A /* WatchRootView.swift in Sources */,
+				00000000000000000000009C /* WatchSessionStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		FFFFFFFF0000000000000018 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				FFFFFFFF0000000000000019 /* DrinkTrackWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FFFFFFFF000000000000001A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FFFFFFFF0000000000000011 /* DrinkTrackWatch */;
+			targetProxy = FFFFFFFF000000000000001B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXContainerItemProxy section */
+		FFFFFFFF000000000000001B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FFFFFFFF0000000000000002 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FFFFFFFF0000000000000011;
+			remoteInfo = DrinkTrackWatch;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin XCBuildConfiguration section */
 		FFFFFFFF0000000000000009 /* Debug */ = {
@@ -578,7 +707,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DrinkTrack/DrinkTrack.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkTrack/Info.plist;
@@ -604,7 +733,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DrinkTrack/DrinkTrack.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkTrack/Info.plist;
@@ -620,6 +749,62 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		FFFFFFFF0000000000000015 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "小酌场";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.drinktrack.app;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.drinktrack.app.watchkitapp;
+				PRODUCT_NAME = DrinkTrackWatch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		FFFFFFFF0000000000000016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "小酌场";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.drinktrack.app;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.drinktrack.app.watchkitapp;
+				PRODUCT_NAME = DrinkTrackWatch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
@@ -640,6 +825,15 @@
 			buildConfigurations = (
 				FFFFFFFF0000000000000006 /* Debug */,
 				FFFFFFFF0000000000000007 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FFFFFFFF0000000000000017 /* Build configuration list for PBXNativeTarget "DrinkTrackWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FFFFFFFF0000000000000015 /* Debug */,
+				FFFFFFFF0000000000000016 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

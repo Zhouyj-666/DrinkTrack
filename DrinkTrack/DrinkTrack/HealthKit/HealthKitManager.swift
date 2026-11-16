@@ -1,5 +1,6 @@
 import HealthKit
 import Combine
+import Security
 
 /// HealthKit 数据采集模块（§5.1）。
 ///
@@ -19,6 +20,8 @@ import Combine
 enum HealthConnectionState: Equatable {
     /// 设备不支持 HealthKit（如 iPad、部分模拟器）
     case unavailable
+    /// 安装包里没有 HealthKit entitlement（侧载重签时常见）
+    case entitlementMissing
     /// 还没弹过授权窗
     case notRequested
     /// 弹过授权窗，且确实读到了数据 —— 唯一能确认「真的连上了」的状态
@@ -52,6 +55,14 @@ final class HealthKitManager: ObservableObject {
     @Published var recentHeartRatePoints: [HealthSamplePoint] = []
     @Published var recentSpO2Points: [HealthSamplePoint] = []
 
+    /// In-session readings only. Stay nil unless a real sample falls inside the
+    /// active session window. Never filled with a placeholder or a pre-session value.
+    @Published private(set) var latestInSessionHeartRate: Double?
+    @Published private(set) var latestInSessionHeartRateAt: Date?
+    @Published private(set) var latestInSessionSpO2: Double?
+    @Published private(set) var latestInSessionSpO2At: Date?
+    @Published private(set) var activeSessionStartedAt: Date?
+
     var isHealthDataAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
 
     private var heartRateQuery: HKQuery?
@@ -67,10 +78,65 @@ final class HealthKitManager: ObservableObject {
     private init() {
         if !isHealthDataAvailable {
             connectionState = .unavailable
+        } else if Self.isHealthKitEntitlementMissingOnDevice() {
+            connectionState = .entitlementMissing
+            authorizationError = Self.entitlementMissingMessage
         } else if hasRequestedAuthorization {
             connectionState = .requestedButNoData // 等 refreshConnectionState() 探测后再更新
         }
     }
+
+    /// Short Chinese status for the Watch face. Never claims a reading exists
+    /// when it does not, and never pretends Health works after a stripped sign.
+    var watchHealthStatusText: String {
+        switch connectionState {
+        case .connected:
+            if latestInSessionHeartRate != nil {
+                return "已连接健康数据，本场心率来自 Apple 健康。"
+            }
+            return "已连接健康数据。本场还没有心率读数。"
+        case .entitlementMissing:
+            return "这次安装没有健康权限，心率不会出现。"
+        case .notRequested:
+            return "手机还没连接 Apple 健康，心率先空着。"
+        case .requestedButNoData:
+            return "还读不到心率。可能是没授权、没戴表，或这次安装没有健康权限。"
+        case .unavailable:
+            return "这台手机无法读取健康数据。"
+        }
+    }
+
+    /// Bind live queries to an active session. Pass nil when no session is open.
+    /// Heart rate and SpO2 shown as "本场" are then filtered to this window.
+    func setActiveSessionWindow(startedAt: Date?) {
+        let previous = activeSessionStartedAt
+        activeSessionStartedAt = startedAt
+        refreshInSessionReadings()
+        guard isSampling else { return }
+        let changed: Bool
+        if let previous, let startedAt {
+            changed = abs(previous.timeIntervalSince(startedAt)) > 0.5
+        } else {
+            changed = (previous == nil) != (startedAt == nil)
+        }
+        if changed {
+            stopForegroundSampling()
+            startForegroundSampling()
+        }
+    }
+
+    /// Chart series: the active session when one is open, otherwise the last 2 hours.
+    var chartHeartRatePoints: [HealthSamplePoint] {
+        guard let start = activeSessionStartedAt else { return recentHeartRatePoints }
+        return recentHeartRatePoints.filter { $0.timestamp >= start }
+    }
+
+    var chartSpO2Points: [HealthSamplePoint] {
+        guard let start = activeSessionStartedAt else { return recentSpO2Points }
+        return recentSpO2Points.filter { $0.timestamp >= start }
+    }
+
+    var isChartInSession: Bool { activeSessionStartedAt != nil }
 
     // MARK: - FR-HK-06 权限管理
 
@@ -84,6 +150,11 @@ final class HealthKitManager: ObservableObject {
             authorizationError = "此设备不支持 HealthKit（iPad 和部分模拟器不支持）。你仍然可以手动记录饮酒。"
             return
         }
+        if Self.isHealthKitEntitlementMissingOnDevice() {
+            connectionState = .entitlementMissing
+            authorizationError = Self.entitlementMissingMessage
+            return
+        }
         do {
             try await healthStore.requestAuthorization(toShare: [], read: HealthKitTypes.readTypes)
             hasRequestedAuthorization = true
@@ -94,7 +165,9 @@ final class HealthKitManager: ObservableObject {
             await refreshConnectionState()
         } catch {
             authorizationError = Self.friendlyAuthorizationMessage(for: error)
-            if !hasRequestedAuthorization {
+            if authorizationError == Self.entitlementMissingMessage || Self.isHealthKitEntitlementMissingOnDevice() {
+                connectionState = .entitlementMissing
+            } else if !hasRequestedAuthorization {
                 connectionState = .notRequested
             }
         }
@@ -108,7 +181,7 @@ final class HealthKitManager: ObservableObject {
         let reason = nsError.localizedFailureReason ?? ""
         let haystack = (error.localizedDescription + " " + reason + " " + String(describing: error)).lowercased()
         if haystack.contains("entitlement") || haystack.contains("missing com.apple.developer.healthkit") {
-            return "这次安装没有带上「健康」权限，所以系统授权窗口不会出现。用个人 Apple ID 侧载重签时经常会这样。你仍然可以手动记录饮酒；若要读取心率和血氧，需要用带 HealthKit 权限的签名方式重新安装。"
+            return Self.entitlementMissingMessage
         }
         if let hkError = error as? HKError {
             switch hkError.code {
@@ -127,6 +200,34 @@ final class HealthKitManager: ObservableObject {
         return "无法完成健康授权：\(error.localizedDescription)"
     }
 
+    static let entitlementMissingMessage = """
+        这次安装没有带上「健康」权限，所以系统授权窗口不会出现。用个人 Apple ID 侧载重签时经常会这样。你仍然可以手动记录饮酒。若要在这台 iPhone 上读取心率和血氧，需要用带健康权限的方式安装，例如加入 Apple 开发者计划后，用 Xcode 或 TestFlight 安装。
+        """.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    /// True only when we can read the code signature and it clearly lacks the
+    /// HealthKit entitlement. Returns false on Simulator (unsigned debug builds
+    /// often have no entitlements dict, which is not the same as a sideload strip)
+    /// and when the signature cannot be inspected.
+    static func isHealthKitEntitlementMissingOnDevice() -> Bool {
+        #if targetEnvironment(simulator)
+        return false
+        #else
+        guard let entitlements = signingEntitlements() else { return false }
+        return entitlements["com.apple.developer.healthkit"] as? Bool != true
+        #endif
+    }
+
+    private static func signingEntitlements() -> [String: Any]? {
+        var staticCode: SecStaticCode?
+        guard SecStaticCodeCreateWithPath(Bundle.main.bundleURL as CFURL, [], &staticCode) == errSecSuccess,
+              let staticCode else { return nil }
+        var info: CFDictionary?
+        let flags = SecCSFlags(rawValue: kSecCSSigningInformation)
+        guard SecCodeCopySigningInformation(staticCode, flags, &info) == errSecSuccess,
+              let dict = info as? [String: Any] else { return nil }
+        return dict[kSecCodeInfoEntitlementsDict as String] as? [String: Any]
+    }
+
     /// App 每次进入前台时调用：恢复采样 + 重新探测连接状态。
     ///
     /// 修复的 bug：原来 `startForegroundSampling()` 只在 `requestAuthorization()` 里调用一次，
@@ -134,6 +235,11 @@ final class HealthKitManager: ObservableObject {
     func resumeIfPossible() async {
         guard isHealthDataAvailable else {
             connectionState = .unavailable
+            return
+        }
+        if Self.isHealthKitEntitlementMissingOnDevice() {
+            connectionState = .entitlementMissing
+            authorizationError = Self.entitlementMissingMessage
             return
         }
         guard hasRequestedAuthorization else {
@@ -148,6 +254,11 @@ final class HealthKitManager: ObservableObject {
     func refreshConnectionState() async {
         guard isHealthDataAvailable else {
             connectionState = .unavailable
+            return
+        }
+        if Self.isHealthKitEntitlementMissingOnDevice() {
+            connectionState = .entitlementMissing
+            authorizationError = Self.entitlementMissingMessage
             return
         }
         guard hasRequestedAuthorization else {
@@ -213,7 +324,7 @@ final class HealthKitManager: ObservableObject {
 
     private func startHeartRateObserving() {
         let type = HKQuantityType.quantityType(forIdentifier: .heartRate)!
-        let predicate = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-2 * 3600), end: nil)
+        let predicate = HKQuery.predicateForSamples(withStart: heartRateObservationStart, end: nil)
         let query = HKAnchoredObjectQuery(
             type: type, predicate: predicate, anchor: nil, limit: HKObjectQueryNoLimit
         ) { [weak self] _, samples, _, _, error in
@@ -246,12 +357,13 @@ final class HealthKitManager: ObservableObject {
         // HKAnchoredObjectQuery 的 updateHandler 只回传**自上次锚点以来的新样本**，
         // 不是全量。原来写成 `recentHeartRatePoints = points` 会导致第一次更新之后
         // 整条曲线塌缩成只剩新来的那一两个点。
-        recentHeartRatePoints = Self.merged(
-            existing: recentHeartRatePoints, incoming: newPoints, window: Self.heartRateWindow
+        recentHeartRatePoints = merged(
+            existing: recentHeartRatePoints, incoming: newPoints, window: currentHeartRateWindow
         )
         latestHeartRate = recentHeartRatePoints.last?.value
         watchSeemsConnected = (recentHeartRatePoints.last?.timestamp ?? .distantPast)
             .timeIntervalSinceNow > -900
+        refreshInSessionReadings()
 
         if let latest = recentHeartRatePoints.last?.timestamp {
             connectionState = .connected(lastSampleAt: latest)
@@ -259,10 +371,15 @@ final class HealthKitManager: ObservableObject {
     }
 
     /// 合并新旧样本：按时间戳去重、排序，并丢掉窗口之外的旧数据（防止无限增长）。
-    private static func merged(
+    private func merged(
         existing: [HealthSamplePoint], incoming: [HealthSamplePoint], window: TimeInterval
     ) -> [HealthSamplePoint] {
-        let cutoff = Date().addingTimeInterval(-window)
+        let cutoff: Date
+        if let start = activeSessionStartedAt {
+            cutoff = min(start, Date().addingTimeInterval(-window))
+        } else {
+            cutoff = Date().addingTimeInterval(-window)
+        }
         var byTimestamp: [Date: HealthSamplePoint] = [:]
         for point in existing + incoming where point.timestamp >= cutoff {
             byTimestamp[point.timestamp] = point
@@ -270,11 +387,59 @@ final class HealthKitManager: ObservableObject {
         return byTimestamp.values.sorted { $0.timestamp < $1.timestamp }
     }
 
+    private var heartRateObservationStart: Date {
+        if let start = activeSessionStartedAt { return start }
+        return Date().addingTimeInterval(-Self.heartRateWindow)
+    }
+
+    private var spo2ObservationStart: Date {
+        if let start = activeSessionStartedAt { return start }
+        return Date().addingTimeInterval(-Self.spo2Window)
+    }
+
+    private var currentHeartRateWindow: TimeInterval {
+        if let start = activeSessionStartedAt {
+            return max(Self.heartRateWindow, Date().timeIntervalSince(start) + 60)
+        }
+        return Self.heartRateWindow
+    }
+
+    private var currentSpO2Window: TimeInterval {
+        if let start = activeSessionStartedAt {
+            return max(Self.spo2Window, Date().timeIntervalSince(start) + 60)
+        }
+        return Self.spo2Window
+    }
+
+    private func refreshInSessionReadings() {
+        guard let start = activeSessionStartedAt else {
+            latestInSessionHeartRate = nil
+            latestInSessionHeartRateAt = nil
+            latestInSessionSpO2 = nil
+            latestInSessionSpO2At = nil
+            return
+        }
+        if let point = recentHeartRatePoints.last(where: { $0.timestamp >= start }) {
+            latestInSessionHeartRate = point.value
+            latestInSessionHeartRateAt = point.timestamp
+        } else {
+            latestInSessionHeartRate = nil
+            latestInSessionHeartRateAt = nil
+        }
+        if let point = recentSpO2Points.last(where: { $0.timestamp >= start }) {
+            latestInSessionSpO2 = point.value
+            latestInSessionSpO2At = point.timestamp
+        } else {
+            latestInSessionSpO2 = nil
+            latestInSessionSpO2At = nil
+        }
+    }
+
     // MARK: - FR-HK-02 血氧采集
 
     private func startSpO2Observing() {
         let type = HKQuantityType.quantityType(forIdentifier: .oxygenSaturation)!
-        let predicate = HKQuery.predicateForSamples(withStart: Date().addingTimeInterval(-3600), end: nil)
+        let predicate = HKQuery.predicateForSamples(withStart: spo2ObservationStart, end: nil)
         let query = HKAnchoredObjectQuery(
             type: type, predicate: predicate, anchor: nil, limit: HKObjectQueryNoLimit
         ) { [weak self] _, samples, _, _, error in
@@ -297,10 +462,11 @@ final class HealthKitManager: ObservableObject {
             HealthSamplePoint(timestamp: $0.endDate, value: $0.quantity.doubleValue(for: .percent()) * 100)
         }
         // 同心率：累加而非替换，见 handleHeartRateSamples 的注释
-        recentSpO2Points = Self.merged(
-            existing: recentSpO2Points, incoming: newPoints, window: Self.spo2Window
+        recentSpO2Points = merged(
+            existing: recentSpO2Points, incoming: newPoints, window: currentSpO2Window
         )
         latestSpO2 = recentSpO2Points.last?.value
+        refreshInSessionReadings()
     }
 
     // MARK: - FR-HK-03 HRV 采集（直接读取原生 SDNN，不做换算）

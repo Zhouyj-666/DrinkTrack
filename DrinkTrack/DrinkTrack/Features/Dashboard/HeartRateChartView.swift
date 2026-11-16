@@ -8,11 +8,12 @@ struct HeartRateChartView: View {
     let points: [HealthSamplePoint]
     let drinkMarks: [Date]
     let watchConnected: Bool
+    var isInSession: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("心率（最近 2 小时）").font(.headline)
+                Text(isInSession ? "心率（本场）" : "心率（最近 2 小时）").font(.headline)
                 Spacer()
                 if !watchConnected {
                     Label("手表未连接", systemImage: "applewatch.slash")
@@ -70,7 +71,7 @@ struct HeartRateChartView: View {
                         .frame(height: 1)
                         .mask(DashedLine())
                 )
-            Text("暂无心率数据").font(.caption).foregroundStyle(DesignSystem.mutedInk)
+            Text(isInSession ? "本场还没有心率读数" : "暂无心率数据").font(.caption).foregroundStyle(DesignSystem.mutedInk)
         }
         .frame(height: 180)
     }

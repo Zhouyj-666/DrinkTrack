@@ -6,6 +6,7 @@ struct SessionControlView: View {
     @Binding var activeSession: DrinkSessionEntity?
     @Binding var showQuickLog: Bool
     var latestHeartRate: Double?
+    var latestSpO2: Double?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -69,12 +70,23 @@ struct SessionControlView: View {
         let volume = logs.reduce(0.0) { $0 + $1.volumeMl }
         let standard = logs.reduce(0.0) { $0 + $1.standardDrinks }
         let started = session.startedAt ?? Date()
-        return HStack(spacing: 10) {
-            metric(icon: "clock.fill", title: "已进行", valueView: Text(started, style: .timer))
-            metric(icon: "drop.fill", title: "本场容量", valueView: Text(volume == 0 ? "—" : "\(Int(volume.rounded())) ml"))
-            metric(icon: "wineglass.fill", title: "标准饮品", valueView: Text(volume == 0 ? "—" : String(format: "≈%.1f", standard)))
-            if let bpm = latestHeartRate {
-                metric(icon: "heart.fill", title: "当前心率", valueView: Text("\(Int(bpm.rounded()))"))
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                metric(icon: "clock.fill", title: "已进行", valueView: Text(started, style: .timer))
+                metric(icon: "wineglass.fill", title: "本场杯数", valueView: Text("\(logs.count)"))
+                metric(icon: "drop.fill", title: "本场容量", valueView: Text(volume == 0 ? "—" : "\(Int(volume.rounded())) ml"))
+                metric(icon: "equal.circle.fill", title: "标准饮品", valueView: Text(volume == 0 ? "—" : String(format: "≈%.1f", standard)))
+            }
+            if latestHeartRate != nil || latestSpO2 != nil {
+                HStack(spacing: 10) {
+                    if let bpm = latestHeartRate {
+                        metric(icon: "heart.fill", title: "本场心率", valueView: Text("\(Int(bpm.rounded()))"))
+                    }
+                    if let spo2 = latestSpO2 {
+                        metric(icon: "lungs.fill", title: "本场血氧", valueView: Text(String(format: "%.0f%%", spo2)))
+                    }
+                    Spacer(minLength: 0)
+                }
             }
         }
     }

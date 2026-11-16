@@ -120,6 +120,7 @@ final class DrinkRepository: ObservableObject {
     func save() {
         guard context.hasChanges else { return }
         try? context.save()
+        NotificationCenter.default.post(name: .drinkTrackDataDidChange, object: nil)
     }
 
     // MARK: FR-TREND-* 长期趋势报告数据源

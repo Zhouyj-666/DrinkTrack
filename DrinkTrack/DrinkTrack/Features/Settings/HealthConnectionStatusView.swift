@@ -126,6 +126,7 @@ struct HealthConnectionStatusView: View {
         case .connected: return "heart.fill"
         case .requestedButNoData: return "questionmark.circle.fill"
         case .notRequested: return "heart.slash"
+        case .entitlementMissing: return "heart.slash"
         case .unavailable: return "xmark.circle.fill"
         }
     }
@@ -135,7 +136,7 @@ struct HealthConnectionStatusView: View {
         case .connected: return DesignSystem.statusGood
         case .requestedButNoData: return DesignSystem.statusWarning
         case .notRequested: return DesignSystem.mutedInk
-        case .unavailable: return DesignSystem.statusCritical
+        case .entitlementMissing, .unavailable: return DesignSystem.statusCritical
         }
     }
 
@@ -145,6 +146,7 @@ struct HealthConnectionStatusView: View {
         case .connected: return "已连接 Apple 健康"
         case .requestedButNoData: return "读不到健康数据"
         case .notRequested: return "尚未连接 Apple 健康"
+        case .entitlementMissing: return "这次安装无法连接健康数据"
         case .unavailable: return "此设备不支持健康数据"
         }
     }
@@ -167,7 +169,13 @@ struct HealthConnectionStatusView: View {
             确认心率、血氧、心率变异性、睡眠都是打开的。
             """
         case .notRequested:
-            return "连接后可以在饮酒时看到实时心率和血氧变化。我们只读取数据，不会修改或删除你的健康记录。"
+            return """
+            点「连接 Apple 健康」，在系统弹窗里勾选允许即可。            小酌场只会读取心率、血氧、心率变异性、安静心率和睡眠，用来在饮酒时展示你的身体状态，以及生成饮酒日与非饮酒日的对比。            不会把饮酒记录写入健康，也不会修改或删除你的健康数据。
+            """
+        case .entitlementMissing:
+            return """
+            这次安装没有带上「健康」权限，所以系统授权窗口不会出现。用个人 Apple ID 侧载重签时经常会这样。            你仍然可以手动记录饮酒。若要在这台 iPhone 上读取心率和血氧，需要用带健康权限的方式安装，            例如加入 Apple 开发者计划后，用 Xcode 或 TestFlight 安装。
+            """
         case .unavailable:
             return "健康数据需要 iPhone（iPad 和部分模拟器不支持 HealthKit）。你仍然可以手动记录饮酒。"
         }
@@ -187,6 +195,10 @@ struct HealthConnectionStatusView: View {
         switch state {
         case .notRequested:
             return ActionSpec(title: "连接 Apple 健康", kind: .request)
+        case .entitlementMissing:
+            // Offer a retry in case the signature check was wrong; if the
+            // entitlement really is missing, the same Chinese reason appears.
+            return ActionSpec(title: "再试一次授权", kind: .request)
         case .requestedButNoData:
             // Offer another authorization request (the system sheet only appears
             // if the status is still "not determined") plus a refresh path via
@@ -201,6 +213,7 @@ struct HealthConnectionStatusView: View {
     private var showsOpenHealthButton: Bool {
         switch state {
         case .requestedButNoData: return true
+        case .entitlementMissing: return false
         case .notRequested, .connected, .unavailable: return authorizationError != nil
         }
     }
