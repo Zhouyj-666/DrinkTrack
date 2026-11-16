@@ -38,8 +38,8 @@ final class DashboardGlanceBuilderTests: XCTestCase {
         // Dashboard session counts come only from GlanceSessionFact inputs.
         // PlaceMarks are never converted into session facts by DrinkRepository.
         let metrics = DashboardGlanceBuilder.metrics(
-            logs: [],
-            sessions: [],
+            logs: [GlanceLogFact](),
+            sessions: [GlanceSessionFact](),
             now: Date(),
             calendar: .current
         )
