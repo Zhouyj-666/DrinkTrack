@@ -41,6 +41,7 @@ enum UserPreferences {
 
     private static let recentLocationsKey = "recentLocationNames"
     private static let shareShowsLocationKey = "shareCardShowsLocation"
+    private static let appearanceKey = "appearancePreference"
     private static let sessionAlertsKey = "sessionAlertsEnabled"
     private static let heartRateAlertsKey = "heartRateAlertsEnabled"
     private static let spo2AlertsKey = "spo2AlertsEnabled"
@@ -129,6 +130,18 @@ enum UserPreferences {
         return Int((yuan * 100).rounded())
     }
 
+    /// Follows the system light/dark appearance by default.
+    static var appearancePreference: AppearancePreference {
+        get {
+            if let raw = UserDefaults.standard.string(forKey: appearanceKey),
+               let value = AppearancePreference(rawValue: raw) {
+                return value
+            }
+            return .system
+        }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: appearanceKey) }
+    }
+
     static func formatDuration(_ interval: TimeInterval) -> String {
         let seconds = max(0, Int(interval.rounded()))
         if seconds < 60 { return "\(seconds)秒" }
@@ -141,5 +154,22 @@ enum UserPreferences {
         let remainMinutes = (seconds % 3600) / 60
         if remainMinutes == 0 { return "\(hours)小时" }
         return "\(hours)小时\(remainMinutes)分"
+    }
+}
+
+/// In-app appearance. The default follows the device light/dark setting.
+enum AppearancePreference: String, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .system: return "跟随系统"
+        case .light: return "浅色"
+        case .dark: return "深色"
+        }
     }
 }

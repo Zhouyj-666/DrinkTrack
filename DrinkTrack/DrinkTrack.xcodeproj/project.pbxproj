@@ -43,45 +43,47 @@
 		000000000000000000000053 /* LocationInputField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000052 /* LocationInputField.swift */; };
 		000000000000000000000056 /* PlaceSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000055 /* PlaceSummary.swift */; };
 		000000000000000000000058 /* RouteJournal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* RouteJournal.swift */; };
-		00000000000000000000005A /* MarkPlaceSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000059 /* MarkPlaceSheet.swift */; };
-		00000000000000000000005C /* DrinkingMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000005B /* DrinkingMapView.swift */; };
-		00000000000000000000005F /* TrendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000005E /* TrendsView.swift */; };
-		000000000000000000000061 /* TrendAxis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000060 /* TrendAxis.swift */; };
-		000000000000000000000063 /* FrequencyChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000062 /* FrequencyChart.swift */; };
-		000000000000000000000065 /* VolumeTrendChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000064 /* VolumeTrendChart.swift */; };
-		000000000000000000000067 /* DrinkVsNonDrinkComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000066 /* DrinkVsNonDrinkComparisonView.swift */; };
-		000000000000000000000069 /* MonthlySpendSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000068 /* MonthlySpendSummaryView.swift */; };
-		00000000000000000000006C /* FriendFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006B /* FriendFeedView.swift */; };
-		00000000000000000000006E /* FriendCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006D /* FriendCodeView.swift */; };
-		000000000000000000000070 /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006F /* ShareCardView.swift */; };
-		000000000000000000000072 /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000071 /* SessionDetailView.swift */; };
-		000000000000000000000074 /* SessionTimelineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000073 /* SessionTimelineChart.swift */; };
-		000000000000000000000077 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000076 /* SettingsView.swift */; };
-		000000000000000000000079 /* DataManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000078 /* DataManagementView.swift */; };
-		00000000000000000000007B /* AlertSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007A /* AlertSettingsView.swift */; };
-		00000000000000000000007D /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007C /* ProfileView.swift */; };
-		00000000000000000000007F /* HealthConnectionStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007E /* HealthConnectionStatusView.swift */; };
-		000000000000000000000082 /* DisclaimerStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000081 /* DisclaimerStrings.swift */; };
-		000000000000000000000084 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000083 /* DesignSystem.swift */; };
-		000000000000000000000086 /* NumericField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000085 /* NumericField.swift */; };
-		000000000000000000000088 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000087 /* RootView.swift */; };
-		00000000000000000000008A /* UserPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000089 /* UserPreferences.swift */; };
-		00000000000000000000008C /* LocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000008B /* LocationProvider.swift */; };
-		00000000000000000000008E /* QRCodeImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000008D /* QRCodeImage.swift */; };
-		000000000000000000000090 /* BrandSplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000008F /* BrandSplashView.swift */; };
-		000000000000000000000093 /* PhoneWatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000092 /* PhoneWatchBridge.swift */; };
-		0000000000000000000000A5 /* SessionSyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000A4 /* SessionSyncPayload.swift */; };
-		000000000000000000000097 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000096 /* Assets.xcassets */; };
-		000000000000000000000099 /* LaunchScreenV2.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000098 /* LaunchScreenV2.storyboard */; };
-		00000000000000000000009C /* LaunchPortraitV2@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009B /* LaunchPortraitV2@2x.png */; };
-		00000000000000000000009E /* LaunchPortraitV2@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009D /* LaunchPortraitV2@3x.png */; };
-		0000000000000000000000A0 /* LaunchLandscapeV2@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009F /* LaunchLandscapeV2@2x.png */; };
-		0000000000000000000000A2 /* LaunchLandscapeV2@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000A1 /* LaunchLandscapeV2@3x.png */; };
-		0000000000000000000000A6 /* SessionSyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000A4 /* SessionSyncPayload.swift */; };
-		0000000000000000000000A9 /* DrinkTrackWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000A8 /* DrinkTrackWatchApp.swift */; };
-		0000000000000000000000AB /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000AA /* WatchRootView.swift */; };
-		0000000000000000000000AD /* WatchSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000AC /* WatchSessionStore.swift */; };
-		0000000000000000000000AF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000AE /* Assets.xcassets */; };
+		00000000000000000000005A /* RouteJournalExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000059 /* RouteJournalExport.swift */; };
+		00000000000000000000005C /* RouteJournalShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000005B /* RouteJournalShareCardView.swift */; };
+		00000000000000000000005E /* MarkPlaceSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000005D /* MarkPlaceSheet.swift */; };
+		000000000000000000000060 /* DrinkingMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000005F /* DrinkingMapView.swift */; };
+		000000000000000000000063 /* TrendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000062 /* TrendsView.swift */; };
+		000000000000000000000065 /* TrendAxis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000064 /* TrendAxis.swift */; };
+		000000000000000000000067 /* FrequencyChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000066 /* FrequencyChart.swift */; };
+		000000000000000000000069 /* VolumeTrendChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000068 /* VolumeTrendChart.swift */; };
+		00000000000000000000006B /* DrinkVsNonDrinkComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006A /* DrinkVsNonDrinkComparisonView.swift */; };
+		00000000000000000000006D /* MonthlySpendSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006C /* MonthlySpendSummaryView.swift */; };
+		000000000000000000000070 /* FriendFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006F /* FriendFeedView.swift */; };
+		000000000000000000000072 /* FriendCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000071 /* FriendCodeView.swift */; };
+		000000000000000000000074 /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000073 /* ShareCardView.swift */; };
+		000000000000000000000076 /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000075 /* SessionDetailView.swift */; };
+		000000000000000000000078 /* SessionTimelineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000077 /* SessionTimelineChart.swift */; };
+		00000000000000000000007B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007A /* SettingsView.swift */; };
+		00000000000000000000007D /* DataManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007C /* DataManagementView.swift */; };
+		00000000000000000000007F /* AlertSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007E /* AlertSettingsView.swift */; };
+		000000000000000000000081 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000080 /* ProfileView.swift */; };
+		000000000000000000000083 /* HealthConnectionStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000082 /* HealthConnectionStatusView.swift */; };
+		000000000000000000000086 /* DisclaimerStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000085 /* DisclaimerStrings.swift */; };
+		000000000000000000000088 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000087 /* DesignSystem.swift */; };
+		00000000000000000000008A /* NumericField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000089 /* NumericField.swift */; };
+		00000000000000000000008C /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000008B /* RootView.swift */; };
+		00000000000000000000008E /* UserPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000008D /* UserPreferences.swift */; };
+		000000000000000000000090 /* LocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000008F /* LocationProvider.swift */; };
+		000000000000000000000092 /* QRCodeImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000091 /* QRCodeImage.swift */; };
+		000000000000000000000094 /* BrandSplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000093 /* BrandSplashView.swift */; };
+		000000000000000000000097 /* PhoneWatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000096 /* PhoneWatchBridge.swift */; };
+		0000000000000000000000A9 /* SessionSyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000A8 /* SessionSyncPayload.swift */; };
+		00000000000000000000009B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009A /* Assets.xcassets */; };
+		00000000000000000000009D /* LaunchScreenV2.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009C /* LaunchScreenV2.storyboard */; };
+		0000000000000000000000A0 /* LaunchPortraitV2@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009F /* LaunchPortraitV2@2x.png */; };
+		0000000000000000000000A2 /* LaunchPortraitV2@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000A1 /* LaunchPortraitV2@3x.png */; };
+		0000000000000000000000A4 /* LaunchLandscapeV2@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000A3 /* LaunchLandscapeV2@2x.png */; };
+		0000000000000000000000A6 /* LaunchLandscapeV2@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000A5 /* LaunchLandscapeV2@3x.png */; };
+		0000000000000000000000AA /* SessionSyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000A8 /* SessionSyncPayload.swift */; };
+		0000000000000000000000AD /* DrinkTrackWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000AC /* DrinkTrackWatchApp.swift */; };
+		0000000000000000000000AF /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000AE /* WatchRootView.swift */; };
+		0000000000000000000000B1 /* WatchSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000B0 /* WatchSessionStore.swift */; };
+		0000000000000000000000B3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000B2 /* Assets.xcassets */; };
 		FFFFFFFF0000000000000019 /* DrinkTrackWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = FFFFFFFF0000000000000010 /* DrinkTrackWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -129,46 +131,48 @@
 		000000000000000000000052 /* LocationInputField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationInputField.swift; sourceTree = "<group>"; };
 		000000000000000000000055 /* PlaceSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceSummary.swift; sourceTree = "<group>"; };
 		000000000000000000000057 /* RouteJournal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteJournal.swift; sourceTree = "<group>"; };
-		000000000000000000000059 /* MarkPlaceSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkPlaceSheet.swift; sourceTree = "<group>"; };
-		00000000000000000000005B /* DrinkingMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkingMapView.swift; sourceTree = "<group>"; };
-		00000000000000000000005E /* TrendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendsView.swift; sourceTree = "<group>"; };
-		000000000000000000000060 /* TrendAxis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendAxis.swift; sourceTree = "<group>"; };
-		000000000000000000000062 /* FrequencyChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrequencyChart.swift; sourceTree = "<group>"; };
-		000000000000000000000064 /* VolumeTrendChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeTrendChart.swift; sourceTree = "<group>"; };
-		000000000000000000000066 /* DrinkVsNonDrinkComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkVsNonDrinkComparisonView.swift; sourceTree = "<group>"; };
-		000000000000000000000068 /* MonthlySpendSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlySpendSummaryView.swift; sourceTree = "<group>"; };
-		00000000000000000000006B /* FriendFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendFeedView.swift; sourceTree = "<group>"; };
-		00000000000000000000006D /* FriendCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendCodeView.swift; sourceTree = "<group>"; };
-		00000000000000000000006F /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
-		000000000000000000000071 /* SessionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
-		000000000000000000000073 /* SessionTimelineChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTimelineChart.swift; sourceTree = "<group>"; };
-		000000000000000000000076 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		000000000000000000000078 /* DataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManagementView.swift; sourceTree = "<group>"; };
-		00000000000000000000007A /* AlertSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertSettingsView.swift; sourceTree = "<group>"; };
-		00000000000000000000007C /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		00000000000000000000007E /* HealthConnectionStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthConnectionStatusView.swift; sourceTree = "<group>"; };
-		000000000000000000000081 /* DisclaimerStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisclaimerStrings.swift; sourceTree = "<group>"; };
-		000000000000000000000083 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
-		000000000000000000000085 /* NumericField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericField.swift; sourceTree = "<group>"; };
-		000000000000000000000087 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
-		000000000000000000000089 /* UserPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPreferences.swift; sourceTree = "<group>"; };
-		00000000000000000000008B /* LocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationProvider.swift; sourceTree = "<group>"; };
-		00000000000000000000008D /* QRCodeImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCodeImage.swift; sourceTree = "<group>"; };
-		00000000000000000000008F /* BrandSplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandSplashView.swift; sourceTree = "<group>"; };
-		000000000000000000000092 /* PhoneWatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneWatchBridge.swift; sourceTree = "<group>"; };
-		000000000000000000000094 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		000000000000000000000095 /* DrinkTrack.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DrinkTrack.entitlements; sourceTree = "<group>"; };
-		000000000000000000000096 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		000000000000000000000098 /* LaunchScreenV2.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreenV2.storyboard; sourceTree = "<group>"; };
-		00000000000000000000009B /* LaunchPortraitV2@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchPortraitV2@2x.png"; sourceTree = "<group>"; };
-		00000000000000000000009D /* LaunchPortraitV2@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchPortraitV2@3x.png"; sourceTree = "<group>"; };
-		00000000000000000000009F /* LaunchLandscapeV2@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchLandscapeV2@2x.png"; sourceTree = "<group>"; };
-		0000000000000000000000A1 /* LaunchLandscapeV2@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchLandscapeV2@3x.png"; sourceTree = "<group>"; };
-		0000000000000000000000A4 /* SessionSyncPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSyncPayload.swift; sourceTree = "<group>"; };
-		0000000000000000000000A8 /* DrinkTrackWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkTrackWatchApp.swift; sourceTree = "<group>"; };
-		0000000000000000000000AA /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
-		0000000000000000000000AC /* WatchSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSessionStore.swift; sourceTree = "<group>"; };
-		0000000000000000000000AE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		000000000000000000000059 /* RouteJournalExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteJournalExport.swift; sourceTree = "<group>"; };
+		00000000000000000000005B /* RouteJournalShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteJournalShareCardView.swift; sourceTree = "<group>"; };
+		00000000000000000000005D /* MarkPlaceSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkPlaceSheet.swift; sourceTree = "<group>"; };
+		00000000000000000000005F /* DrinkingMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkingMapView.swift; sourceTree = "<group>"; };
+		000000000000000000000062 /* TrendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendsView.swift; sourceTree = "<group>"; };
+		000000000000000000000064 /* TrendAxis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendAxis.swift; sourceTree = "<group>"; };
+		000000000000000000000066 /* FrequencyChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrequencyChart.swift; sourceTree = "<group>"; };
+		000000000000000000000068 /* VolumeTrendChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeTrendChart.swift; sourceTree = "<group>"; };
+		00000000000000000000006A /* DrinkVsNonDrinkComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkVsNonDrinkComparisonView.swift; sourceTree = "<group>"; };
+		00000000000000000000006C /* MonthlySpendSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlySpendSummaryView.swift; sourceTree = "<group>"; };
+		00000000000000000000006F /* FriendFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendFeedView.swift; sourceTree = "<group>"; };
+		000000000000000000000071 /* FriendCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendCodeView.swift; sourceTree = "<group>"; };
+		000000000000000000000073 /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
+		000000000000000000000075 /* SessionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
+		000000000000000000000077 /* SessionTimelineChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTimelineChart.swift; sourceTree = "<group>"; };
+		00000000000000000000007A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		00000000000000000000007C /* DataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManagementView.swift; sourceTree = "<group>"; };
+		00000000000000000000007E /* AlertSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertSettingsView.swift; sourceTree = "<group>"; };
+		000000000000000000000080 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		000000000000000000000082 /* HealthConnectionStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthConnectionStatusView.swift; sourceTree = "<group>"; };
+		000000000000000000000085 /* DisclaimerStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisclaimerStrings.swift; sourceTree = "<group>"; };
+		000000000000000000000087 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		000000000000000000000089 /* NumericField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericField.swift; sourceTree = "<group>"; };
+		00000000000000000000008B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		00000000000000000000008D /* UserPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPreferences.swift; sourceTree = "<group>"; };
+		00000000000000000000008F /* LocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationProvider.swift; sourceTree = "<group>"; };
+		000000000000000000000091 /* QRCodeImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCodeImage.swift; sourceTree = "<group>"; };
+		000000000000000000000093 /* BrandSplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandSplashView.swift; sourceTree = "<group>"; };
+		000000000000000000000096 /* PhoneWatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneWatchBridge.swift; sourceTree = "<group>"; };
+		000000000000000000000098 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		000000000000000000000099 /* DrinkTrack.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DrinkTrack.entitlements; sourceTree = "<group>"; };
+		00000000000000000000009A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		00000000000000000000009C /* LaunchScreenV2.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreenV2.storyboard; sourceTree = "<group>"; };
+		00000000000000000000009F /* LaunchPortraitV2@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchPortraitV2@2x.png"; sourceTree = "<group>"; };
+		0000000000000000000000A1 /* LaunchPortraitV2@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchPortraitV2@3x.png"; sourceTree = "<group>"; };
+		0000000000000000000000A3 /* LaunchLandscapeV2@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchLandscapeV2@2x.png"; sourceTree = "<group>"; };
+		0000000000000000000000A5 /* LaunchLandscapeV2@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "LaunchLandscapeV2@3x.png"; sourceTree = "<group>"; };
+		0000000000000000000000A8 /* SessionSyncPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSyncPayload.swift; sourceTree = "<group>"; };
+		0000000000000000000000AC /* DrinkTrackWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrinkTrackWatchApp.swift; sourceTree = "<group>"; };
+		0000000000000000000000AE /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
+		0000000000000000000000B0 /* WatchSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSessionStore.swift; sourceTree = "<group>"; };
+		0000000000000000000000B2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -278,43 +282,45 @@
 				000000000000000000000057,
 				000000000000000000000059,
 				00000000000000000000005B,
+				00000000000000000000005D,
+				00000000000000000000005F,
 			);
 			path = Map;
 			sourceTree = "<group>";
 		};
-		00000000000000000000005D /* Trends */ = {
+		000000000000000000000061 /* Trends */ = {
 			isa = PBXGroup;
 			children = (
-				00000000000000000000005E,
-				000000000000000000000060,
 				000000000000000000000062,
 				000000000000000000000064,
 				000000000000000000000066,
 				000000000000000000000068,
+				00000000000000000000006A,
+				00000000000000000000006C,
 			);
 			path = Trends;
 			sourceTree = "<group>";
 		};
-		00000000000000000000006A /* Social */ = {
+		00000000000000000000006E /* Social */ = {
 			isa = PBXGroup;
 			children = (
-				00000000000000000000006B,
-				00000000000000000000006D,
 				00000000000000000000006F,
 				000000000000000000000071,
 				000000000000000000000073,
+				000000000000000000000075,
+				000000000000000000000077,
 			);
 			path = Social;
 			sourceTree = "<group>";
 		};
-		000000000000000000000075 /* Settings */ = {
+		000000000000000000000079 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000076,
-				000000000000000000000078,
 				00000000000000000000007A,
 				00000000000000000000007C,
 				00000000000000000000007E,
+				000000000000000000000080,
+				000000000000000000000082,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -326,43 +332,43 @@
 				000000000000000000000036,
 				000000000000000000000049,
 				000000000000000000000054,
-				00000000000000000000005D,
-				00000000000000000000006A,
-				000000000000000000000075,
+				000000000000000000000061,
+				00000000000000000000006E,
+				000000000000000000000079,
 			);
 			path = Features;
 			sourceTree = "<group>";
 		};
-		000000000000000000000080 /* Shared */ = {
+		000000000000000000000084 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000081,
-				000000000000000000000083,
 				000000000000000000000085,
 				000000000000000000000087,
 				000000000000000000000089,
 				00000000000000000000008B,
 				00000000000000000000008D,
 				00000000000000000000008F,
+				000000000000000000000091,
+				000000000000000000000093,
 			);
 			path = Shared;
 			sourceTree = "<group>";
 		};
-		000000000000000000000091 /* WatchConnectivity */ = {
+		000000000000000000000095 /* WatchConnectivity */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000092,
+				000000000000000000000096,
 			);
 			path = WatchConnectivity;
 			sourceTree = "<group>";
 		};
-		00000000000000000000009A /* LaunchImages */ = {
+		00000000000000000000009E /* LaunchImages */ = {
 			isa = PBXGroup;
 			children = (
-				00000000000000000000009B,
-				00000000000000000000009D,
 				00000000000000000000009F,
 				0000000000000000000000A1,
+				0000000000000000000000A3,
+				0000000000000000000000A5,
 			);
 			path = LaunchImages;
 			sourceTree = "<group>";
@@ -376,32 +382,32 @@
 				000000000000000000000014,
 				000000000000000000000023,
 				00000000000000000000002C,
-				000000000000000000000080,
-				000000000000000000000091,
-				000000000000000000000094,
+				000000000000000000000084,
 				000000000000000000000095,
-				000000000000000000000096,
 				000000000000000000000098,
+				000000000000000000000099,
 				00000000000000000000009A,
+				00000000000000000000009C,
+				00000000000000000000009E,
 			);
 			path = DrinkTrack;
 			sourceTree = "<group>";
 		};
-		0000000000000000000000A3 /* SharedWatch */ = {
+		0000000000000000000000A7 /* SharedWatch */ = {
 			isa = PBXGroup;
 			children = (
-				0000000000000000000000A4 /* SessionSyncPayload.swift */,
+				0000000000000000000000A8 /* SessionSyncPayload.swift */,
 			);
 			path = SharedWatch;
 			sourceTree = "<group>";
 		};
-		0000000000000000000000A7 /* DrinkTrackWatch */ = {
+		0000000000000000000000AB /* DrinkTrackWatch */ = {
 			isa = PBXGroup;
 			children = (
-				0000000000000000000000A8 /* DrinkTrackWatchApp.swift */,
-				0000000000000000000000AA /* WatchRootView.swift */,
-				0000000000000000000000AC /* WatchSessionStore.swift */,
-				0000000000000000000000AE /* Assets.xcassets */,
+				0000000000000000000000AC /* DrinkTrackWatchApp.swift */,
+				0000000000000000000000AE /* WatchRootView.swift */,
+				0000000000000000000000B0 /* WatchSessionStore.swift */,
+				0000000000000000000000B2 /* Assets.xcassets */,
 			);
 			path = DrinkTrackWatch;
 			sourceTree = "<group>";
@@ -419,8 +425,8 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000001 /* DrinkTrack */,
-				0000000000000000000000A3 /* SharedWatch */,
-				0000000000000000000000A7 /* DrinkTrackWatch */,
+				0000000000000000000000A7 /* SharedWatch */,
+				0000000000000000000000AB /* DrinkTrackWatch */,
 				FFFFFFFF000000000000000B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -524,12 +530,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				000000000000000000000097 /* Assets.xcassets in Resources */,
-				000000000000000000000099 /* LaunchScreenV2.storyboard in Resources */,
-				00000000000000000000009C /* LaunchPortraitV2@2x.png in Resources */,
-				00000000000000000000009E /* LaunchPortraitV2@3x.png in Resources */,
-				0000000000000000000000A0 /* LaunchLandscapeV2@2x.png in Resources */,
-				0000000000000000000000A2 /* LaunchLandscapeV2@3x.png in Resources */,
+				00000000000000000000009B /* Assets.xcassets in Resources */,
+				00000000000000000000009D /* LaunchScreenV2.storyboard in Resources */,
+				0000000000000000000000A0 /* LaunchPortraitV2@2x.png in Resources */,
+				0000000000000000000000A2 /* LaunchPortraitV2@3x.png in Resources */,
+				0000000000000000000000A4 /* LaunchLandscapeV2@2x.png in Resources */,
+				0000000000000000000000A6 /* LaunchLandscapeV2@3x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -576,34 +582,36 @@
 				000000000000000000000053 /* LocationInputField.swift in Sources */,
 				000000000000000000000056 /* PlaceSummary.swift in Sources */,
 				000000000000000000000058 /* RouteJournal.swift in Sources */,
-				00000000000000000000005A /* MarkPlaceSheet.swift in Sources */,
-				00000000000000000000005C /* DrinkingMapView.swift in Sources */,
-				00000000000000000000005F /* TrendsView.swift in Sources */,
-				000000000000000000000061 /* TrendAxis.swift in Sources */,
-				000000000000000000000063 /* FrequencyChart.swift in Sources */,
-				000000000000000000000065 /* VolumeTrendChart.swift in Sources */,
-				000000000000000000000067 /* DrinkVsNonDrinkComparisonView.swift in Sources */,
-				000000000000000000000069 /* MonthlySpendSummaryView.swift in Sources */,
-				00000000000000000000006C /* FriendFeedView.swift in Sources */,
-				00000000000000000000006E /* FriendCodeView.swift in Sources */,
-				000000000000000000000070 /* ShareCardView.swift in Sources */,
-				000000000000000000000072 /* SessionDetailView.swift in Sources */,
-				000000000000000000000074 /* SessionTimelineChart.swift in Sources */,
-				000000000000000000000077 /* SettingsView.swift in Sources */,
-				000000000000000000000079 /* DataManagementView.swift in Sources */,
-				00000000000000000000007B /* AlertSettingsView.swift in Sources */,
-				00000000000000000000007D /* ProfileView.swift in Sources */,
-				00000000000000000000007F /* HealthConnectionStatusView.swift in Sources */,
-				000000000000000000000082 /* DisclaimerStrings.swift in Sources */,
-				000000000000000000000084 /* DesignSystem.swift in Sources */,
-				000000000000000000000086 /* NumericField.swift in Sources */,
-				000000000000000000000088 /* RootView.swift in Sources */,
-				00000000000000000000008A /* UserPreferences.swift in Sources */,
-				00000000000000000000008C /* LocationProvider.swift in Sources */,
-				00000000000000000000008E /* QRCodeImage.swift in Sources */,
-				000000000000000000000090 /* BrandSplashView.swift in Sources */,
-				000000000000000000000093 /* PhoneWatchBridge.swift in Sources */,
-				0000000000000000000000A5 /* SessionSyncPayload.swift in Sources */,
+				00000000000000000000005A /* RouteJournalExport.swift in Sources */,
+				00000000000000000000005C /* RouteJournalShareCardView.swift in Sources */,
+				00000000000000000000005E /* MarkPlaceSheet.swift in Sources */,
+				000000000000000000000060 /* DrinkingMapView.swift in Sources */,
+				000000000000000000000063 /* TrendsView.swift in Sources */,
+				000000000000000000000065 /* TrendAxis.swift in Sources */,
+				000000000000000000000067 /* FrequencyChart.swift in Sources */,
+				000000000000000000000069 /* VolumeTrendChart.swift in Sources */,
+				00000000000000000000006B /* DrinkVsNonDrinkComparisonView.swift in Sources */,
+				00000000000000000000006D /* MonthlySpendSummaryView.swift in Sources */,
+				000000000000000000000070 /* FriendFeedView.swift in Sources */,
+				000000000000000000000072 /* FriendCodeView.swift in Sources */,
+				000000000000000000000074 /* ShareCardView.swift in Sources */,
+				000000000000000000000076 /* SessionDetailView.swift in Sources */,
+				000000000000000000000078 /* SessionTimelineChart.swift in Sources */,
+				00000000000000000000007B /* SettingsView.swift in Sources */,
+				00000000000000000000007D /* DataManagementView.swift in Sources */,
+				00000000000000000000007F /* AlertSettingsView.swift in Sources */,
+				000000000000000000000081 /* ProfileView.swift in Sources */,
+				000000000000000000000083 /* HealthConnectionStatusView.swift in Sources */,
+				000000000000000000000086 /* DisclaimerStrings.swift in Sources */,
+				000000000000000000000088 /* DesignSystem.swift in Sources */,
+				00000000000000000000008A /* NumericField.swift in Sources */,
+				00000000000000000000008C /* RootView.swift in Sources */,
+				00000000000000000000008E /* UserPreferences.swift in Sources */,
+				000000000000000000000090 /* LocationProvider.swift in Sources */,
+				000000000000000000000092 /* QRCodeImage.swift in Sources */,
+				000000000000000000000094 /* BrandSplashView.swift in Sources */,
+				000000000000000000000097 /* PhoneWatchBridge.swift in Sources */,
+				0000000000000000000000A9 /* SessionSyncPayload.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -611,7 +619,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0000000000000000000000AF /* Assets.xcassets in Resources */,
+				0000000000000000000000B3 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -619,10 +627,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0000000000000000000000A6 /* SessionSyncPayload.swift in Sources */,
-				0000000000000000000000A9 /* DrinkTrackWatchApp.swift in Sources */,
-				0000000000000000000000AB /* WatchRootView.swift in Sources */,
-				0000000000000000000000AD /* WatchSessionStore.swift in Sources */,
+				0000000000000000000000AA /* SessionSyncPayload.swift in Sources */,
+				0000000000000000000000AD /* DrinkTrackWatchApp.swift in Sources */,
+				0000000000000000000000AF /* WatchRootView.swift in Sources */,
+				0000000000000000000000B1 /* WatchSessionStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -747,7 +755,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DrinkTrack/DrinkTrack.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkTrack/Info.plist;
@@ -773,7 +781,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DrinkTrack/DrinkTrack.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkTrack/Info.plist;
@@ -798,7 +806,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "小酌场";
 				INFOPLIST_KEY_WKApplication = YES;
@@ -826,7 +834,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "小酌场";
 				INFOPLIST_KEY_WKApplication = YES;

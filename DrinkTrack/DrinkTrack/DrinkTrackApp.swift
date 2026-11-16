@@ -10,6 +10,7 @@ struct DrinkTrackApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @Environment(\.scenePhase) private var scenePhase
     @State private var showBrandSplash = !Self.shouldSkipBrandSplash
+    @AppStorage("appearancePreference") private var appearanceRaw = AppearancePreference.system.rawValue
 
     var body: some Scene {
         WindowGroup {
@@ -31,6 +32,7 @@ struct DrinkTrackApp: App {
             .environment(\.managedObjectContext, persistence.viewContext)
             .environmentObject(healthKitManager)
             .environmentObject(drinkRepository)
+            .preferredColorScheme(preferredColorScheme)
             .task {
                 PhoneWatchBridge.shared.start(repository: drinkRepository, health: healthKitManager)
                 guard showBrandSplash else { return }
@@ -54,6 +56,14 @@ struct DrinkTrackApp: App {
             }
         }
     }
+    private var preferredColorScheme: ColorScheme? {
+        switch AppearancePreference(rawValue: appearanceRaw) ?? .system {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+
     /// UI tests and debug launches can skip the branded splash so walkthroughs
     /// do not wait on the animation. Also skip when running under XCTest.
     private static var shouldSkipBrandSplash: Bool {

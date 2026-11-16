@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var showAFibDisclaimer = false
     @State private var profile: UserProfileEntity?
     @State private var spendTrackingEnabled = UserPreferences.spendTrackingEnabled
+    @AppStorage("appearancePreference") private var appearanceRaw = AppearancePreference.system.rawValue
 
     var body: some View {
         // 注意：这里**不能**再包一层 NavigationStack。
@@ -19,6 +20,19 @@ struct SettingsView: View {
                 // 健康连接状态不在这里重复展示——它在「我的」页顶部，
                 // 用 HealthConnectionStatusView 如实反映真实可读性，
                 // 而不是像以前那样显示一个永远为「已授权」的假状态。
+                Section {
+                    Picker("外观", selection: $appearanceRaw) {
+                        Text("跟随系统").tag(AppearancePreference.system.rawValue)
+                        Text("浅色").tag(AppearancePreference.light.rawValue)
+                        Text("深色").tag(AppearancePreference.dark.rawValue)
+                    }
+                    .pickerStyle(.menu)
+                } header: {
+                    Text("显示")
+                } footer: {
+                    Text("默认跟随系统的浅色或深色模式，也可以在这里单独选择。")
+                }
+
                 Section {
                     NavigationLink("会话中的身体提示") {
                         AlertSettingsView()

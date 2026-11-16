@@ -18,6 +18,8 @@ struct DrinkingMapView: View {
     @State private var markInitialName = ""
     @State private var fillPlaceName: String?
     @State private var didFitCamera = false
+    @State private var showExportSheet = false
+    @State private var showExportEmptyHint = false
 
     private enum ListMode: String, CaseIterable, Identifiable {
         case timeline
@@ -45,6 +47,24 @@ struct DrinkingMapView: View {
         return pins.first { $0.stop.name == selectedPinName }
     }
 
+    private var nameOnlyPlaces: [RouteJournalNameOnlyPlace] {
+        places.filter { !$0.hasCoordinate }.map {
+            RouteJournalNameOnlyPlace(name: $0.name, lastAt: $0.lastAt)
+        }
+    }
+
+    private var exportPayload: RouteJournalExport {
+        RouteJournalExport.build(
+            stops: allStops,
+            nameOnlyPlaces: nameOnlyPlaces,
+            range: timeRange
+        )
+    }
+
+    private var hasAnyRouteData: Bool {
+        !allStops.isEmpty || places.contains { !$0.hasCoordinate }
+    }
+
 
     var body: some View {
         NavigationStack {
@@ -61,6 +81,18 @@ struct DrinkingMapView: View {
             .background(DesignSystem.pagePlane)
             .navigationTitle("路书")
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        if exportPayload.canExport {
+                            showExportSheet = true
+                        } else {
+                            showExportEmptyHint = true
+                        }
+                    } label: {
+                        Label("分享", systemImage: "square.and.arrow.up")
+                    }
+                    .accessibilityLabel("分享路书")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         markCoordinate = nil
@@ -98,6 +130,17 @@ struct DrinkingMapView: View {
                     )
                     .environmentObject(drinkRepository)
                 }
+            }
+            .alert("还没有可导出的路书", isPresented: $showExportEmptyHint) {
+                Button("好", role: .cancel) {}
+            } message: {
+                Text(RouteJournalExport.emptyHint(hasAnyData: hasAnyRouteData, range: timeRange))
+            }
+            .sheet(isPresented: $showExportSheet) {
+                RouteJournalExportSheet(
+                    payload: exportPayload,
+                    mappedStops: RouteJournal.filter(allStops, range: timeRange)
+                )
             }
             .task { reload(fit: true) }
             .onReceive(NotificationCenter.default.publisher(for: .drinkTrackDataDidChange)) { _ in

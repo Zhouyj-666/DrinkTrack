@@ -256,6 +256,26 @@ final class DrinkTrackSmokeUITests: XCTestCase {
                 app.swipeUp()
                 snap("tab-map-list")
             }
+            let share = app.buttons["分享路书"]
+            if share.waitForExistence(timeout: 3) {
+                snap("tab-map-share-button")
+                if share.isHittable {
+                    share.tap()
+                    let alert = app.alerts["还没有可导出的路书"]
+                    if alert.waitForExistence(timeout: 3) {
+                        snap("tab-map-share-empty")
+                        let ok = alert.buttons["好"]
+                        if ok.exists { ok.tap() }
+                    } else if app.navigationBars["导出路书"].waitForExistence(timeout: 3) {
+                        snap("tab-map-export-sheet")
+                        let close = app.buttons["关闭"]
+                        if close.exists { close.tap() }
+                    }
+                }
+            } else {
+                snap("MISSING-map-share")
+                note("路书 share button was not found.")
+            }
         }
 
         // Friends

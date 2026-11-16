@@ -21,10 +21,10 @@ enum DesignSystem {
     static let baseline = Color(light: "#c3c2b7", dark: "#383835")
 
     // MARK: Sequential（心率/血氧等单一幅度数值）—— 单一蓝色色阶，浅→深
-    static let sequentialBlue100 = Color(hex: "#cde2fb")
+    static let sequentialBlue100 = Color(light: "#cde2fb", dark: "#16324f")
     static let sequentialBlue400 = Color(light: "#3987e5", dark: "#3987e5")
     static let sequentialBlue500 = Color(light: "#256abf", dark: "#256abf")
-    static let sequentialBlue700 = Color(hex: "#0d366b")
+    static let sequentialBlue700 = Color(light: "#0d366b", dark: "#9ec4ef")
 
     /// 心率曲线主色（FR-DASH-01）
     static var heartRateLine: Color { sequentialBlue500 }

@@ -81,4 +81,106 @@ final class RouteJournalTests: XCTestCase {
         XCTAssertEqual(summaries.first?.name, "公园")
         XCTAssertTrue(summaries.first?.hasCoordinate ?? false)
     }
+
+
+    func testExportPayloadOmitsCoordinatesByDefault() {
+        let calendar = Calendar(identifier: .gregorian)
+        let day = calendar.date(from: DateComponents(year: 2026, month: 11, day: 8, hour: 21))!
+        // Distinctive values that must never appear in the shareable payload.
+        let latitude = 39.934567
+        let longitude = 116.456789
+        let stops = RouteJournal.stops(
+            sessions: [
+                (id: "s1", name: "三里屯", startedAt: day, latitude: latitude, longitude: longitude, volumeML: 330, standardDrinks: 1)
+            ],
+            placeMarks: []
+        )
+        let payload = RouteJournalExport.build(
+            stops: stops,
+            nameOnlyPlaces: [RouteJournalNameOnlyPlace(name: "巷子酒馆", lastAt: day)],
+            range: .all,
+            now: day,
+            calendar: calendar
+        )
+        XCTAssertTrue(payload.canExport)
+        XCTAssertFalse(payload.includesCoordinates)
+        let blob = payload.shareableText + "\n" + payload.shareableJSONString
+        let lowered = blob.lowercased()
+        XCTAssertFalse(blob.contains("39.934567"))
+        XCTAssertFalse(blob.contains("116.456789"))
+        XCTAssertFalse(blob.contains("39.93"))
+        XCTAssertFalse(blob.contains("116.45"))
+        XCTAssertFalse(lowered.contains("latitude"))
+        XCTAssertFalse(lowered.contains("longitude"))
+        XCTAssertFalse(lowered.contains("\"lat\""))
+        XCTAssertFalse(lowered.contains("\"lon\""))
+        XCTAssertTrue(payload.items.contains { $0.name == "三里屯" && $0.pinNumber == 1 && !$0.isNameOnly })
+        XCTAssertTrue(payload.items.contains { $0.name == "巷子酒馆" && $0.isNameOnly })
+    }
+
+    func testExportAppliesTimeRangeFilter() {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(secondsFromGMT: 8 * 3600)!
+        cal.firstWeekday = 2
+        let now = cal.date(from: DateComponents(year: 2026, month: 11, day: 16, hour: 12))!
+        let stops = RouteJournal.stops(
+            sessions: [
+                (id: "old", name: "A", startedAt: cal.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 20))!, latitude: 1, longitude: 1, volumeML: 1, standardDrinks: 1),
+                (id: "month", name: "B", startedAt: cal.date(from: DateComponents(year: 2026, month: 11, day: 2, hour: 20))!, latitude: 2, longitude: 2, volumeML: 1, standardDrinks: 1),
+                (id: "week", name: "C", startedAt: cal.date(from: DateComponents(year: 2026, month: 11, day: 16, hour: 10))!, latitude: 3, longitude: 3, volumeML: 1, standardDrinks: 1)
+            ],
+            placeMarks: []
+        )
+        let nameOnly = [
+            RouteJournalNameOnlyPlace(name: "巷子酒馆", lastAt: cal.date(from: DateComponents(year: 2026, month: 11, day: 16, hour: 11))!),
+            RouteJournalNameOnlyPlace(name: "过期店", lastAt: cal.date(from: DateComponents(year: 2026, month: 10, day: 3, hour: 19))!)
+        ]
+        let week = RouteJournalExport.build(stops: stops, nameOnlyPlaces: nameOnly, range: .week, now: now, calendar: cal)
+        XCTAssertEqual(week.items.filter { !$0.isNameOnly }.map(\.name), ["C"])
+        XCTAssertEqual(week.items.filter(\.isNameOnly).map(\.name), ["巷子酒馆"])
+        let month = RouteJournalExport.build(stops: stops, nameOnlyPlaces: nameOnly, range: .month, now: now, calendar: cal)
+        XCTAssertEqual(month.items.filter { !$0.isNameOnly }.map(\.name), ["B", "C"])
+        XCTAssertEqual(month.items.filter(\.isNameOnly).map(\.name), ["巷子酒馆"])
+        let all = RouteJournalExport.build(stops: stops, nameOnlyPlaces: nameOnly, range: .all, now: now, calendar: cal)
+        XCTAssertEqual(all.items.filter { !$0.isNameOnly }.map(\.name), ["A", "B", "C"])
+        XCTAssertEqual(Set(all.items.filter(\.isNameOnly).map(\.name)), Set(["巷子酒馆", "过期店"]))
+    }
+
+    func testExportListsNameOnlyPlacesWithoutFakeCoordinates() {
+        let calendar = Calendar(identifier: .gregorian)
+        let day = calendar.date(from: DateComponents(year: 2026, month: 11, day: 10, hour: 19))!
+        let stops = RouteJournal.stops(
+            sessions: [
+                (id: "s1", name: "家里", startedAt: day, latitude: 31.230401, longitude: 121.473701, volumeML: 200, standardDrinks: 0.8),
+                (id: "s2", name: "仅名称", startedAt: day, latitude: nil, longitude: nil, volumeML: 100, standardDrinks: 0.4)
+            ],
+            placeMarks: []
+        )
+        let payload = RouteJournalExport.build(
+            stops: stops,
+            nameOnlyPlaces: [RouteJournalNameOnlyPlace(name: "仅名称", lastAt: day)],
+            range: .all,
+            now: day,
+            calendar: calendar
+        )
+        XCTAssertEqual(payload.mappedStopCount, 1)
+        XCTAssertEqual(payload.nameOnlyCount, 1)
+        let nameOnly = payload.items.first { $0.isNameOnly }
+        XCTAssertEqual(nameOnly?.name, "仅名称")
+        XCTAssertNil(nameOnly?.pinNumber)
+        let mapped = payload.items.first { !$0.isNameOnly }
+        XCTAssertEqual(mapped?.name, "家里")
+        XCTAssertEqual(mapped?.pinNumber, 1)
+        let blob = payload.shareableText + "\n" + payload.shareableJSONString
+        XCTAssertFalse(blob.contains("31.230401"))
+        XCTAssertFalse(blob.contains("121.473701"))
+        XCTAssertTrue(blob.contains("图上未标点"))
+    }
+
+    func testEmptyExportCannotShare() {
+        let payload = RouteJournalExport.build(stops: [], nameOnlyPlaces: [], range: .all)
+        XCTAssertFalse(payload.canExport)
+        XCTAssertTrue(payload.items.isEmpty)
+        XCTAssertFalse(RouteJournalExport.emptyHint(hasAnyData: false, range: .all).isEmpty)
+    }
 }
