@@ -77,8 +77,8 @@ GitHub 新建仓库 → `uploading an existing file` → 把 `E:\DrinkTrack` 里
 
 编译成功后（绿色 ✓）：
 1. 点进这次运行的页面
-2. 最下面 `Artifacts` → 下载 **DrinkTrack-ipa**
-3. 解压出 `DrinkTrack.ipa`
+2. 最下面 `Artifacts` → 下载 **小酌场-ipa**
+3. 解压出 `小酌场.ipa`
 
 ---
 
@@ -88,7 +88,7 @@ GitHub 新建仓库 → `uploading an existing file` → 把 `E:\DrinkTrack` 里
    - 它依赖 iTunes 的驱动组件，如果没装过 iTunes，Sideloadly 会提示你装
 2. iPhone 用数据线插电脑 → iPhone 上弹出"信任此电脑" → 点**信任** → 输入锁屏密码
 3. 打开 Sideloadly：
-   - `IPA file`：拖入 `DrinkTrack.ipa`
+   - `IPA file`：拖入 `小酌场.ipa`
    - `Apple ID`：填你自己的 Apple ID
    - 点 **Start** → 会要求输入 Apple ID 密码（如果开了两步验证，需要用 App 专用密码，Sideloadly 会提示）
 4. 等进度条走完，提示 `Done`
@@ -148,7 +148,7 @@ iPhone 自带的"健康" App 里可以手动添加数据，用来快速验证图
 
 签名 7 天后过期，App 会打不开。重新装一次即可：
 1. iPhone 插电脑
-2. 打开 Sideloadly，拖入同一个 `DrinkTrack.ipa`，Start
+2. 打开 Sideloadly，拖入同一个 `小酌场.ipa`，Start
 3. 本地数据不会丢（Core Data 存在 App 沙盒里，覆盖安装会保留）
 
 改了代码想重新测：push 到 GitHub → 等 Actions 跑完 → 下新 ipa → Sideloadly 重装。

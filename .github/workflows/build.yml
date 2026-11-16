@@ -115,14 +115,14 @@ jobs:
         run: |
           mkdir -p Payload
           cp -R build/Build/Products/Release-iphoneos/DrinkTrack.app Payload/
-          zip -qry DrinkTrack.ipa Payload
-          ls -lh DrinkTrack.ipa
+          zip -qry 小酌场.ipa Payload
+          ls -lh 小酌场.ipa
 
       - name: 上传 IPA（在 Actions 运行结果页面下载）
         uses: actions/upload-artifact@v4
         with:
-          name: DrinkTrack-ipa
-          path: DrinkTrack.ipa
+          name: 小酌场-ipa
+          path: 小酌场.ipa
           retention-days: 30
 
       - name: 上传完整编译日志（无论成功失败都上传，失败时发给 Claude 排查）
