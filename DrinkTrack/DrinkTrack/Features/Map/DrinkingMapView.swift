@@ -82,7 +82,7 @@ struct DrinkingMapView: View {
                     .accessibilityLabel(mapExpanded ? "缩小地图" : "放大地图")
                 }
             }
-            .sheet(isPresented: $showMarkSheet, onDismiss: reload) {
+            .sheet(isPresented: $showMarkSheet, onDismiss: { reload() }) {
                 if let fillPlaceName {
                     MarkPlaceSheet(
                         initialCoordinate: markCoordinate,
