@@ -79,7 +79,7 @@ struct FriendCodeView: View {
     }
 
     private var shareText: String {
-        "我的 DrinkTrack 好友码是 \(myCode)。本版本先把码存到手机上，设备之间的动态互通还在后续。"
+        "我的小酌场好友码是 \(myCode)。本版本先把码存到手机上，设备之间的动态互通还在后续。"
     }
 
     private func saveCode() async {

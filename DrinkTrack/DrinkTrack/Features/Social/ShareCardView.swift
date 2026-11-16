@@ -80,11 +80,13 @@ struct ShareCardView: View {
 
     private var header: some View {
         HStack(alignment: .top) {
-            Image(systemName: "wineglass.fill")
-                .font(.title2)
-                .foregroundStyle(DesignSystem.heartRateLine)
+            Image("BrandMark")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 28, height: 28)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text("DrinkTrack 饮酒打卡").font(.headline)
+                Text("小酌场 饮酒打卡").font(.headline)
                 Text(timeRangeText)
                     .font(.caption)
                     .foregroundStyle(DesignSystem.secondaryInk)

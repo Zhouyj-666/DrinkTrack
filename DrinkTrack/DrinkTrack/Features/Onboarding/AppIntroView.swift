@@ -42,14 +42,17 @@ struct AppIntroView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("DrinkTrack")
-                            .font(.largeTitle.bold())
+                    VStack(alignment: .leading, spacing: 12) {
+                        Image("BrandLockup")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 280, alignment: .leading)
+                            .accessibilityLabel("小酌场 SipSession")
                         Text("把每一次喝酒，变成一次可以回看的身体记录。")
                             .font(.subheadline)
                             .foregroundStyle(DesignSystem.secondaryInk)
                     }
-                    .padding(.top, 32)
+                    .padding(.top, 24)
 
                     VStack(alignment: .leading, spacing: 22) {
                         ForEach(features) { feature in

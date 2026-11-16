@@ -64,7 +64,8 @@ $swiftFiles = @(
 $plainOtherFiles = @(
     @{ Path = "Info.plist"; Type = "text.plist.xml" },
     @{ Path = "DrinkTrack.entitlements"; Type = "text.plist.entitlements" },
-    @{ Path = "Assets.xcassets"; Type = "folder.assetcatalog" }
+    @{ Path = "Assets.xcassets"; Type = "folder.assetcatalog" },
+    @{ Path = "LaunchScreen.storyboard"; Type = "file.storyboard" }
 )
 
 $xcdatamodeldRel = "Model/DrinkTrack.xcdatamodeld"
@@ -170,7 +171,7 @@ function Walk-Node($node) {
         if ($node.FileType -eq 'sourcecode.swift') {
             $bfId = New-Id
             [void]$sourceBuildFiles.Add(@{ Id = $bfId; FileRefId = $id; Name = $node.Name })
-        } elseif ($node.FileType -eq 'folder.assetcatalog') {
+        } elseif ($node.FileType -eq 'folder.assetcatalog' -or $node.FileType -eq 'file.storyboard') {
             $bfId = New-Id
             [void]$resourceBuildFiles.Add(@{ Id = $bfId; FileRefId = $id; Name = $node.Name })
         }

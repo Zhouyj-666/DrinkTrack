@@ -43,7 +43,7 @@ struct SessionDetailView: View {
                 if let renderedImage {
                     ShareLink(
                         item: renderedImage,
-                        preview: SharePreview("DrinkTrack 饮酒打卡", image: renderedImage)
+                        preview: SharePreview("小酌场 饮酒打卡", image: renderedImage)
                     ) {
                         Label("分享这张卡片", systemImage: "square.and.arrow.up")
                             .frame(maxWidth: .infinity)
@@ -59,7 +59,7 @@ struct SessionDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 ShareLink(
                     item: renderedImage ?? Image(systemName: "wineglass"),
-                    preview: SharePreview("DrinkTrack 饮酒打卡", image: renderedImage ?? Image(systemName: "wineglass"))
+                    preview: SharePreview("小酌场 饮酒打卡", image: renderedImage ?? Image(systemName: "wineglass"))
                 ) {
                     Image(systemName: "square.and.arrow.up")
                 }

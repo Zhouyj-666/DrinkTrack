@@ -60,6 +60,7 @@
 		000000000000000000000077 /* LocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000076 /* LocationProvider.swift */; };
 		000000000000000000000079 /* QRCodeImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000078 /* QRCodeImage.swift */; };
 		00000000000000000000007D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007C /* Assets.xcassets */; };
+		00000000000000000000007F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007E /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -122,6 +123,7 @@
 		00000000000000000000007A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00000000000000000000007B /* DrinkTrack.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DrinkTrack.entitlements; sourceTree = "<group>"; };
 		00000000000000000000007C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		00000000000000000000007E /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -289,6 +291,7 @@
 				00000000000000000000007A,
 				00000000000000000000007B,
 				00000000000000000000007C,
+				00000000000000000000007E,
 			);
 			path = DrinkTrack;
 			sourceTree = "<group>";
@@ -384,6 +387,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				00000000000000000000007D /* Assets.xcassets in Resources */,
+				00000000000000000000007F /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

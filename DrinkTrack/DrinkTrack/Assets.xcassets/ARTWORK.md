@@ -1,12 +1,12 @@
-# DrinkTrack 图标与开屏图 — 给设计替换用
+# 小酌场 / SipSession 图标与开屏图
 
-这里放的是**占位图**，不是最终设计。Simmons 做好 Logo / 开屏图后，按下面的文件名和尺寸直接覆盖即可，不需要改工程结构、不需要改代码。
+工程名、Bundle ID 和目标名称仍是 DrinkTrack / `com.drinktrack.app`。桌面显示名（CFBundleDisplayName）和界面文案用「小酌场」，英文标识为 SipSession。
 
-占位图是纯色底加一只简单的杯形线条，方便现在打包安装；请整张替换，不要在占位图上修修补补。
+源文件保存在仓库根目录的 `artwork/`，已放进资源目录的是处理后的版本。把新图放到 `artwork/` 后，再按下面规则更新 `Assets.xcassets`，不要只改 C 盘里的原稿。
 
-## 1. App 图标（主屏幕 / App Store）
+## App 图标（必须用正方形、无圆角、无透明）
 
-替换这个文件，**保持文件名不变**：
+路径：
 
 ```
 DrinkTrack/DrinkTrack/Assets.xcassets/AppIcon.appiconset/AppIcon.png
@@ -14,56 +14,55 @@ DrinkTrack/DrinkTrack/Assets.xcassets/AppIcon.appiconset/AppIcon.png
 
 要求：
 
-- 正好 **1024 × 1024** 的 PNG
-- **不要透明通道**（App Store 会拒）
-- **不要**自己画圆角或刘海遮罩，系统会统一裁切
-- `Contents.json` 已经指向 `AppIcon.png`，换图即可
+- 正好 1024 × 1024 的 PNG
+- RGB，不要透明通道
+- 画面要铺满正方形，不要预先裁成圆角
 
-如果以后要做深色或着色图标，再在同一个 `AppIcon.appiconset` 里补文件，并在 `Contents.json` 中增加对应条目，例如：
+当前文件来自 `artwork/drinktrack-logo-icon-1024.png`（Simmons 交付的正方形图标）。iOS 会自己加圆角，请不要把 `artwork/drinktrack-icon-cheers.jpg` 放到这里——那张已经带圆角，再当 App 图标会双重圆角。
 
-```json
-{
-  "filename" : "AppIcon-dark.png",
-  "idiom" : "universal",
-  "platform" : "ios",
-  "size" : "1024x1024",
-  "appearances" : [{ "appearance" : "luminosity", "value" : "dark" }]
-}
-```
+`Contents.json` 和 imageset 名称不要改。
 
-现在不必做。
+## 开屏图
 
-## 2. 开屏 Logo
+开屏由 `LaunchScreen.storyboard` 全屏铺 `LaunchPortrait` / `LaunchLandscape` 图片，不再使用原来的「蓝底 + 线稿酒杯」和 `LaunchLogo`。
 
-开屏背景色来自 `LaunchBackground.colorset`（当前是 `#256ABF`，和占位图标同色）。Logo 叠在正中央。
+图片不是直接放大 720×1280 / 1280×720 的交付 JPG，而是按交付稿合成的更高分辨率版本：
 
-替换这三张，**保持文件名不变**：
+- 从正方形图标里抠出圆形酒杯标志（带透明）
+- 用开屏稿取样的酒红到橙色渐变铺底
+- 用矢量字体写出「SipSession / 小酌场」，保证字清晰
+
+资源：
 
 ```
-DrinkTrack/DrinkTrack/Assets.xcassets/LaunchLogo.imageset/LaunchLogo.png       256 × 256  (@1x)
-DrinkTrack/DrinkTrack/Assets.xcassets/LaunchLogo.imageset/LaunchLogo@2x.png    512 × 512  (@2x)
-DrinkTrack/DrinkTrack/Assets.xcassets/LaunchLogo.imageset/LaunchLogo@3x.png    768 × 768  (@3x)
+LaunchPortrait.imageset/LaunchPortrait@2x.png     860 × 1920
+LaunchPortrait.imageset/LaunchPortrait@3x.png     1290 × 2880
+LaunchLandscape.imageset/LaunchLandscape@2x.png   1920 × 860
+LaunchLandscape.imageset/LaunchLandscape@3x.png   2880 × 1290
 ```
 
-建议：
+比例故意比常见手机再长一些（约 2.23），这样刘海屏或矮屏只会裁到上下/左右的渐变，标志和文字留在中间安全区。图片用 Aspect Fill，背景色 `LaunchBackground` 是酒红 `#3C0613`，以免图片未加载时闪旧蓝底。
 
-- PNG，**可以带透明**，好叠在开屏背景上
-- 内容居中；可以是纯 Logo，也可以是 Logo + 名称（占位图带了 DrinkTrack 字样）
-- 三张应是同一构图的不同分辨率，不要只换其中一张
+说明：当前 App 仍只支持竖屏（Info.plist 里 `UISupportedInterfaceOrientations` 只有 Portrait）。横屏开屏图已接到 storyboard 的 `heightClass = compact`，等以后开放横屏才会用到。
 
-如果只先交出一张高清图，请至少提供 768 × 768（@3x），另外两张按比例缩小。
+## 引导页 / 关于页锁头图
 
-## 3. 开屏背景色 / 强调色（可选）
+```
+BrandLockup.imageset/  — 白底图标 + SipSession / 小酌场，已裁掉多余白边
+BrandMark.imageset/    — 透明圆形标志，256 / 512 / 768，用于分享卡等小图标
+```
 
-- 开屏背景：`LaunchBackground.colorset/Contents.json`（现在是 `#256ABF`）
-- 按钮和系统强调色：`AccentColor.colorset/Contents.json`（现在同样是 `#256ABF`）
+`BrandLockup` 来自 `artwork/drinktrack-lockup.jpg`。那张图里的图标已经带圆角，只适合用在引导和关于页，不要拿去替换 AppIcon。
 
-改颜色时只动 `components` 里的 RGB，不要改 `colorset` 的名字。`Info.plist` 的 `UILaunchScreen` 已经引用了 `LaunchBackground` 和 `LaunchLogo`。
+## 颜色
 
-## 4. 不要改的东西
+- `LaunchBackground`：`#3C0613`（开屏酒红）
+- `AccentColor`：`#A82A24`（接近品牌酒红，替代原来的 `#256ABF`）
 
-- 不要重命名 `AppIcon`、`LaunchLogo`、`LaunchBackground` 这些资源集
-- 不要删 `Contents.json`
-- 不需要新增 Launch Screen Storyboard，也不需要改 Xcode 工程文件
+趋势图里原有的数据色没有跟着改，以免把图表语义改乱。
 
-替换后重新编译即可在模拟器和真机上看到新图。
+## 不要做的事
+
+- 不要把 `drinktrack-icon-cheers.jpg`（预切圆角）复制到 `AppIcon.appiconset/AppIcon.png`
+- 不要给 App 图标加透明或先裁圆角
+- 不要改 Bundle ID、Xcode 目标名或工程名

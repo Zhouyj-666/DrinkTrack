@@ -3,7 +3,7 @@ import CoreData
 import SwiftUI
 
 /// 把本机饮酒记录导出为 JSON（完整备份）或 CSV（方便用表格打开）。
-/// 导出文件写在临时目录，再交给系统分享面板，DrinkTrack 不会自行上传。
+/// 导出文件写在临时目录，再交给系统分享面板，小酌场不会自行上传。
 enum DataExporter {
     struct Result {
         let url: URL
@@ -26,16 +26,17 @@ enum DataExporter {
 
     private static func exportJSON(context: NSManagedObjectContext) throws -> Result {
         let payload: [String: Any] = [
-            "app": "DrinkTrack",
+            "app": "SipSession",
+            "displayName": "小酌场",
             "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0",
             "exportedAt": iso(Date()),
-            "note": "本文件由 DrinkTrack 在本机生成。含饮酒记录、会话、可选花费和地点、本场提示和个人基础信息；不含 Apple 健康里的原始心率/血氧样本。",
+            "note": "本文件由小酌场（SipSession）在本机生成。含饮酒记录、会话、可选花费和地点、本场提示和个人基础信息；不含 Apple 健康里的原始心率/血氧样本。",
             "profile": profileJSON(context: context),
             "sessions": sessionsJSON(context: context),
             "friends": friendsJSON(context: context)
         ]
         let data = try JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
-        return try write(data: data, fileName: fileName(prefix: "DrinkTrack-记录", ext: "json"))
+        return try write(data: data, fileName: fileName(prefix: "小酌场-记录", ext: "json"))
     }
 
     private static func profileJSON(context: NSManagedObjectContext) -> [String: Any] {
@@ -171,7 +172,7 @@ enum DataExporter {
         // BOM so Excel on Windows opens UTF-8 correctly.
         let body = "\u{FEFF}" + lines.joined(separator: "\r\n")
         let data = Data(body.utf8)
-        return try write(data: data, fileName: fileName(prefix: "DrinkTrack-记录", ext: "csv"))
+        return try write(data: data, fileName: fileName(prefix: "小酌场-记录", ext: "csv"))
     }
 
     // MARK: - Files

@@ -79,6 +79,25 @@ struct SettingsView: View {
                 NavigationLink("数据管理") {
                     DataManagementView()
                 }
+
+                Section {
+                    VStack(spacing: 8) {
+                        Image("BrandLockup")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 200)
+                            .accessibilityLabel("小酌场 SipSession")
+                        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0"
+                        Text("版本 \(version)")
+                            .font(.caption)
+                            .foregroundStyle(DesignSystem.mutedInk)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .listRowBackground(Color.clear)
+                } header: {
+                    Text("关于")
+                }
         }
         .navigationTitle("设置")
         .navigationBarTitleDisplayMode(.inline)

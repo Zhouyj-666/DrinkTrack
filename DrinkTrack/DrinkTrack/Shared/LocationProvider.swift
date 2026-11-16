@@ -35,7 +35,7 @@ final class LocationProvider: NSObject, ObservableObject, CLLocationManagerDeleg
             state = .locating
             manager.requestWhenInUseAuthorization()
         case .denied, .restricted:
-            state = .failed("定位权限已关闭，可在「设置 > 隐私与安全性 > 定位服务」里给 DrinkTrack 打开，或直接手动输入地点。")
+            state = .failed("定位权限已关闭，可在「设置 > 隐私与安全性 > 定位服务」里给小酌场打开，或直接手动输入地点。")
         default:
             state = .locating
             manager.requestLocation()

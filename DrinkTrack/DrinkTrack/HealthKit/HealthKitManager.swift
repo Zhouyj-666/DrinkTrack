@@ -117,7 +117,7 @@ final class HealthKitManager: ObservableObject {
             case .errorHealthDataRestricted:
                 return "健康数据受到系统限制（例如屏幕使用时间或设备管理），无法授权。"
             case .errorAuthorizationDenied:
-                return "系统拒绝了健康数据授权。请打开「健康」App → 头像 → 隐私 → App → DrinkTrack，打开心率、血氧、心率变异性和睡眠。"
+                return "系统拒绝了健康数据授权。请打开「健康」App → 头像 → 隐私 → App → 小酌场，打开心率、血氧、心率变异性和睡眠。"
             case .errorUserCanceled:
                 return "你取消了授权。需要连接时可以再点一次「连接 Apple 健康」。"
             default:

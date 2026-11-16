@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>zh_CN</string>
 	<key>CFBundleDisplayName</key>
-	<string>DrinkTrack</string>
+	<string>小酌场</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -23,9 +23,9 @@
 
 	<!-- FR-HK-06 权限管理：系统授权弹窗展示的文案 -->
 	<key>NSHealthShareUsageDescription</key>
-	<string>DrinkTrack 需要读取你的心率、血氧、HRV 和睡眠数据，用来在饮酒时展示你的实时身体状态，以及生成饮酒日与非饮酒日的长期对比报告。我们只读取数据，不会修改或删除你的健康记录。</string>
+	<string>小酌场需要读取你的心率、血氧、HRV 和睡眠数据，用来在饮酒时展示你的实时身体状态，以及生成饮酒日与非饮酒日的长期对比报告。我们只读取数据，不会修改或删除你的健康记录。</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>DrinkTrack 本版本不会写入任何 Apple Health 数据。</string>
+	<string>小酌场本版本不会写入任何 Apple 健康数据。</string>
 
 	<!-- FR-DR-05 地点（可选），调用系统定位服务 -->
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -36,15 +36,8 @@
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
-	<key>UILaunchScreen</key>
-	<dict>
-		<key>UIColorName</key>
-		<string>LaunchBackground</string>
-		<key>UIImageName</key>
-		<string>LaunchLogo</string>
-		<key>UIImageRespectsSafeAreaInsets</key>
-		<true/>
-	</dict>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

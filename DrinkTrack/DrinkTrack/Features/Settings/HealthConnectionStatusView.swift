@@ -163,7 +163,7 @@ struct HealthConnectionStatusView: View {
             · Apple Watch 还没戴上或还没有数据
             · 当前安装方式没有带上「健康」权限（常见于侧载重签）
 
-            自查：打开「健康」App → 右上角头像 → 隐私 →「App」→ DrinkTrack，\
+            自查：打开「健康」App → 右上角头像 → 隐私 →「App」→ 小酌场，\
             确认心率、血氧、心率变异性、睡眠都是打开的。
             """
         case .notRequested:
