@@ -1,6 +1,5 @@
 import HealthKit
 import Combine
-import Security
 
 /// HealthKit 数据采集模块（§5.1）。
 ///
@@ -217,15 +216,22 @@ final class HealthKitManager: ObservableObject {
         #endif
     }
 
+    /// Read Entitlements from the installed provisioning profile.
+    /// This is available on device installs (including Sideloadly resigns) and
+    /// absent on the Simulator, where we must not pretend the entitlement was
+    /// stripped. The macOS SecStaticCode APIs are not in the iOS SDK.
     private static func signingEntitlements() -> [String: Any]? {
-        var staticCode: SecStaticCode?
-        guard SecStaticCodeCreateWithPath(Bundle.main.bundleURL as CFURL, [], &staticCode) == errSecSuccess,
-              let staticCode else { return nil }
-        var info: CFDictionary?
-        let flags = SecCSFlags(rawValue: kSecCSSigningInformation)
-        guard SecCodeCopySigningInformation(staticCode, flags, &info) == errSecSuccess,
-              let dict = info as? [String: Any] else { return nil }
-        return dict[kSecCodeInfoEntitlementsDict as String] as? [String: Any]
+        guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+              let data = try? Data(contentsOf: url) else { return nil }
+        // The profile is a CMS wrapper around a plist. Scan for the XML body.
+        guard let raw = String(data: data, encoding: .isoLatin1) ?? String(data: data, encoding: .ascii) else { return nil }
+        guard let start = raw.range(of: "<?xml"),
+              let end = raw.range(of: "</plist>") else { return nil }
+        let xml = String(raw[start.lowerBound...end.upperBound])
+        guard let plistData = xml.data(using: .utf8),
+              let plist = try? PropertyListSerialization.propertyList(from: plistData, options: [], format: nil) as? [String: Any],
+              let entitlements = plist["Entitlements"] as? [String: Any] else { return nil }
+        return entitlements
     }
 
     /// App 每次进入前台时调用：恢复采样 + 重新探测连接状态。
