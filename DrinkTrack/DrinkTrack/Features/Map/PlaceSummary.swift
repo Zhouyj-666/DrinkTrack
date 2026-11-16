@@ -70,6 +70,14 @@ struct PlaceAccumulator {
         }
     }
 
+    /// PlaceMark-only visits: keep the catalog row alive even with zero drink logs.
+    mutating func considerMark(coordinate: (Double, Double)?, at date: Date?) {
+        consider(coordinate: coordinate, at: date)
+        if let date, date > (lastAt ?? .distantPast) {
+            lastAt = date
+        }
+    }
+
     func summary() -> PlaceSummary {
         let ranked = categoryVolumes.sorted { $0.value > $1.value }
         let total = ranked.reduce(0) { $0 + $1.value }

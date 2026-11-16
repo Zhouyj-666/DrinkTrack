@@ -155,7 +155,8 @@ final class DrinkRepository: ObservableObject {
 
     // MARK: Places / 喝酒地图
 
-    /// Exact-name lookup for a coordinate the user already granted via current location.
+    /// Exact-name lookup for a coordinate the user already granted via current location
+    /// or an explicit PlaceMark. Never geocodes a typed name.
     func knownCoordinate(forPlaceName name: String) -> (Double, Double)? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
@@ -174,6 +175,18 @@ final class DrinkRepository: ObservableObject {
         sessionRequest.fetchLimit = 1
         if let session = try? context.fetch(sessionRequest).first, let pair = LocationCoordinate.pair(from: session) {
             return pair
+        }
+
+        let markRequest = NSFetchRequest<NSManagedObject>(entityName: "PlaceMark")
+        markRequest.predicate = NSPredicate(format: "name == %@", trimmed)
+        markRequest.sortDescriptors = [NSSortDescriptor(key: "markedAt", ascending: false)]
+        markRequest.fetchLimit = 1
+        if let mark = try? context.fetch(markRequest).first {
+            let latitude = Self.doubleKey(mark, "latitude")
+            let longitude = Self.doubleKey(mark, "longitude")
+            if let pair = LocationCoordinate.validated(latitude: latitude, longitude: longitude) {
+                return pair
+            }
         }
         return nil
     }
@@ -200,6 +213,8 @@ final class DrinkRepository: ObservableObject {
 
     /// Groups the user's own sessions and logs by exact place name.
     /// Name-only places stay in the list even when they have no coordinates.
+    /// Explicit PlaceMarks contribute coordinates / catalog entries but never
+    /// inflate drink-session counts.
     func placeSummaries() -> [PlaceSummary] {
         let sessions = fetchAllSessions(limit: 1000)
         var buckets: [String: PlaceAccumulator] = [:]
@@ -233,9 +248,101 @@ final class DrinkRepository: ObservableObject {
             }
         }
 
+        for mark in fetchPlaceMarks() {
+            guard let name = Self.trimmed(mark.value(forKey: "name") as? String) else { continue }
+            let latitude = Self.doubleKey(mark, "latitude")
+            let longitude = Self.doubleKey(mark, "longitude")
+            let markedAt = mark.value(forKey: "markedAt") as? Date
+            var acc = buckets[name] ?? PlaceAccumulator(name: name)
+            acc.considerMark(
+                coordinate: LocationCoordinate.validated(latitude: latitude, longitude: longitude),
+                at: markedAt
+            )
+            buckets[name] = acc
+        }
+
         return buckets.values
             .map { $0.summary() }
             .sorted { ($0.lastAt ?? .distantPast) > ($1.lastAt ?? .distantPast) }
+    }
+
+    /// Chronological 路书 stops (sessions with coordinates + PlaceMarks).
+    func routeStops() -> [RouteStop] {
+        let sessions = fetchAllSessions(limit: 1000).map { session -> (id: String, name: String?, startedAt: Date?, latitude: Double?, longitude: Double?, volumeML: Double, standardDrinks: Double) in
+            let logs = (session.logs as? Set<DrinkLogEntity>) ?? []
+            let volume = logs.reduce(0.0) { $0 + $1.volumeMl }
+            let standard = logs.reduce(0.0) { $0 + $1.standardDrinks }
+            let pair = LocationCoordinate.pair(from: session)
+            return (
+                id: session.objectID.uriRepresentation().absoluteString,
+                name: session.locationName,
+                startedAt: session.startedAt,
+                latitude: pair?.0,
+                longitude: pair?.1,
+                volumeML: volume,
+                standardDrinks: standard
+            )
+        }
+
+        let marks = fetchPlaceMarks().compactMap { mark -> (id: String, name: String, markedAt: Date, latitude: Double, longitude: Double)? in
+            guard let name = Self.trimmed(mark.value(forKey: "name") as? String),
+                  let markedAt = mark.value(forKey: "markedAt") as? Date,
+                  let latitude = Self.doubleKey(mark, "latitude"),
+                  let longitude = Self.doubleKey(mark, "longitude") else {
+                return nil
+            }
+            let id = (mark.value(forKey: "id") as? UUID)?.uuidString
+                ?? mark.objectID.uriRepresentation().absoluteString
+            return (id: id, name: name, markedAt: markedAt, latitude: latitude, longitude: longitude)
+        }
+
+        return RouteJournal.stops(sessions: sessions, placeMarks: marks)
+    }
+
+    // MARK: PlaceMark / 路书标记
+
+    func fetchPlaceMarks() -> [NSManagedObject] {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "PlaceMark")
+        request.sortDescriptors = [NSSortDescriptor(key: "markedAt", ascending: false)]
+        return (try? context.fetch(request)) ?? []
+    }
+
+    /// Explicit map mark that is NOT a drink session. Same-name drink rows get
+    /// coordinates back-filled; session counts stay unchanged.
+    @discardableResult
+    func addPlaceMark(
+        name: String,
+        latitude: Double,
+        longitude: Double,
+        markedAt: Date = Date(),
+        note: String? = nil
+    ) -> NSManagedObject? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              let pair = LocationCoordinate.validated(latitude: latitude, longitude: longitude),
+              let entity = NSEntityDescription.entity(forEntityName: "PlaceMark", in: context) else {
+            return nil
+        }
+        let mark = NSManagedObject(entity: entity, insertInto: context)
+        mark.setValue(UUID(), forKey: "id")
+        mark.setValue(trimmed, forKey: "name")
+        mark.setValue(pair.0, forKey: "latitude")
+        mark.setValue(pair.1, forKey: "longitude")
+        mark.setValue(markedAt, forKey: "markedAt")
+        if let note {
+            let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+            mark.setValue(trimmedNote.isEmpty ? nil : trimmedNote, forKey: "note")
+        }
+        UserPreferences.rememberLocation(trimmed)
+        backfillCoordinates(forPlaceName: trimmed, latitude: pair.0, longitude: pair.1)
+        save()
+        return mark
+    }
+
+    /// Fill coordinates on same-named drink rows (and leave PlaceMarks alone).
+    func applyCoordinatesToPlaceName(_ name: String, latitude: Double, longitude: Double) {
+        backfillCoordinates(forPlaceName: name, latitude: latitude, longitude: longitude)
+        save()
     }
 
     private static func trimmed(_ raw: String?) -> String? {
@@ -305,5 +412,12 @@ final class DrinkRepository: ObservableObject {
         // 本月花费 and 本月至今花费 are the same number while the month is still
         // in progress: we cannot know future days. Both are month-to-date.
         return (total, total, average, count)
+    }
+
+    private static func doubleKey(_ object: NSManagedObject, _ key: String) -> Double? {
+        if let number = object.value(forKey: key) as? NSNumber {
+            return number.doubleValue
+        }
+        return object.value(forKey: key) as? Double
     }
 }

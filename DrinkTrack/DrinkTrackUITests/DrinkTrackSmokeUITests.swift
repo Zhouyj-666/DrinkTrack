@@ -239,13 +239,18 @@ final class DrinkTrackSmokeUITests: XCTestCase {
             snap("tab-2-trends-scrolled")
         }
 
-        // Drinking map. Do not tap 「用当前位置」; that would request system
-        // location permission. Opening the map of saved pins must not.
+        // 路书 / map. Do not tap 「用当前位置」 or 「标记地点」; that would request
+        // system location permission. Opening the map itself must not.
         if tap(tabBar.buttons["地图"], "tab-map") {
             sleep(2)
             snap("tab-map")
-            let empty = app.staticTexts["还没有地点记录"]
-            if empty.waitForExistence(timeout: 3) {
+            let emptyA = app.staticTexts["还没有可以画在地图上的地点"]
+            let emptyB = app.staticTexts["还没有路书足迹"]
+            let title = app.navigationBars["路书"]
+            if title.waitForExistence(timeout: 3) {
+                snap("tab-map-title-luxshu")
+            }
+            if emptyA.waitForExistence(timeout: 2) || emptyB.waitForExistence(timeout: 1) {
                 snap("tab-map-empty")
             } else {
                 app.swipeUp()

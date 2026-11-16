@@ -39,6 +39,8 @@ $swiftFiles = @(
     "Features/DrinkLogging/BrandLibraryView.swift",
     "Features/DrinkLogging/LocationInputField.swift",
     "Features/Map/PlaceSummary.swift",
+    "Features/Map/RouteJournal.swift",
+    "Features/Map/MarkPlaceSheet.swift",
     "Features/Map/DrinkingMapView.swift",
     "Features/Trends/TrendsView.swift",
     "Features/Trends/TrendAxis.swift",
@@ -65,6 +67,7 @@ $swiftFiles = @(
     "Shared/QRCodeImage.swift",
     "Shared/BrandSplashView.swift",
     "Features/Dashboard/DashboardGlanceView.swift",
+    "Features/Dashboard/DashboardRoutePreviewCard.swift",
     "Repositories/DataImporter.swift",
     "WatchConnectivity/PhoneWatchBridge.swift"
 )
@@ -86,9 +89,10 @@ $xcdatamodelChildNames = @(
     "DrinkTrack 2.xcdatamodel",
     "DrinkTrack 3.xcdatamodel",
     "DrinkTrack 4.xcdatamodel",
-    "DrinkTrack 5.xcdatamodel"
+    "DrinkTrack 5.xcdatamodel",
+    "DrinkTrack 6.xcdatamodel"
 )
-$xcdatamodelCurrentName = "DrinkTrack 5.xcdatamodel"
+$xcdatamodelCurrentName = "DrinkTrack 6.xcdatamodel"
 
 # Watch companion and files shared with the iPhone target live next to the
 # iPhone source folder (siblings of DrinkTrack/ under the .xcodeproj dir).
@@ -720,7 +724,7 @@ $targetCommonSettings = @'
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DrinkTrack/DrinkTrack.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkTrack/Info.plist;
@@ -762,7 +766,7 @@ $watchCommonSettings = @'
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "BRAND_DISPLAY_NAME";
 				INFOPLIST_KEY_WKApplication = YES;

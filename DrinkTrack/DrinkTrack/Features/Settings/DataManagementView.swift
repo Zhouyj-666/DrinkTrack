@@ -178,6 +178,9 @@ struct DataManagementView: View {
         if outcome.placesAdded > 0 {
             parts.append("\(outcome.placesAdded) 个地点")
         }
+        if outcome.placeMarksAdded > 0 {
+            parts.append("\(outcome.placeMarksAdded) 个路书标记")
+        }
         if outcome.profileImported {
             parts.append("个人基础信息")
         }
@@ -231,6 +234,7 @@ private struct ImportPreviewSheet: View {
                     row("饮酒记录", "\(preview.logCount) 条")
                     row("花费", preview.spendCount > 0 ? "\(preview.spendCount) 条，共 \(UserPreferences.formatYuan(fen: preview.spendFen))" : "没有记录花费")
                     row("地点", preview.placeCount > 0 ? "\(preview.placeCount) 个" : "没有地点")
+                    row("路书标记", preview.placeMarkCount > 0 ? "\(preview.placeMarkCount) 个" : "没有标记")
                     row("本场提示", preview.alertCount > 0 ? "\(preview.alertCount) 条" : "没有提示")
                     row("个人基础信息", preview.hasProfile ? "有" : "没有")
                     row("本机好友", preview.friendCount > 0 ? "\(preview.friendCount) 人" : "没有")

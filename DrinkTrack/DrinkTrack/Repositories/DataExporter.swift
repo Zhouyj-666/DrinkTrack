@@ -31,8 +31,9 @@ enum DataExporter {
             "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0",
             "schemaVersion": DataImporter.supportedSchemaVersion,
             "exportedAt": iso(Date()),
-            "note": "本文件由小酌场（SipSession）在本机生成。含饮酒记录、会话、可选花费和地点（若你曾用「用当前位置」，还会包含对应的经纬度）、本场提示和个人基础信息；不含 Apple 健康里的原始心率/血氧样本。分享卡片不会带上坐标。",
+            "note": "本文件由小酌场（SipSession）在本机生成。含饮酒记录、会话、可选花费、地点与路书标记（若你曾用「用当前位置」或「标记地点」，还会包含对应的经纬度）、本场提示和个人基础信息；不含 Apple 健康里的原始心率/血氧样本。分享卡片不会带上坐标。",
             "sessions": sessionsJSON(context: context),
+            "placeMarks": placeMarksJSON(context: context),
             "profile": profileJSON(context: context),
             "friends": friendsJSON(context: context)
         ]
@@ -120,6 +121,30 @@ enum DataExporter {
             ]
             if let value = alert.measuredValue { body["measuredValue"] = value }
             if let value = alert.thresholdValue { body["thresholdValue"] = value }
+            return body
+        }
+    }
+
+    private static func placeMarksJSON(context: NSManagedObjectContext) -> [[String: Any]] {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "PlaceMark")
+        request.sortDescriptors = [NSSortDescriptor(key: "markedAt", ascending: false)]
+        let marks = (try? context.fetch(request)) ?? []
+        return marks.compactMap { mark -> [String: Any]? in
+            guard let name = mark.value(forKey: "name") as? String, !name.isEmpty else { return nil }
+            var body: [String: Any] = [
+                "name": name,
+                "latitude": (mark.value(forKey: "latitude") as? NSNumber)?.doubleValue ?? 0,
+                "longitude": (mark.value(forKey: "longitude") as? NSNumber)?.doubleValue ?? 0
+            ]
+            if let id = mark.value(forKey: "id") as? UUID {
+                body["id"] = id.uuidString
+            }
+            if let markedAt = mark.value(forKey: "markedAt") as? Date {
+                body["markedAt"] = iso(markedAt)
+            }
+            if let note = mark.value(forKey: "note") as? String, !note.isEmpty {
+                body["note"] = note
+            }
             return body
         }
     }

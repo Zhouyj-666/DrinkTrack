@@ -4,7 +4,7 @@ import CoreData
 /// Restore a JSON backup written by `DataExporter`. The file stays on device;
 /// nothing is uploaded. HealthKit samples are not in the backup and are never faked.
 enum DataImporter {
-    static let supportedSchemaVersion = 1
+    static let supportedSchemaVersion = 2
 
     enum Mode {
         case merge
@@ -29,7 +29,7 @@ enum DataImporter {
             case .newerSchema(let version):
                 return "这个备份的格式版本是 \(version)，当前 App 只支持到版本 \(DataImporter.supportedSchemaVersion)。请先把小酌场更新到更新的版本，再尝试导入。"
             case .empty:
-                return "这个备份里没有可以导入的会话、饮酒记录、好友或个人基础信息。"
+                return "这个备份里没有可以导入的会话、饮酒记录、路书标记、好友或个人基础信息。"
             }
         }
     }
@@ -44,6 +44,7 @@ enum DataImporter {
         let spendCount: Int
         let spendFen: Int
         let placeCount: Int
+        let placeMarkCount: Int
         let alertCount: Int
         let hasProfile: Bool
         let friendCount: Int
@@ -60,6 +61,7 @@ enum DataImporter {
         let logsAdded: Int
         let friendsAdded: Int
         let placesAdded: Int
+        let placeMarksAdded: Int
         let profileImported: Bool
         let archivedImportedActive: Bool
     }
@@ -68,6 +70,7 @@ enum DataImporter {
         let payload = try loadPayload(from: url)
         let sessions = payload["sessions"] as? [[String: Any]] ?? []
         let friends = payload["friends"] as? [[String: Any]] ?? []
+        let placeMarks = payload["placeMarks"] as? [[String: Any]] ?? []
         let profile = payload["profile"] as? [String: Any]
         let hasProfile = profile.map { !$0.isEmpty } ?? false
 
@@ -111,7 +114,7 @@ enum DataImporter {
             }
         }
 
-        if sessions.isEmpty && friends.isEmpty && !hasProfile {
+        if sessions.isEmpty && friends.isEmpty && placeMarks.isEmpty && !hasProfile {
             throw Failure.empty
         }
 
@@ -125,6 +128,7 @@ enum DataImporter {
             spendCount: spendCount,
             spendFen: spendFen,
             placeCount: places.count,
+            placeMarkCount: placeMarks.count,
             alertCount: alertCount,
             hasProfile: hasProfile,
             friendCount: friends.count,
@@ -145,6 +149,7 @@ enum DataImporter {
         let payload = preview.payload
         let sessions = payload["sessions"] as? [[String: Any]] ?? []
         let friends = payload["friends"] as? [[String: Any]] ?? []
+        let placeMarks = payload["placeMarks"] as? [[String: Any]] ?? []
         let profile = payload["profile"] as? [String: Any]
 
         let existingSessions = existingSessionIDs(in: context)
@@ -240,6 +245,30 @@ enum DataImporter {
             friendsAdded += 1
         }
 
+        var placeMarksAdded = 0
+        let existingMarkIDs = existingPlaceMarkIDs(in: context)
+        for markPayload in placeMarks {
+            guard let name = string(markPayload["name"]),
+                  let latitude = doubleValue(markPayload["latitude"]),
+                  let longitude = doubleValue(markPayload["longitude"]),
+                  let pair = LocationCoordinate.validated(latitude: latitude, longitude: longitude),
+                  let entity = NSEntityDescription.entity(forEntityName: "PlaceMark", in: context) else {
+                continue
+            }
+            if let markID = uuid(markPayload["id"]), existingMarkIDs.contains(markID), mode == .merge {
+                continue
+            }
+            let mark = NSManagedObject(entity: entity, insertInto: context)
+            mark.setValue(uuid(markPayload["id"]) ?? UUID(), forKey: "id")
+            mark.setValue(name, forKey: "name")
+            mark.setValue(pair.0, forKey: "latitude")
+            mark.setValue(pair.1, forKey: "longitude")
+            mark.setValue(dateValue(markPayload["markedAt"]) ?? Date(), forKey: "markedAt")
+            mark.setValue(string(markPayload["note"]), forKey: "note")
+            places.append(name)
+            placeMarksAdded += 1
+        }
+
         let profileImported = importProfile(profile, mode: mode, context: context)
 
         var seenPlaces = Set<String>()
@@ -259,6 +288,7 @@ enum DataImporter {
             logsAdded: logsAdded,
             friendsAdded: friendsAdded,
             placesAdded: seenPlaces.count,
+            placeMarksAdded: placeMarksAdded,
             profileImported: profileImported,
             archivedImportedActive: archivedImportedActive
         )
@@ -298,6 +328,7 @@ enum DataImporter {
 
     private static func looksLikeBackup(_ payload: [String: Any]) -> Bool {
         if payload["sessions"] is [Any] { return true }
+        if payload["placeMarks"] is [Any] { return true }
         if payload["friends"] is [Any] { return true }
         if payload["profile"] is [String: Any] { return true }
         if let app = string(payload["app"]), app == "SipSession" || app == "DrinkTrack" {
@@ -382,6 +413,12 @@ enum DataImporter {
         let request = NSFetchRequest<FriendConnectionEntity>(entityName: "FriendConnection")
         let rows = (try? context.fetch(request)) ?? []
         return Set(rows.compactMap { $0.friendCode }.filter { !$0.isEmpty })
+    }
+
+    private static func existingPlaceMarkIDs(in context: NSManagedObjectContext) -> Set<UUID> {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "PlaceMark")
+        let rows = (try? context.fetch(request)) ?? []
+        return Set(rows.compactMap { $0.value(forKey: "id") as? UUID })
     }
 
     private static func activeSessionRequest() -> NSFetchRequest<DrinkSessionEntity> {

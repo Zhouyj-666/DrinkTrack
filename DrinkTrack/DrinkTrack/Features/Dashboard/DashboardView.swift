@@ -3,6 +3,7 @@ import CoreData
 
 /// §5.3 实时状态仪表盘：饮酒记录列表、心率曲线、血氧展示、被动预警、会话开始/结束控制。
 struct DashboardView: View {
+    @Binding var selectedTab: AppTab
     @EnvironmentObject private var healthKitManager: HealthKitManager
     @EnvironmentObject private var drinkRepository: DrinkRepository
     @Environment(\.managedObjectContext) private var context
@@ -22,10 +23,21 @@ struct DashboardView: View {
     @State private var glanceWeekVolume: Double = 0
     @State private var glanceWeekStandard: Double = 0
     @State private var glanceWeekSessions: Int = 0
+    @State private var glanceLastWeekVolume: Double = 0
+    @State private var glanceLastWeekStandard: Double = 0
+    @State private var glanceMonthSessions: Int = 0
+    @State private var glanceMonthPlaces: Int = 0
     @State private var glanceMonthSpendFen: Int = 0
     @State private var glanceMonthSpendCount: Int = 0
     @State private var glanceTopCategory: DrinkCategory?
+    @State private var glanceTopBrand: String?
     @State private var glanceMix: [(DrinkCategory, Double)] = []
+    @State private var routeStops: [RouteStop] = []
+    @State private var routePlaceCount: Int = 0
+    @State private var routeLatestPlace: String?
+    @State private var bodyRestingHR: Double?
+    @State private var bodyHRV: Double?
+    @State private var bodySleepMinutes: Double?
 
     var body: some View {
         NavigationStack {
@@ -47,11 +59,29 @@ struct DashboardView: View {
                             weekVolumeML: glanceWeekVolume,
                             weekStandard: glanceWeekStandard,
                             weekSessionCount: glanceWeekSessions,
+                            lastWeekVolumeML: glanceLastWeekVolume,
+                            lastWeekStandard: glanceLastWeekStandard,
+                            monthSessionCount: glanceMonthSessions,
+                            monthPlaceCount: glanceMonthPlaces,
                             monthSpendFen: glanceMonthSpendFen,
                             monthSpendCount: glanceMonthSpendCount,
                             showSpend: UserPreferences.spendTrackingEnabled,
                             topCategory: glanceTopCategory,
+                            topBrand: glanceTopBrand,
                             mix: glanceMix
+                        )
+
+                        DashboardRoutePreviewCard(
+                            stops: routeStops,
+                            placeCount: routePlaceCount,
+                            latestPlaceName: routeLatestPlace,
+                            onOpenMap: { selectedTab = .map }
+                        )
+
+                        DashboardBodySnapshotCard(
+                            restingHeartRate: bodyRestingHR,
+                            hrvSDNN: bodyHRV,
+                            sleepMinutes: bodySleepMinutes
                         )
 
                         if activeSession == nil, let last = lastEndedSession {
@@ -117,10 +147,12 @@ struct DashboardView: View {
                 loadSessionAlerts()
                 loadLastEndedSession()
                 loadGlance()
+                loadRoutePreview()
                 loadRestingHeartRate()
                 await healthKitManager.resumeIfPossible()
                 await refreshHRVBaseline()
                 await refreshRestingHeartRateFromHealth()
+                await refreshBodySnapshot()
                 evaluateAlerts()
             }
             .onChange(of: activeSession) { _, session in
@@ -135,6 +167,7 @@ struct DashboardView: View {
                 loadSessionAlerts()
                 loadLastEndedSession()
                 loadGlance()
+                loadRoutePreview()
             }
             .onChange(of: healthKitManager.recentHeartRatePoints.count) { _, _ in
                 evaluateAlerts()
@@ -157,6 +190,7 @@ struct DashboardView: View {
                 // 录入面板关掉后刷新列表和图表标记
                 logRevision += 1
                 loadGlance()
+                loadRoutePreview()
                 loadLastEndedSession()
             }) {
                 if let session = activeSession {
@@ -180,8 +214,9 @@ struct DashboardView: View {
         let calendar = Calendar.current
         let now = Date()
         let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? calendar.startOfDay(for: now)
+        let startOfLastWeek = calendar.date(byAdding: .day, value: -7, to: startOfWeek) ?? startOfWeek
         let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? startOfWeek
-        let logs = drinkRepository.allLogs(since: min(startOfWeek, startOfMonth))
+        let logs = drinkRepository.allLogs(since: min(startOfLastWeek, startOfMonth))
         let result = DashboardGlanceBuilder.metrics(
             logs: logs,
             sessions: drinkRepository.fetchAllSessions(limit: 400),
@@ -193,10 +228,46 @@ struct DashboardView: View {
         glanceWeekVolume = result.weekVolumeML
         glanceWeekStandard = result.weekStandard
         glanceWeekSessions = result.weekSessionCount
+        glanceLastWeekVolume = result.lastWeekVolumeML
+        glanceLastWeekStandard = result.lastWeekStandard
+        glanceMonthSessions = result.monthSessionCount
+        glanceMonthPlaces = result.monthPlaceCount
         glanceMonthSpendFen = result.monthSpendFen
         glanceMonthSpendCount = result.monthSpendCount
         glanceTopCategory = result.topCategory
+        glanceTopBrand = result.topBrand
         glanceMix = result.mix
+    }
+
+    private func loadRoutePreview() {
+        let stops = drinkRepository.routeStops()
+        routeStops = stops
+        routePlaceCount = RouteJournal.uniquePlaceCount(in: stops)
+        routeLatestPlace = stops.last?.name
+    }
+
+    private func refreshBodySnapshot() async {
+        guard healthKitManager.connectionState.isUsable else {
+            bodyRestingHR = nil
+            bodyHRV = nil
+            bodySleepMinutes = nil
+            return
+        }
+        if let avg = await healthKitManager.fetchRestingHeartRateAverage(), avg > 0 {
+            bodyRestingHR = avg
+        } else {
+            bodyRestingHR = nil
+        }
+        if let hrv = await healthKitManager.fetchLatestHRV(), hrv > 0 {
+            bodyHRV = hrv
+        } else {
+            bodyHRV = healthKitManager.latestHRV
+        }
+        if let sleep = await healthKitManager.fetchLastNightSleep(), sleep.totalMinutes > 0 {
+            bodySleepMinutes = sleep.totalMinutes
+        } else {
+            bodySleepMinutes = nil
+        }
     }
 
     private func loadRestingHeartRate() {
