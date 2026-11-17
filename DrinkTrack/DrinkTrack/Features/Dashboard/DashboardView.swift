@@ -54,6 +54,38 @@ struct DashboardView: View {
                         )
                         .id(logRevision)
 
+                        // 健康数据没连上时，把状态和自查方法摆在显眼处，
+                        // 而不是让用户对着一张空图表猜为什么没数据
+                        if !healthKitManager.connectionState.isUsable {
+                            HealthConnectionStatusView(
+                                state: healthKitManager.connectionState,
+                                authorizationError: healthKitManager.authorizationError,
+                                isRequesting: healthKitManager.isRequestingAuthorization,
+                                onRequestAuthorization: {
+                                    Task { await healthKitManager.requestAuthorization() }
+                                },
+                                onRefresh: {
+                                    Task { await healthKitManager.refreshConnectionState() }
+                                }
+                            )
+                        }
+
+                        HeartRateChartView(
+                            points: healthKitManager.chartHeartRatePoints,
+                            drinkMarks: drinkMarkTimestamps,
+                            watchConnected: healthKitManager.watchSeemsConnected,
+                            isInSession: healthKitManager.isChartInSession
+                        )
+
+                        if !healthKitManager.chartSpO2Points.isEmpty || healthKitManager.latestInSessionSpO2 != nil {
+                            SpO2View(
+                                points: healthKitManager.chartSpO2Points,
+                                current: healthKitManager.isChartInSession
+                                    ? healthKitManager.latestInSessionSpO2
+                                    : healthKitManager.latestSpO2
+                            )
+                        }
+
                         DashboardGlanceView(
                             todayVolumeML: glanceTodayVolume,
                             todayStandard: glanceTodayStandard,
@@ -101,37 +133,6 @@ struct DashboardView: View {
                             SessionAlertsCard(alerts: sessionAlerts)
                         }
 
-                        // 健康数据没连上时，把状态和自查方法摆在显眼处，
-                        // 而不是让用户对着一张空图表猜为什么没数据
-                        if !healthKitManager.connectionState.isUsable {
-                            HealthConnectionStatusView(
-                                state: healthKitManager.connectionState,
-                                authorizationError: healthKitManager.authorizationError,
-                                isRequesting: healthKitManager.isRequestingAuthorization,
-                                onRequestAuthorization: {
-                                    Task { await healthKitManager.requestAuthorization() }
-                                },
-                                onRefresh: {
-                                    Task { await healthKitManager.refreshConnectionState() }
-                                }
-                            )
-                        }
-
-                        HeartRateChartView(
-                            points: healthKitManager.chartHeartRatePoints,
-                            drinkMarks: drinkMarkTimestamps,
-                            watchConnected: healthKitManager.watchSeemsConnected,
-                            isInSession: healthKitManager.isChartInSession
-                        )
-
-                        if !healthKitManager.chartSpO2Points.isEmpty || healthKitManager.latestInSessionSpO2 != nil {
-                            SpO2View(
-                                points: healthKitManager.chartSpO2Points,
-                                current: healthKitManager.isChartInSession
-                                    ? healthKitManager.latestInSessionSpO2
-                                    : healthKitManager.latestSpO2
-                            )
-                        }
                     }
                     .padding()
                 }

@@ -50,6 +50,33 @@ enum ChartDateDomain {
     static func earliestStart(now: Date = Date(), calendar: Calendar = .current) -> Date {
         range(for: .year, now: now, calendar: calendar).lowerBound
     }
+
+    /// Start of every visible bucket, including today (or this month in the
+    /// year view) even when that bucket has no logs.
+    ///
+    /// Swift Charts BarMarks that use a Date `unit` will clip trailing empty
+    /// categories after the last data point, even when `chartXScale(domain:)`
+    /// already extends to tomorrow. A week window on 17 Nov 2026 therefore
+    /// showed 11/11–11/16 — mid-range empty days were labeled, but today
+    /// (0 ml, after the last bar) disappeared. Callers must emit a 0-value
+    /// placeholder for each of these starts.
+    static func bucketStarts(for trendRange: TrendRange, now: Date = Date(), calendar: Calendar = .current) -> [Date] {
+        let domain = range(for: trendRange, now: now, calendar: calendar)
+        let step: Calendar.Component = trendRange.bucket
+        var result: [Date] = []
+        var current = calendar.startOfDay(for: domain.lowerBound)
+        if step == .month {
+            current = calendar.date(from: calendar.dateComponents([.year, .month], from: domain.lowerBound)) ?? current
+        }
+        var guardCounter = 0
+        while current < domain.upperBound && guardCounter < 400 {
+            result.append(current)
+            guard let next = calendar.date(byAdding: step, value: 1, to: current) else { break }
+            current = next
+            guardCounter += 1
+        }
+        return result
+    }
 }
 
 /// Explicit x-axis ticks for a trends chart.

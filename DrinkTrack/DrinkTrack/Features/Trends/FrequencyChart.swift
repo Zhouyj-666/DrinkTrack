@@ -82,9 +82,10 @@ struct FrequencyChart: View {
             let timestamp = log.timestamp ?? Date()
             return calendar.dateInterval(of: component, for: timestamp)?.start ?? calendar.startOfDay(for: timestamp)
         }
-        return grouped.map { start, bucketLogs in
-            BucketTotal(start: start, totalML: bucketLogs.reduce(0.0) { $0 + $1.volumeMl })
+        // Always include every day (or month) in the window, even at 0 ml,
+        // so today stays on the axis when it has no drinks yet.
+        return ChartDateDomain.bucketStarts(for: range, now: now, calendar: calendar).map { start in
+            BucketTotal(start: start, totalML: grouped[start]?.reduce(0.0) { $0 + $1.volumeMl } ?? 0)
         }
-        .sorted { $0.start < $1.start }
     }
 }

@@ -106,7 +106,13 @@ struct VolumeTrendChart: View {
             return calendar.dateInterval(of: component, for: timestamp)?.start ?? calendar.startOfDay(for: timestamp)
         }
         var result: [StackedPoint] = []
-        for (bucketStart, bucketLogs) in grouped {
+        for bucketStart in ChartDateDomain.bucketStarts(for: range, now: now, calendar: calendar) {
+            let bucketLogs = grouped[bucketStart] ?? []
+            if bucketLogs.isEmpty {
+                // Placeholder so a trailing empty today is not clipped.
+                result.append(StackedPoint(bucketStart: bucketStart, category: .other, value: 0))
+                continue
+            }
             let byCategory = Dictionary(grouping: bucketLogs) { $0.category ?? "" }
             for (rawCategory, categoryLogs) in byCategory {
                 guard let category = DrinkCategory(rawValue: rawCategory) else { continue }
