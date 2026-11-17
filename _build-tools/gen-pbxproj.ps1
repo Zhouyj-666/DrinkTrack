@@ -72,7 +72,18 @@ $swiftFiles = @(
     "Features/Dashboard/DashboardGlanceView.swift",
     "Features/Dashboard/DashboardRoutePreviewCard.swift",
     "Repositories/DataImporter.swift",
-    "WatchConnectivity/PhoneWatchBridge.swift"
+    "WatchConnectivity/PhoneWatchBridge.swift",
+    "Auth/AuthModels.swift",
+    "Auth/AuthAPIConfiguration.swift",
+    "Auth/AuthAPIClient.swift",
+    "Auth/KeychainTokenStore.swift",
+    "Auth/AccountRecordTagger.swift",
+    "Auth/AuthSession.swift",
+    "Features/Auth/AuthPalette.swift",
+    "Features/Auth/LoginView.swift",
+    "Features/Auth/RegisterView.swift",
+    "Features/Auth/AccountView.swift",
+    "Features/Auth/AccountSectionView.swift"
 )
 
 $plainOtherFiles = @(
@@ -93,9 +104,10 @@ $xcdatamodelChildNames = @(
     "DrinkTrack 3.xcdatamodel",
     "DrinkTrack 4.xcdatamodel",
     "DrinkTrack 5.xcdatamodel",
-    "DrinkTrack 6.xcdatamodel"
+    "DrinkTrack 6.xcdatamodel",
+    "DrinkTrack 7.xcdatamodel"
 )
-$xcdatamodelCurrentName = "DrinkTrack 6.xcdatamodel"
+$xcdatamodelCurrentName = "DrinkTrack 7.xcdatamodel"
 
 # Watch companion and files shared with the iPhone target live next to the
 # iPhone source folder (siblings of DrinkTrack/ under the .xcodeproj dir).

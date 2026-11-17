@@ -44,7 +44,14 @@ unless project.targets.any? { |t| t.name == UNITTEST_NAME }
   group = project.main_group.find_subpath(UNITTEST_NAME, true)
   group.set_source_tree('<group>')
   group.set_path(UNITTEST_NAME)
-  %w[RouteJournalTests.swift DashboardGlanceBuilderTests.swift].each do |name|
+  %w[
+    RouteJournalTests.swift
+    DashboardGlanceBuilderTests.swift
+    TrendAxisTests.swift
+    AuthAPIMappingTests.swift
+    AccountRecordTaggerTests.swift
+    AuthSessionTests.swift
+  ].each do |name|
     ref = group.new_reference(name)
     unit.add_file_references([ref])
   end

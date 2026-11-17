@@ -5,6 +5,7 @@ struct DrinkTrackApp: App {
     @StateObject private var healthKitManager = HealthKitManager.shared
     @StateObject private var drinkRepository = DrinkRepository()
     @StateObject private var calendarDay = CalendarDayContext()
+    @StateObject private var authSession = AuthSession.shared
     private let persistence = PersistenceController.shared
     @StateObject private var friendRepository = LocalFriendRepository()
 
@@ -34,9 +35,11 @@ struct DrinkTrackApp: App {
             .environmentObject(healthKitManager)
             .environmentObject(drinkRepository)
             .environmentObject(calendarDay)
+            .environmentObject(authSession)
             .preferredColorScheme(preferredColorScheme)
             .onAppear { DesignSystem.applyChrome() }
             .task {
+                await authSession.restoreSession()
                 PhoneWatchBridge.shared.start(repository: drinkRepository, health: healthKitManager)
                 guard showBrandSplash else { return }
                 try? await Task.sleep(for: .milliseconds(1200))

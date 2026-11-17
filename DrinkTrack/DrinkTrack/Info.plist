@@ -40,6 +40,16 @@
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
+	<!-- Local auth API during development (HTTP to this computer on the LAN).
+	     Production must use HTTPS; do not rely on this exception for a public host. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>开发阶段需要连接同一 Wi-Fi 下的电脑，用来登录测试账号。正式版本会改用加密的 HTTPS，不再访问你局域网里的电脑。</string>
+
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreenV2</string>
 	<key>UISupportedInterfaceOrientations</key>

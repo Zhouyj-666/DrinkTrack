@@ -3,7 +3,7 @@ import CoreData
 
 /// 「我的」页：设备、个人、设置，按用户改稿分层。
 ///
-/// 个人信息仍是可选的，不填也能用。本页不加入登录或注册入口。
+/// 个人信息仍是可选的，不填也能用。账号入口在本页顶部的「账号」分区，见 AUTH-HOOK。
 struct ProfileView: View {
     @Environment(\.managedObjectContext) private var context
     @EnvironmentObject private var healthKitManager: HealthKitManager
@@ -14,6 +14,14 @@ struct ProfileView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
+                    // AUTH-HOOK start: account entry for email login/register.
+                    // Keep this insertion small so later Me tweaks can rebase around it.
+                    // If this block is lost in a rewrite, drop AccountSectionView under a
+                    // sectionHeader("账号") on the new 我的 page.
+                    sectionHeader("账号")
+                    AccountSectionView()
+                    // AUTH-HOOK end
+
                     sectionHeader("设备")
                     NavigationLink {
                         WatchDeviceView()

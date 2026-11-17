@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: drinktrack
+      POSTGRES_PASSWORD: drinktrack
+      POSTGRES_DB: drinktrack
+    ports:
+      # Published so you can also run the API on the host against this database.
+      - "5432:5432"
+    volumes:
+      - drinktrack_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drinktrack -d drinktrack"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Compose service hostname; overrides a localhost URL if someone copied .env for host use.
+      DATABASE_URL: postgresql+psycopg://drinktrack:drinktrack@db:5432/drinktrack
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  drinktrack_pgdata:

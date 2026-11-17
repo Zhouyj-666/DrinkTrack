@@ -18,6 +18,7 @@ final class DrinkRepository: ObservableObject {
         session.id = UUID()
         session.startedAt = Date()
         session.status = "active"
+        AccountRecordTagger.applyCurrentAccount(to: session)
         save()
         return session
     }
@@ -142,6 +143,7 @@ final class DrinkRepository: ObservableObject {
             }
         }
         log.session = session
+        AccountRecordTagger.applyCurrentAccount(to: log)
         UserPreferences.rememberLastDrink(category: category, volumeML: volumeML)
         save()
         return log
@@ -333,6 +335,7 @@ final class DrinkRepository: ObservableObject {
             let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
             mark.setValue(trimmedNote.isEmpty ? nil : trimmedNote, forKey: "note")
         }
+        AccountRecordTagger.applyCurrentAccount(to: mark)
         UserPreferences.rememberLocation(trimmed)
         backfillCoordinates(forPlaceName: trimmed, latitude: pair.0, longitude: pair.1)
         save()
