@@ -9,12 +9,13 @@ import SwiftUI
 ///     AccountSectionView()
 struct AccountSectionView: View {
     @EnvironmentObject private var authSession: AuthSession
+    @State private var route: AccountEntryRoute?
 
     var body: some View {
         Group {
             if let user = authSession.user {
-                NavigationLink {
-                    AccountView()
+                Button {
+                    route = .account
                 } label: {
                     HStack(spacing: 12) {
                         iconBadge("person.crop.circle.fill")
@@ -52,14 +53,14 @@ struct AccountSectionView: View {
                         .font(.system(size: 13))
                         .foregroundStyle(DesignSystem.muted2)
                     HStack(spacing: 10) {
-                        NavigationLink {
-                            LoginView()
+                        Button {
+                            route = .login
                         } label: {
                             Text("登录")
                         }
                         .buttonStyle(SipPrimaryButtonStyle())
-                        NavigationLink {
-                            RegisterView()
+                        Button {
+                            route = .register
                         } label: {
                             Text("注册")
                         }
@@ -67,6 +68,20 @@ struct AccountSectionView: View {
                     }
                 }
                 .sipCard()
+            }
+        }
+        // Keep this destination on a view that stays in the tree after login.
+        // A NavigationLink inside the logged-out branch is destroyed when
+        // AuthSession.user becomes non-nil, which crashes SwiftUI while the
+        // login/register screen is still presented.
+        .navigationDestination(item: $route) { route in
+            switch route {
+            case .login:
+                LoginView()
+            case .register:
+                RegisterView()
+            case .account:
+                AccountView()
             }
         }
     }
@@ -81,6 +96,12 @@ struct AccountSectionView: View {
                 .foregroundStyle(DesignSystem.burgundy)
         }
     }
+}
+
+private enum AccountEntryRoute: Hashable {
+    case login
+    case register
+    case account
 }
 
 private extension View {

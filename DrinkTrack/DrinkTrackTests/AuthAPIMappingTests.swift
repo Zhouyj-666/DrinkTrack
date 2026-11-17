@@ -61,4 +61,49 @@ final class AuthAPIMappingTests: XCTestCase {
         XCTAssertFalse(AuthAPIConfiguration.defaultBaseURLString.contains("production"))
         XCTAssertFalse(AuthAPIConfiguration.defaultBaseURLString.contains("https://api."))
     }
+
+    func testDecodesFastAPIMicrosecondCreatedAt() throws {
+        // Exact shape returned by the in-repo FastAPI service (6-digit frac, Z).
+        let json = """
+        {
+          "token": "tok_live",
+          "token_type": "bearer",
+          "user": {
+            "id": "914bf60d-f8f0-45a1-9364-165bdab434ba",
+            "email": "you@example.com",
+            "display_name": "probe",
+            "created_at": "2026-11-17T08:26:56.276158Z"
+          }
+        }
+        """.data(using: .utf8)!
+
+        let response = try AuthJSON.decoder.decode(AuthSessionResponse.self, from: json)
+        XCTAssertEqual(response.user.id, "914bf60d-f8f0-45a1-9364-165bdab434ba")
+        XCTAssertEqual(response.user.displayName, "probe")
+        XCTAssertNotNil(response.user.createdAt)
+    }
+
+    func testDateParserAcceptsPydanticAndUnixFormats() {
+        XCTAssertNotNil(AuthJSON.date(from: "2026-11-17T08:26:56.276158Z"))
+        XCTAssertNotNil(AuthJSON.date(from: "2026-11-17T07:00:00.000000+00:00"))
+        XCTAssertNotNil(AuthJSON.date(from: "2026-11-17T07:00:00Z"))
+        XCTAssertNotNil(AuthJSON.date(from: "2026-11-17T07:00:00+00:00"))
+    }
+
+    func testSessionResponseStillDecodesWhenCreatedAtMissing() throws {
+        let json = """
+        {
+          "token": "tok_abc",
+          "token_type": "bearer",
+          "user": {
+            "id": "11111111-2222-3333-4444-555555555555",
+            "email": "you@example.com",
+            "display_name": "小酌"
+          }
+        }
+        """.data(using: .utf8)!
+        let response = try AuthJSON.decoder.decode(AuthSessionResponse.self, from: json)
+        XCTAssertNil(response.user.createdAt)
+        XCTAssertEqual(response.user.email, "you@example.com")
+    }
 }

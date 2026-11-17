@@ -93,8 +93,16 @@ final class AuthSession: ObservableObject {
     }
 
     private func accept(_ response: AuthSessionResponse) throws {
+        // Persist the session first so a later UI failure cannot drop a
+        // server-side success on the floor. If the profile cannot be cached,
+        // roll the token back rather than leave a token with no user.
         try tokenStore.saveToken(response.token)
-        try userStore.saveUser(response.user)
+        do {
+            try userStore.saveUser(response.user)
+        } catch {
+            try? tokenStore.clearToken()
+            throw error
+        }
         applyAuthenticated(user: response.user)
         phase = .signedIn
         if let context = contextProvider() {

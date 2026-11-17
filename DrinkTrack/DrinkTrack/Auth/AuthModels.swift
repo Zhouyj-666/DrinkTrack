@@ -34,11 +34,15 @@ struct AuthUser: Codable, Equatable, Identifiable, Sendable {
     }
 
     private static func decodeDate(_ container: KeyedDecodingContainer<CodingKeys>) -> Date? {
-        if let date = try? container.decode(Date.self, forKey: .createdAt) {
-            return date
+        // Never decode Date.self here. AuthJSON's custom date strategy would
+        // re-enter the same closure and overflow the stack.
+        if let raw = try? container.decode(String.self, forKey: .createdAt) {
+            return AuthJSON.date(from: raw)
         }
-        guard let raw = try? container.decode(String.self, forKey: .createdAt) else { return nil }
-        return AuthJSON.date(from: raw)
+        if let seconds = try? container.decode(Double.self, forKey: .createdAt) {
+            return Date(timeIntervalSince1970: seconds)
+        }
+        return nil
     }
 }
 
@@ -118,12 +122,20 @@ enum AuthJSON {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
-            if let date = try? container.decode(Date.self) {
+            // Calling decode(Date.self) inside a custom date strategy recurses
+            // into this closure and crashes with a stack overflow. Parse
+            // strings (and numeric timestamps) only.
+            if let raw = try? container.decode(String.self),
+               let date = date(from: raw) {
                 return date
             }
-            let raw = try container.decode(String.self)
-            if let date = date(from: raw) { return date }
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unrecognized date: \(raw)")
+            if let seconds = try? container.decode(Double.self) {
+                return Date(timeIntervalSince1970: seconds)
+            }
+            if let seconds = try? container.decode(Int.self) {
+                return Date(timeIntervalSince1970: TimeInterval(seconds))
+            }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unrecognized date value")
         }
         return decoder
     }()
@@ -134,16 +146,74 @@ enum AuthJSON {
         return encoder
     }()
 
+    /// Parses the date strings FastAPI/Pydantic actually emit, including
+    /// microsecond precision and `+00:00` offsets.
     static func date(from raw: String) -> Date? {
-        let iso = ISO8601DateFormatter()
-        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = iso.date(from: raw) { return date }
-        iso.formatOptions = [.withInternetDateTime]
-        if let date = iso.date(from: raw) { return date }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if let date = iso8601Date(from: trimmed, fractional: true)
+            ?? iso8601Date(from: trimmed, fractional: false) {
+            return date
+        }
+        if let normalized = normalizeISO8601(trimmed),
+           let date = iso8601Date(from: normalized, fractional: true)
+            ?? iso8601Date(from: normalized, fractional: false) {
+            return date
+        }
+        return posixDate(from: trimmed)
+    }
+
+    private static func iso8601Date(from raw: String, fractional: Bool) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = fractional
+            ? [.withInternetDateTime, .withFractionalSeconds]
+            : [.withInternetDateTime]
+        return formatter.date(from: raw)
+    }
+
+    /// Collapse `+00:00` to `Z` and clamp fractional seconds to milliseconds
+    /// so ISO8601DateFormatter can parse FastAPI's 6-digit values.
+    private static func normalizeISO8601(_ raw: String) -> String? {
+        var value = raw
+        if value.hasSuffix("+00:00") {
+            value = String(value.dropLast(6)) + "Z"
+        }
+        guard let dot = value.firstIndex(of: ".") else { return value }
+        let prefix = String(value[..<dot])
+        let rest = String(value[value.index(after: dot)...])
+        var digits = ""
+        var zone = ""
+        var readingDigits = true
+        for character in rest {
+            if readingDigits, character.isNumber {
+                digits.append(character)
+            } else {
+                readingDigits = false
+                zone.append(character)
+            }
+        }
+        if zone == "+00:00" { zone = "Z" }
+        if digits.isEmpty { return prefix + zone }
+        let millis = String(digits.padding(toLength: 3, withPad: "0", startingAt: 0).prefix(3))
+        return prefix + "." + millis + zone
+    }
+
+    private static func posixDate(from raw: String) -> Date? {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        return formatter.date(from: raw)
+        for format in [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXXXX",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX",
+            "yyyy-MM-dd'T'HH:mm:ssXXXXX",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss"
+        ] {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: raw) { return date }
+        }
+        return nil
     }
 }

@@ -8,6 +8,7 @@ struct AccountView: View {
     @State private var isLoggingOut = false
     @State private var confirmLogout = false
     @State private var serverURL = AuthAPIConfiguration.baseURLString
+    @State private var route: AccountViewRoute?
 
     var body: some View {
         List {
@@ -31,8 +32,8 @@ struct AccountView: View {
                 Section {
                     Text("你现在没有登录。先不登录也可以继续用小酌场。")
                         .foregroundStyle(AuthPalette.secondary)
-                    NavigationLink("登录") { LoginView() }
-                    NavigationLink("注册") { RegisterView() }
+                    Button("登录") { route = .login }
+                    Button("注册") { route = .register }
                 }
             }
 
@@ -71,6 +72,14 @@ struct AccountView: View {
         .sipScreenBackground()
         .navigationTitle("账号")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationDestination(item: $route) { route in
+            switch route {
+            case .login:
+                LoginView()
+            case .register:
+                RegisterView()
+            }
+        }
         .alert("退出登录？", isPresented: $confirmLogout) {
             Button("取消", role: .cancel) {}
             Button("退出", role: .destructive) {
@@ -87,4 +96,9 @@ struct AccountView: View {
         isLoggingOut = false
         dismiss()
     }
+}
+
+private enum AccountViewRoute: Hashable {
+    case login
+    case register
 }
