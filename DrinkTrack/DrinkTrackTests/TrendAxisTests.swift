@@ -114,4 +114,49 @@ final class TrendAxisTests: XCTestCase {
         let logAt0150 = now
         XCTAssertTrue(logAt0150 >= domain.lowerBound && logAt0150 < domain.upperBound)
     }
+    func testPlotModelWeekCategoryDomainEndsTodayWhenLastDrinkWasYesterday() {
+        // The array actually passed to chartXScale(domain:). Unit tests of
+        // bucketStarts/axis plan can pass while Date-unit BarMarks still clip
+        // today after a last drink on 11/16.
+        let calendar = shanghaiCalendar()
+        let now = date(2026, 11, 17, 10, 34, calendar: calendar)
+        let model = TrendChartPlotModel.make(for: .week, now: now, calendar: calendar)
+
+        XCTAssertEqual(model.categoryDomain, [
+            "2026-11-11", "2026-11-12", "2026-11-13", "2026-11-14",
+            "2026-11-15", "2026-11-16", "2026-11-17"
+        ])
+        XCTAssertEqual(model.axisTexts, ["11/11", "11/12", "11/13", "11/14", "11/15", "11/16", "11/17"])
+        XCTAssertEqual(model.axisTexts.last, "11/17")
+        XCTAssertEqual(model.buckets.last?.start, calendar.startOfDay(for: now))
+        XCTAssertEqual(model.tickIDs.last, "2026-11-17")
+        XCTAssertEqual(model.tickIDs.count, 7)
+
+        let lastDrinkDay = calendar.startOfDay(for: date(2026, 11, 16, 21, calendar: calendar))
+        let totals = model.buckets.map { bucket -> Double in
+            bucket.start == lastDrinkDay ? 330 : 0
+        }
+        XCTAssertEqual(totals, [0, 0, 0, 0, 0, 330, 0])
+        XCTAssertEqual(model.categoryDomain.last, "2026-11-17")
+    }
+
+    func testPlotModelMonthAndQuarterKeepTrailingEmptyToday() {
+        let calendar = shanghaiCalendar()
+        let now = date(2026, 11, 17, 10, 34, calendar: calendar)
+        for range in [TrendRange.month, .quarter] {
+            let model = TrendChartPlotModel.make(for: range, now: now, calendar: calendar)
+            XCTAssertEqual(model.axisTexts.last, "11/17", "range=\(range.rawValue)")
+            XCTAssertEqual(model.categoryDomain.last, "2026-11-17", "range=\(range.rawValue)")
+            XCTAssertEqual(model.buckets.last?.start, calendar.startOfDay(for: now), "range=\(range.rawValue)")
+        }
+    }
+
+    func testPlotModelYearKeepsCurrentMonthCategory() {
+        let calendar = shanghaiCalendar()
+        let now = date(2026, 11, 17, 10, 34, calendar: calendar)
+        let model = TrendChartPlotModel.make(for: .year, now: now, calendar: calendar)
+        XCTAssertEqual(model.categoryDomain.count, 12)
+        XCTAssertEqual(model.categoryDomain.last, "2026-11")
+        XCTAssertEqual(model.axisTexts.last, "11月")
+    }
 }

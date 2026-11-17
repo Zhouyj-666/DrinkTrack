@@ -5,6 +5,9 @@ import Charts
 /// 以及周/月/3个月/年四个时间范围。
 /// 分类颜色固定按 DrinkCategory 的枚举顺序取色（DesignSystem.color(for:)），
 /// 不会因为某天某种类目数据多少而重新排序配色（Color follows the entity, never its rank）。
+///
+/// X uses the same discrete category domain as 每日饮酒量, so a trailing empty
+/// today (or empty trailing days in 月 / 3个月) keeps its slot and tick.
 struct VolumeTrendChart: View {
     let logs: [DrinkLogEntity]
     var now: Date = Date()
@@ -15,7 +18,8 @@ struct VolumeTrendChart: View {
     enum Unit: String, CaseIterable { case ml = "原始 ml", standardDrinks = "标准饮品数" }
 
     private struct StackedPoint: Identifiable {
-        var id: String { "\(bucketStart.timeIntervalSince1970)-\(category.rawValue)" }
+        var id: String { "\(categoryID)-\(category.rawValue)" }
+        let categoryID: String
         let bucketStart: Date
         let category: DrinkCategory
         let value: Double
@@ -35,28 +39,52 @@ struct VolumeTrendChart: View {
             TrendRangePicker(selection: $range)
 
             Chart(stackedPoints) { point in
-                BarMark(x: .value("日期", point.bucketStart, unit: range.bucket), y: .value("数量", point.value))
-                    .foregroundStyle(by: .value("种类", point.category.displayName))
+                BarMark(
+                    x: .value("日期", point.categoryID),
+                    y: .value("数量", point.value)
+                )
+                .foregroundStyle(by: .value("种类", point.category.displayName))
             }
             .chartForegroundStyleScale(domain: DrinkCategory.allCases.map(\.displayName),
                                         range: DrinkCategory.allCases.map { DesignSystem.color(for: $0) })
-            .chartXScale(domain: xDomain)
+            .chartXScale(
+                domain: plotModel.categoryDomain,
+                range: .plotDimension(startPadding: 4, endPadding: 12)
+            )
             .chartXAxis {
-                AxisMarks(values: axisPlan.values) { _ in
+                AxisMarks(values: plotModel.tickIDs) { value in
                     AxisGridLine().foregroundStyle(DesignSystem.gridline)
                     AxisTick().foregroundStyle(DesignSystem.gridline)
-                    AxisValueLabel(format: axisPlan.format, centered: axisPlan.centered)
-                        .foregroundStyle(DesignSystem.mutedInk)
+                    AxisValueLabel {
+                        if let id = value.as(String.self), let text = plotModel.axisText(for: id) {
+                            Text(text)
+                        }
+                    }
+                    .foregroundStyle(DesignSystem.mutedInk)
                 }
             }
-            .chartYAxis {
-                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
+            .chartYAxis(position: .leading) {
+                AxisMarks(preset: .aligned, position: .leading, values: .automatic(desiredCount: 4)) { _ in
                     AxisGridLine().foregroundStyle(DesignSystem.gridline)
                     AxisValueLabel().foregroundStyle(DesignSystem.mutedInk)
                 }
             }
+            .chartPlotStyle { plot in
+                plot.padding(.trailing, 8)
+            }
             .frame(height: 180)
             .chartLegend(position: .bottom, spacing: 8)
+            .accessibilityIdentifier("volume-chart")
+
+            Text(plotModel.axisTexts.joined(separator: " "))
+                .font(.caption2)
+                .foregroundStyle(Color.clear)
+                .frame(maxWidth: .infinity, minHeight: 1, maxHeight: 1)
+                .accessibilityIdentifier("volume-chart-x-domain")
+                .accessibilityLabel(plotModel.axisTexts.joined(separator: " "))
+                .accessibilityValue(plotModel.axisTexts.joined(separator: " "))
+                .allowsHitTesting(false)
+                .accessibilityHidden(false)
 
             Text("\(range.bucketCaption) · \(totalText)")
                 .font(.caption)
@@ -72,12 +100,12 @@ struct VolumeTrendChart: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    private var xDomain: ClosedRange<Date> {
-        ChartDateDomain.range(for: range, now: now, calendar: calendar)
+    private var plotModel: TrendChartPlotModel {
+        TrendChartPlotModel.make(for: range, now: now, calendar: calendar)
     }
 
-    private var axisPlan: TrendAxisPlan {
-        TrendAxisPlan.plan(for: range, domain: xDomain, calendar: calendar)
+    private var xDomain: ClosedRange<Date> {
+        ChartDateDomain.range(for: range, now: now, calendar: calendar)
     }
 
     private var logsInWindow: [DrinkLogEntity] {
@@ -106,11 +134,10 @@ struct VolumeTrendChart: View {
             return calendar.dateInterval(of: component, for: timestamp)?.start ?? calendar.startOfDay(for: timestamp)
         }
         var result: [StackedPoint] = []
-        for bucketStart in ChartDateDomain.bucketStarts(for: range, now: now, calendar: calendar) {
-            let bucketLogs = grouped[bucketStart] ?? []
+        for bucket in plotModel.buckets {
+            let bucketLogs = grouped[bucket.start] ?? []
             if bucketLogs.isEmpty {
-                // Placeholder so a trailing empty today is not clipped.
-                result.append(StackedPoint(bucketStart: bucketStart, category: .other, value: 0))
+                result.append(StackedPoint(categoryID: bucket.id, bucketStart: bucket.start, category: .other, value: 0))
                 continue
             }
             let byCategory = Dictionary(grouping: bucketLogs) { $0.category ?? "" }
@@ -122,7 +149,7 @@ struct VolumeTrendChart: View {
                 } else {
                     value = categoryLogs.reduce(0) { $0 + $1.standardDrinks }
                 }
-                result.append(StackedPoint(bucketStart: bucketStart, category: category, value: value))
+                result.append(StackedPoint(categoryID: bucket.id, bucketStart: bucket.start, category: category, value: value))
             }
         }
         return result.sorted {

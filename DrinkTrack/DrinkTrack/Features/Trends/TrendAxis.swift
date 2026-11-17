@@ -53,13 +53,6 @@ enum ChartDateDomain {
 
     /// Start of every visible bucket, including today (or this month in the
     /// year view) even when that bucket has no logs.
-    ///
-    /// Swift Charts BarMarks that use a Date `unit` will clip trailing empty
-    /// categories after the last data point, even when `chartXScale(domain:)`
-    /// already extends to tomorrow. A week window on 17 Nov 2026 therefore
-    /// showed 11/11–11/16 — mid-range empty days were labeled, but today
-    /// (0 ml, after the last bar) disappeared. Callers must emit a 0-value
-    /// placeholder for each of these starts.
     static func bucketStarts(for trendRange: TrendRange, now: Date = Date(), calendar: Calendar = .current) -> [Date] {
         let domain = range(for: trendRange, now: now, calendar: calendar)
         let step: Calendar.Component = trendRange.bucket
@@ -151,6 +144,85 @@ struct TrendAxisPlan {
             guardCounter += 1
         }
         return result
+    }
+}
+
+/// Discrete x-axis categories used by `chartXScale(domain:)`.
+///
+/// Swift Charts Date-unit BarMarks plus a continuous `start...tomorrow` scale
+/// still clip a trailing empty day after the last real bar, and a right-side
+/// Y-axis can hide the last tick. Both 每日饮酒量 and 饮酒量趋势 therefore
+/// plot X as this ordered category list — no Date `unit` — so every bucket,
+/// including today at 0 ml, keeps a slot and a label.
+struct TrendChartPlotModel: Equatable {
+    struct Bucket: Equatable, Identifiable {
+        let id: String
+        let start: Date
+        let axisText: String
+        let showTick: Bool
+    }
+
+    let buckets: [Bucket]
+
+    /// Ordered category keys passed to `chartXScale(domain:)`.
+    var categoryDomain: [String] { buckets.map(\.id) }
+
+    var axisTexts: [String] { buckets.map(\.axisText) }
+
+    var tickIDs: [String] { buckets.filter(\.showTick).map(\.id) }
+
+    func axisText(for id: String) -> String? {
+        buckets.first(where: { $0.id == id })?.axisText
+    }
+
+    static func make(for range: TrendRange, now: Date, calendar: Calendar = .current) -> TrendChartPlotModel {
+        let starts = ChartDateDomain.bucketStarts(for: range, now: now, calendar: calendar)
+        let domain = ChartDateDomain.range(for: range, now: now, calendar: calendar)
+        let plan = TrendAxisPlan.plan(for: range, domain: domain, calendar: calendar)
+        let buckets = starts.map { start in
+            Bucket(
+                id: stableID(start: start, range: range, calendar: calendar),
+                start: start,
+                axisText: axisText(start: start, range: range, calendar: calendar),
+                showTick: shouldShowTick(start: start, range: range, plan: plan, calendar: calendar)
+            )
+        }
+        return TrendChartPlotModel(buckets: buckets)
+    }
+
+    private static func shouldShowTick(
+        start: Date,
+        range: TrendRange,
+        plan: TrendAxisPlan,
+        calendar: Calendar
+    ) -> Bool {
+        // Never drop today's week label.
+        if range == .week { return true }
+        let granularity: Calendar.Component = range.bucket
+        return plan.values.contains { calendar.isDate($0, equalTo: start, toGranularity: granularity) }
+    }
+
+    private static func stableID(start: Date, range: TrendRange, calendar: Calendar) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = range.bucket == .month ? "yyyy-MM" : "yyyy-MM-dd"
+        return formatter.string(from: start)
+    }
+
+    private static func axisText(start: Date, range: TrendRange, calendar: Calendar) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.locale = Locale(identifier: "zh_CN")
+        switch range {
+        case .week, .month:
+            formatter.dateFormat = "M/d"
+        case .quarter, .year:
+            formatter.dateFormat = "M月"
+        }
+        return formatter.string(from: start)
     }
 }
 

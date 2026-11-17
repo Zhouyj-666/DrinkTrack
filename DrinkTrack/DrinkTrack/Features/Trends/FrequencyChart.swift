@@ -3,6 +3,12 @@ import Charts
 
 /// FR-TREND-01：每日饮酒量——周/月/3个月/年视图的饮酒量条形图，并用饮酒天数作为频率摘要。
 /// 周、月、3个月按天出柱；年视图按月汇总，否则 365 根柱子会挤成细线。
+///
+/// X is a discrete category domain (`chartXScale(domain: plotModel.categoryDomain)`),
+/// not a Date-unit BarMark. A continuous Date scale plus trailing 0-ml placeholders
+/// still let Swift Charts clip today after the last real bar, and a right-side
+/// Y-axis could hide the last tick. Every bucket, including today at 0 ml, now
+/// keeps a slot; the Y-axis sits on the leading/left side.
 struct FrequencyChart: View {
     let logs: [DrinkLogEntity]
     var now: Date = Date()
@@ -10,7 +16,8 @@ struct FrequencyChart: View {
     @State private var range: TrendRange = .month
 
     private struct BucketTotal: Identifiable {
-        var id: Date { start }
+        var id: String { categoryID }
+        let categoryID: String
         let start: Date
         let totalML: Double
     }
@@ -21,29 +28,50 @@ struct FrequencyChart: View {
             TrendRangePicker(selection: $range)
 
             Chart(bucketTotals) { item in
-                BarMark(x: .value("日期", item.start, unit: range.bucket), y: .value("总量(ml)", item.totalML))
-                    .foregroundStyle(DesignSystem.heartRateLine)
-                    .cornerRadius(3)
+                BarMark(
+                    x: .value("日期", item.categoryID),
+                    y: .value("总量(ml)", item.totalML)
+                )
+                .foregroundStyle(DesignSystem.heartRateLine)
+                .cornerRadius(3)
             }
-            // Pin the visible domain to the selected calendar window. Without an
-            // explicit domain, SwiftUI Charts picks a "nice" Date scale — often
-            // hours — and a single short session's bar stretches across the axis.
-            .chartXScale(domain: xDomain)
+            .chartXScale(
+                domain: plotModel.categoryDomain,
+                range: .plotDimension(startPadding: 4, endPadding: 12)
+            )
             .chartXAxis {
-                AxisMarks(values: axisPlan.values) { _ in
+                AxisMarks(values: plotModel.tickIDs) { value in
                     AxisGridLine().foregroundStyle(DesignSystem.gridline)
                     AxisTick().foregroundStyle(DesignSystem.gridline)
-                    AxisValueLabel(format: axisPlan.format, centered: axisPlan.centered)
-                        .foregroundStyle(DesignSystem.mutedInk)
+                    AxisValueLabel {
+                        if let id = value.as(String.self), let text = plotModel.axisText(for: id) {
+                            Text(text)
+                        }
+                    }
+                    .foregroundStyle(DesignSystem.mutedInk)
                 }
             }
-            .chartYAxis {
-                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
+            .chartYAxis(position: .leading) {
+                AxisMarks(preset: .aligned, position: .leading, values: .automatic(desiredCount: 4)) { _ in
                     AxisGridLine().foregroundStyle(DesignSystem.gridline)
                     AxisValueLabel().foregroundStyle(DesignSystem.mutedInk)
                 }
             }
+            .chartPlotStyle { plot in
+                plot.padding(.trailing, 8)
+            }
             .frame(height: 160)
+            .accessibilityIdentifier("frequency-chart")
+
+            Text(plotModel.axisTexts.joined(separator: " "))
+                .font(.caption2)
+                .foregroundStyle(Color.clear)
+                .frame(maxWidth: .infinity, minHeight: 1, maxHeight: 1)
+                .accessibilityIdentifier("frequency-chart-x-domain")
+                .accessibilityLabel(plotModel.axisTexts.joined(separator: " "))
+                .accessibilityValue(plotModel.axisTexts.joined(separator: " "))
+                .allowsHitTesting(false)
+                .accessibilityHidden(false)
 
             Text("共 \(drinkingDayCount) 个饮酒日 · \(range.bucketCaption) · 单位 ml")
                 .font(.caption)
@@ -54,12 +82,12 @@ struct FrequencyChart: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    private var xDomain: ClosedRange<Date> {
-        ChartDateDomain.range(for: range, now: now, calendar: calendar)
+    private var plotModel: TrendChartPlotModel {
+        TrendChartPlotModel.make(for: range, now: now, calendar: calendar)
     }
 
-    private var axisPlan: TrendAxisPlan {
-        TrendAxisPlan.plan(for: range, domain: xDomain, calendar: calendar)
+    private var xDomain: ClosedRange<Date> {
+        ChartDateDomain.range(for: range, now: now, calendar: calendar)
     }
 
     private var logsInWindow: [DrinkLogEntity] {
@@ -82,10 +110,12 @@ struct FrequencyChart: View {
             let timestamp = log.timestamp ?? Date()
             return calendar.dateInterval(of: component, for: timestamp)?.start ?? calendar.startOfDay(for: timestamp)
         }
-        // Always include every day (or month) in the window, even at 0 ml,
-        // so today stays on the axis when it has no drinks yet.
-        return ChartDateDomain.bucketStarts(for: range, now: now, calendar: calendar).map { start in
-            BucketTotal(start: start, totalML: grouped[start]?.reduce(0.0) { $0 + $1.volumeMl } ?? 0)
+        return plotModel.buckets.map { bucket in
+            BucketTotal(
+                categoryID: bucket.id,
+                start: bucket.start,
+                totalML: grouped[bucket.start]?.reduce(0.0) { $0 + $1.volumeMl } ?? 0
+            )
         }
     }
 }

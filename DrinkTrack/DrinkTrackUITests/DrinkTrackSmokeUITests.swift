@@ -235,6 +235,9 @@ final class DrinkTrackSmokeUITests: XCTestCase {
                     snap("tab-2-trends-range-" + rangeLabel)
                 }
             }
+            // After selecting 周 on 每日饮酒量, today's local M/d must be
+            // the last category in the discrete x-domain (build 8 clipped it).
+            assertWeekChartIncludesToday()
             app.swipeUp()
             snap("tab-2-trends-scrolled")
         }
@@ -381,6 +384,45 @@ final class DrinkTrackSmokeUITests: XCTestCase {
         snap("final-dashboard")
         checkAlive("final")
         attachNotes()
+    }
+
+
+    @MainActor
+    private func assertWeekChartIncludesToday() {
+        if app.staticTexts["暂无数据"].exists {
+            note("Trends empty; skip week-axis today assertion.")
+            return
+        }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "M/d"
+        let today = formatter.string(from: Date())
+        let element = app.descendants(matching: .any)["frequency-chart-x-domain"]
+        guard element.waitForExistence(timeout: 5) else {
+            snap("MISSING-week-chart-x-domain")
+            note("Could not find frequency-chart-x-domain after selecting 周.")
+            XCTFail("Week chart x-domain accessibility value missing")
+            return
+        }
+        let raw = ((element.value as? String) ?? element.label).trimmingCharacters(in: .whitespacesAndNewlines)
+        var parts: [String] = []
+        for piece in raw.replacingOccurrences(of: ",", with: " ").split(separator: " ") {
+            parts.append(String(piece))
+        }
+        snap("tab-2-trends-week-domain")
+        note("Week chart x-domain: " + raw)
+        guard let last = parts.last else {
+            XCTFail("Week chart x-domain was empty")
+            return
+        }
+        if last != today && !parts.contains(today) {
+            note("Week chart x-domain last label is '" + last + "', expected today '" + today + "'. Full: " + raw)
+            XCTFail("Week chart does not show today (" + today + ") as an x label: " + raw)
+        } else if last != today {
+            note("Today (" + today + ") is in the week domain but is not last; last is " + last + ". Full: " + raw)
+            XCTFail("Week chart last x label is " + last + ", expected today " + today)
+        }
     }
 
     @MainActor
