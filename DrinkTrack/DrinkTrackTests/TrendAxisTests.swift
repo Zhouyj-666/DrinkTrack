@@ -145,10 +145,17 @@ final class TrendAxisTests: XCTestCase {
         let now = date(2026, 11, 17, 10, 34, calendar: calendar)
         for range in [TrendRange.month, .quarter] {
             let model = TrendChartPlotModel.make(for: range, now: now, calendar: calendar)
-            XCTAssertEqual(model.axisTexts.last, "11/17", "range=\(range.rawValue)")
             XCTAssertEqual(model.categoryDomain.last, "2026-11-17", "range=\(range.rawValue)")
             XCTAssertEqual(model.buckets.last?.start, calendar.startOfDay(for: now), "range=\(range.rawValue)")
         }
+
+        // Month buckets stay labeled M/d, including a trailing empty today.
+        let month = TrendChartPlotModel.make(for: .month, now: now, calendar: calendar)
+        XCTAssertEqual(month.axisTexts.last, "11/17")
+
+        // Quarter axis labels are month names ("9月 10月 11月"), not M/d.
+        let quarter = TrendChartPlotModel.make(for: .quarter, now: now, calendar: calendar)
+        XCTAssertEqual(quarter.axisTexts.last, "11月")
     }
 
     func testPlotModelYearKeepsCurrentMonthCategory() {
