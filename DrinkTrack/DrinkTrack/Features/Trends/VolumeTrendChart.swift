@@ -63,7 +63,8 @@ struct VolumeTrendChart: View {
                     .foregroundStyle(DesignSystem.mutedInk)
                 }
             }
-            .chartYAxis(position: .leading) {
+            .chartYAxis(position: .leading)
+            .chartYAxis {
                 AxisMarks(preset: .aligned, position: .leading, values: .automatic(desiredCount: 4)) { _ in
                     AxisGridLine().foregroundStyle(DesignSystem.gridline)
                     AxisValueLabel().foregroundStyle(DesignSystem.mutedInk)
