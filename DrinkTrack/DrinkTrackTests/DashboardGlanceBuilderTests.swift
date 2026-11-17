@@ -47,4 +47,35 @@ final class DashboardGlanceBuilderTests: XCTestCase {
         XCTAssertEqual(metrics.monthSessionCount, 0)
         XCTAssertEqual(metrics.monthPlaceCount, 0)
     }
+
+    func testWeekMixFoldsMoreThanTwoTypesIntoOther() {
+        let mix = DashboardGlanceBuilder.foldedMix(from: [
+            .beer: 69,
+            .riceWine: 20,
+            .baijiu: 11
+        ])
+        XCTAssertEqual(mix.map(\.title), ["啤酒", "其他"])
+        XCTAssertEqual(mix[0].fraction, 0.69, accuracy: 0.001)
+        XCTAssertEqual(mix[1].fraction, 0.31, accuracy: 0.001)
+        XCTAssertEqual(mix[1].title, "其他")
+    }
+
+    func testWeekMixKeepsTwoTypesUnchanged() {
+        let mix = DashboardGlanceBuilder.foldedMix(from: [
+            .beer: 69,
+            .riceWine: 31
+        ])
+        XCTAssertEqual(mix.map(\.title), ["啤酒", "米酒"])
+    }
+
+    func testShortenedDisplayNameDropsGenericSuffix() {
+        XCTAssertEqual(DashboardGlanceBuilder.shortenedDisplayName("醪糟（通用）"), "醪糟")
+        XCTAssertEqual(DashboardGlanceBuilder.shortenedDisplayName("青岛"), "青岛")
+    }
+
+    func testFormatYuanOmitsCentsOnWholeAmounts() {
+        XCTAssertEqual(UserPreferences.formatYuan(fen: 5000), "¥50")
+        XCTAssertEqual(UserPreferences.formatYuan(fen: 5050), "¥50.50")
+    }
 }
+

@@ -35,6 +35,7 @@ struct DrinkTrackApp: App {
             .environmentObject(drinkRepository)
             .environmentObject(calendarDay)
             .preferredColorScheme(preferredColorScheme)
+            .onAppear { DesignSystem.applyChrome() }
             .task {
                 PhoneWatchBridge.shared.start(repository: drinkRepository, health: healthKitManager)
                 guard showBrandSplash else { return }

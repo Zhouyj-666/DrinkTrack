@@ -304,8 +304,7 @@ final class DrinkTrackSmokeUITests: XCTestCase {
             sleep(1)
             snap("tab-4-profile")
 
-            // Body metrics live in a collapsed "个人信息" group. Expand it first
-            // so the weight field is actually on screen.
+            // 个人信息 is a pushed page. Open it so the weight field is on screen.
             let personalInfo = app.descendants(matching: .any)["personal-info-group"]
             if personalInfo.waitForExistence(timeout: 4) {
                 personalInfo.tap()

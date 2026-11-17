@@ -1,64 +1,198 @@
 import SwiftUI
 
-/// 图表 / UI 配色系统。
+/// Brand chrome for 小酌场 / SipSession.
 ///
-/// 配色严格按 `dataviz` skill 的方法论来：
-/// - 心率曲线是单一数值的"幅度"编码 → 用 Sequential 单一蓝色色阶（非彩虹渐变）
-/// - 血氧/预警状态走 Status 色板（good/warning/serious/critical），不挪用分类色
-/// - 趋势报告里"按酒种类堆叠"的图表是 Categorical 编码 → 固定顺序取色，永不按排序重新上色
-/// - 下面这组 hex 来自 dataviz skill 的 `references/palette.md` 验证过的默认色板
-///   （色盲安全性、明暗双模式对比度都已跑过 validate_palette.js），如果以后要换成品牌色，
-///   应该替换这里的数值并重新跑一次校验脚本，而不是随手改色号。
+/// Light tokens follow the logo-matching mockups (warm cream, burgundy, amber).
+/// Dark tokens use burgundy-tinted warm surfaces, not cold blue-gray.
 enum DesignSystem {
 
-    // MARK: Chart chrome & ink（对应 palette.md「Chart chrome & ink」）
-    static let chartSurface = Color(light: "#fcfcfb", dark: "#1a1a19")
-    static let pagePlane = Color(light: "#f9f9f7", dark: "#0d0d0d")
-    static let primaryInk = Color(light: "#0b0b0b", dark: "#f0efec")
-    static let secondaryInk = Color(light: "#52514e", dark: "#c3c2b7")
-    static let mutedInk = Color(light: "#898781", dark: "#898781")
-    static let gridline = Color(light: "#e1e0d9", dark: "#2c2c2a")
-    static let baseline = Color(light: "#c3c2b7", dark: "#383835")
+    // MARK: Surfaces & ink
+    static let pagePlane = Color(light: "#F6EFE6", dark: "#1A1412")
+    static let card = Color(light: "#FFFFFF", dark: "#2B211E")
+    static let chartSurface = card
+    static let primaryInk = Color(light: "#1A1210", dark: "#F6EFE6")
+    static let secondaryInk = Color(light: "#8A7D74", dark: "#A89890")
+    static let mutedInk = Color(light: "#8A7D74", dark: "#A89890")
+    static let muted2 = Color(light: "#B0A49B", dark: "#7D716B")
+    static let gridline = Color(light: "#EDE3D8", dark: "#3D302C")
+    static let baseline = Color(light: "#EDE3D8", dark: "#3D302C")
+    static let separator = gridline
+    static let tabBarBackground = Color(light: "#FFFCF9", dark: "#1F1816")
+    static let tabBarUnselected = Color(light: "#B0A49B", dark: "#8A7D74")
 
-    // MARK: Sequential（心率/血氧等单一幅度数值）—— 单一蓝色色阶，浅→深
-    static let sequentialBlue100 = Color(light: "#cde2fb", dark: "#16324f")
-    static let sequentialBlue400 = Color(light: "#3987e5", dark: "#3987e5")
-    static let sequentialBlue500 = Color(light: "#256abf", dark: "#256abf")
-    static let sequentialBlue700 = Color(light: "#0d366b", dark: "#9ec4ef")
+    // MARK: Brand burgundy
+    static let burgundy = Color(light: "#7A1A28", dark: "#E8A0A8")
+    static let burgundyDark = Color(light: "#5A101C", dark: "#C97880")
+    static let burgundySoft = Color(light: "#F6E8EA", dark: "#3A2226")
+    static let primaryButtonTop = Color(hex: "#8F2434")
+    static let primaryButtonBottom = Color(hex: "#68141F")
 
-    /// 心率曲线主色（FR-DASH-01）
-    static var heartRateLine: Color { sequentialBlue500 }
-    /// 血氧曲线主色（FR-DASH-02），低于 95% 时切换成 warning
-    static var spo2Line: Color { sequentialBlue500 }
+    static let warningGold = Color(hex: "#B8811E")
+    static let success = Color(hex: "#2F8A5A")
+    static let successSoft = Color(light: "#E8F6EE", dark: "#1C3A2A")
 
-    // MARK: Status（固定语义色，不复用为分类色；永远搭配 icon + 文字，不单独靠颜色传达）
-    static let statusGood = Color(hex: "#0ca30c")
-    static let statusWarning = Color(hex: "#fab219")
-    static let statusSerious = Color(hex: "#ec835a")
-    static let statusCritical = Color(hex: "#d03b3b")
+    static let beer = Color(hex: "#E08A2A")
+    static let beerSoft = Color(light: "#FBE8D2", dark: "#3A2A18")
+    static let riceWine = Color(hex: "#D48B93")
+    static let riceWineSoft = Color(light: "#F8E4E6", dark: "#3A2226")
 
-    // MARK: Categorical（按固定顺序分配，色板仍是 8 槽，超过的酒类按模循环，顺序取自 palette.md）
+    /// 心率曲线：品牌酒红，不用原来的冷蓝色。
+    static var heartRateLine: Color { Color(light: "#9A2432", dark: "#E0707C") }
+    static var spo2Line: Color { Color(light: "#7A1A28", dark: "#E8A0A8") }
+
+    static let statusGood = success
+    static let statusWarning = warningGold
+    static let statusSerious = Color(hex: "#C45A2A")
+    static let statusCritical = Color(hex: "#7A1A28")
+
+    // Warm categorical palette. Beer and rice wine stay locked to the mockup.
     static let categorical: [Color] = [
-        Color(light: "#2a78d6", dark: "#3987e5"), // 1 blue
-        Color(light: "#eb6834", dark: "#d95926"), // 2 orange
-        Color(light: "#1baf7a", dark: "#199e70"), // 3 aqua
-        Color(light: "#eda100", dark: "#c98500"), // 4 yellow
-        Color(light: "#e87ba4", dark: "#d55181"), // 5 magenta
-        Color(light: "#008300", dark: "#008300"), // 6 green
-        Color(light: "#6250d6", dark: "#9085e9"), // 7 violet
-        Color(light: "#e34948", dark: "#e66767"), // 8 red
+        Color(hex: "#6B3A2A"), // baijiu
+        beer,                  // beer
+        Color(hex: "#7A1A28"), // redWine
+        Color(hex: "#C9A04A"), // huangjiu
+        riceWine,              // riceWine
+        Color(hex: "#C45A4A"), // sake
+        Color(hex: "#B8811E"), // soju
+        Color(hex: "#5A101C"), // spirits
+        Color(hex: "#D48B93"), // cocktail
+        Color(hex: "#E08A2A"), // fruitWine
+        Color(hex: "#8A7D74"), // premix
+        Color(hex: "#B0A49B"), // other
     ]
 
-    /// 按 DrinkCategory 的固定枚举顺序取色，而不是按当前数据排序取色——
-    /// 保证"啤酒永远是橙色"这种心智映射在不同视图之间保持一致。
     static func color(for category: DrinkCategory) -> Color {
         let index = DrinkCategory.allCases.firstIndex(of: category) ?? 0
         return categorical[index % categorical.count]
     }
+
+    static func softColor(for category: DrinkCategory) -> Color {
+        switch category {
+        case .beer: return beerSoft
+        case .riceWine: return riceWineSoft
+        default: return color(for: category).opacity(0.16)
+        }
+    }
+
+    static let cardCorner: CGFloat = 18
+    static let cardSpacing: CGFloat = 8
+    static let screenPadding: CGFloat = 16
+
+    static var primaryButtonGradient: LinearGradient {
+        LinearGradient(
+            colors: [primaryButtonTop, primaryButtonBottom],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    /// Tab bar, navigation bar, and tint so every tab shares the warm chrome.
+    @MainActor
+    static func applyChrome() {
+        let tab = UITabBarAppearance()
+        tab.configureWithOpaqueBackground()
+        tab.backgroundColor = UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hexString: "#1F1816")
+                : UIColor(hexString: "#FFFCF9")
+        }
+        let unselected = UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hexString: "#8A7D74")
+                : UIColor(hexString: "#B0A49B")
+        }
+        let selected = UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hexString: "#E8A0A8")
+                : UIColor(hexString: "#7A1A28")
+        }
+        let item = tab.stackedLayoutAppearance
+        item.normal.iconColor = unselected
+        item.normal.titleTextAttributes = [.foregroundColor: unselected]
+        item.selected.iconColor = selected
+        item.selected.titleTextAttributes = [.foregroundColor: selected]
+        tab.shadowColor = UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hexString: "#3D302C")
+                : UIColor(hexString: "#E8DDD3")
+        }
+        UITabBar.appearance().standardAppearance = tab
+        UITabBar.appearance().scrollEdgeAppearance = tab
+        UITabBar.appearance().unselectedItemTintColor = unselected
+        UITabBar.appearance().tintColor = selected
+
+        let nav = UINavigationBarAppearance()
+        nav.configureWithOpaqueBackground()
+        let page = UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hexString: "#1A1412")
+                : UIColor(hexString: "#F6EFE6")
+        }
+        let ink = UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(hexString: "#F6EFE6")
+                : UIColor(hexString: "#1A1210")
+        }
+        nav.backgroundColor = page
+        nav.shadowColor = .clear
+        nav.titleTextAttributes = [.foregroundColor: ink]
+        nav.largeTitleTextAttributes = [
+            .foregroundColor: ink,
+            .font: UIFont.systemFont(ofSize: 34, weight: .heavy)
+        ]
+        UINavigationBar.appearance().standardAppearance = nav
+        UINavigationBar.appearance().scrollEdgeAppearance = nav
+        UINavigationBar.appearance().compactAppearance = nav
+        UINavigationBar.appearance().tintColor = selected
+    }
+}
+
+extension View {
+    func sipCard() -> some View {
+        self
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(DesignSystem.card)
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.cardCorner, style: .continuous))
+            .shadow(color: Color(red: 90 / 255, green: 40 / 255, blue: 20 / 255).opacity(0.04), radius: 2, y: 1)
+    }
+
+    func sipScreenBackground() -> some View {
+        self.background(DesignSystem.pagePlane.ignoresSafeArea())
+    }
+}
+
+struct SipPrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 16, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .background(DesignSystem.primaryButtonGradient)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .shadow(color: Color(hex: "#68141F").opacity(configuration.isPressed ? 0.12 : 0.28), radius: 8, y: 4)
+            .opacity(configuration.isPressed ? 0.92 : 1)
+    }
+}
+
+struct SipOutlineButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 16, weight: .bold))
+            .foregroundStyle(DesignSystem.burgundy)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .background(DesignSystem.card)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(DesignSystem.burgundy, lineWidth: 1.5)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .opacity(configuration.isPressed ? 0.72 : 1)
+    }
 }
 
 extension Color {
-    /// 支持根据当前颜色模式分别指定浅色/深色模式下的颜色（对应 palette.md 的双模式表）。
     init(light: String, dark: String) {
         self.init(uiColor: UIColor { traits in
             UIColor(hexString: traits.userInterfaceStyle == .dark ? dark : light)
@@ -70,15 +204,15 @@ extension Color {
     }
 }
 
-private extension UIColor {
+extension UIColor {
     convenience init(hexString: String) {
         var hex = hexString.trimmingCharacters(in: .whitespacesAndNewlines)
         hex = hex.replacingOccurrences(of: "#", with: "")
         var rgb: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&rgb)
-        let r = Double((rgb & 0xFF0000) >> 16) / 255
-        let g = Double((rgb & 0x00FF00) >> 8) / 255
-        let b = Double(rgb & 0x0000FF) / 255
+        let r = CGFloat((rgb & 0xFF0000) >> 16) / 255
+        let g = CGFloat((rgb & 0x00FF00) >> 8) / 255
+        let b = CGFloat(rgb & 0x0000FF) / 255
         self.init(red: r, green: g, blue: b, alpha: 1)
     }
 }

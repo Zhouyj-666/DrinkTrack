@@ -12,57 +12,60 @@ struct SessionControlView: View {
         VStack(alignment: .leading, spacing: 12) {
             if let session = activeSession {
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("进行中的饮酒会话").font(.caption).foregroundStyle(DesignSystem.secondaryInk)
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("进行中的饮酒会话")
+                                .font(.caption)
+                                .foregroundStyle(DesignSystem.mutedInk)
                             if let startedAt = session.startedAt {
-                                Text(startedAt, style: .relative).font(.headline) + Text(" 前开始")
+                                Text(startedAt, style: .relative).font(.headline).foregroundStyle(DesignSystem.primaryInk) + Text(" 前开始").foregroundStyle(DesignSystem.primaryInk)
                             }
                         }
-                        Spacer()
+                        Spacer(minLength: 8)
+                    }
+                    HStack(spacing: 10) {
                         Button("+ 添加记录") { showQuickLog = true }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(SipOutlineButtonStyle())
                         Button("结束会话") {
                             drinkRepository.endSession(session)
                             activeSession = nil
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(DesignSystem.statusCritical)
+                        .buttonStyle(SipPrimaryButtonStyle())
                     }
                     activeSessionMetrics(session)
                 }
             } else {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("当前没有进行中的会话")
-                        .foregroundStyle(DesignSystem.secondaryInk)
-                    Text("一键开始会按上次的种类和杯型直接记第一杯，之后还可以改。")
-                        .font(.caption)
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(DesignSystem.primaryInk)
+                    Text("一键开始将按上次的\(UserPreferences.oneTapPresetLabel)记入，之后还能改。")
+                        .font(.system(size: 13))
                         .foregroundStyle(DesignSystem.mutedInk)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 HStack(spacing: 10) {
                     Button("开始新会话") {
                         activeSession = drinkRepository.startNewSession()
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(SipOutlineButtonStyle())
 
                     Button {
                         activeSession = drinkRepository.startSessionWithQuickLog()
                     } label: {
-                        VStack(spacing: 2) {
+                        VStack(spacing: 1) {
                             Text("一键开始")
                             Text(UserPreferences.oneTapPresetLabel)
-                                .font(.caption2)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.82))
                         }
-                        .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(SipPrimaryButtonStyle())
                     .accessibilityIdentifier("one-tap-start")
                 }
             }
         }
-        .padding()
-        .background(DesignSystem.chartSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .sipCard()
     }
 
     private func activeSessionMetrics(_ session: DrinkSessionEntity) -> some View {
@@ -96,13 +99,14 @@ struct SessionControlView: View {
             HStack(spacing: 4) {
                 Image(systemName: icon)
                     .font(.caption2)
-                    .foregroundStyle(Color("AccentColor"))
+                    .foregroundStyle(DesignSystem.burgundy)
                 Text(title)
                     .font(.caption2)
-                    .foregroundStyle(DesignSystem.secondaryInk)
+                    .foregroundStyle(DesignSystem.mutedInk)
             }
             valueView
                 .font(.subheadline.weight(.semibold))
+                .foregroundStyle(DesignSystem.primaryInk)
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)

@@ -1,14 +1,8 @@
 import SwiftUI
 import Charts
 
-/// FR-DASH-01：心率曲线 + 饮酒标记。
-/// 配色遵循 dataviz skill：心率是单一数值的幅度编码 → 用 Sequential 单色线（见 DesignSystem.heartRateLine），
-/// 不使用渐变彩虹色；饮酒标记点用独立的符号+直接标签，不额外引入新的分类色。
-///
-/// The card starts collapsed as a single status row. Expanding reveals the
-/// recent (or in-session) line. The line updates when new HealthKit samples
-/// arrive or when sampling is resumed on foreground / expand — not a
-/// continuous clinical-grade live stream.
+/// FR-DASH-01：可展开的心率卡片。收起只留一行状态；展开显示近 2 小时（或本场）折线。
+/// 折线随新的 HealthKit 样本和回到前台/展开时的采样恢复更新，不是连续的临床级实时流。
 struct HeartRateChartView: View {
     let points: [HealthSamplePoint]
     let drinkMarks: [Date]
@@ -22,20 +16,26 @@ struct HeartRateChartView: View {
         VStack(alignment: .leading, spacing: 8) {
             Button(action: toggleExpanded) {
                 HStack(spacing: 8) {
-                    Text(isInSession ? "心率（本场）" : "心率（最近 2 小时）")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
+                    HStack(spacing: 8) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(DesignSystem.burgundy)
+                        Text("心率")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(DesignSystem.primaryInk)
+                    }
                     Spacer(minLength: 8)
                     trailingStatus
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                    Image(systemName: "chevron.down")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(DesignSystem.mutedInk)
+                        .foregroundStyle(DesignSystem.muted2)
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("heart-rate-toggle")
-            .accessibilityLabel(isInSession ? "心率（本场）" : "心率（最近 2 小时）")
+            .accessibilityLabel("心率")
             .accessibilityValue(accessibilityValue)
             .accessibilityHint("轻点展开或收起心率折线图")
 
@@ -80,21 +80,25 @@ struct HeartRateChartView: View {
                 }
             }
         }
-        .padding()
-        .background(DesignSystem.chartSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 11)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(DesignSystem.card)
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.cardCorner, style: .continuous))
+        .shadow(color: Color(red: 90 / 255, green: 40 / 255, blue: 20 / 255).opacity(0.04), radius: 2, y: 1)
     }
 
     @ViewBuilder
     private var trailingStatus: some View {
         if !watchConnected {
             Label("手表未连接", systemImage: "applewatch.slash")
-                .font(.caption)
-                .foregroundStyle(DesignSystem.statusWarning)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(DesignSystem.warningGold)
+                .labelStyle(.titleAndIcon)
         } else if let latest = points.last {
             Text("\(Int(latest.value.rounded())) bpm")
-                .font(.caption)
-                .foregroundStyle(DesignSystem.mutedInk)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(DesignSystem.warningGold)
                 .accessibilityLabel("最近心率 \(Int(latest.value.rounded())) bpm")
         }
     }

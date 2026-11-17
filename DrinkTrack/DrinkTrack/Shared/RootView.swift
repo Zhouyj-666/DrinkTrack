@@ -10,8 +10,6 @@ enum AppTab: Hashable {
 }
 
 /// 主界面 Tab 容器：仪表盘 / 趋势 / 地图 / 好友 / 我的。
-///
-/// 「我的」放在最右侧（iOS 习惯位置），个人基础信息、健康连接、设置都收在这里。
 struct RootView: View {
     let friendRepository: FriendRepository
     @State private var selectedTab: AppTab = .dashboard
@@ -38,6 +36,9 @@ struct RootView: View {
                 .tabItem { Label("我的", systemImage: "person.crop.circle") }
                 .tag(AppTab.profile)
         }
-        .tint(DesignSystem.heartRateLine)
+        .tint(DesignSystem.burgundy)
+        .toolbarBackground(DesignSystem.tabBarBackground, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        .onAppear { DesignSystem.applyChrome() }
     }
 }

@@ -1,167 +1,253 @@
 import SwiftUI
 import CoreData
 
-/// A compact dashboard digest: today / this week volume, session count,
-/// this month's spend, week-vs-last-week facts, and the most-logged type.
-/// Facts only, no cut-back framing.
-struct DashboardGlanceView: View {
+/// Today / this-week / this-month summary cards for the redesigned dashboard.
+struct DashboardSummaryStack: View {
     let todayVolumeML: Double
     let todayStandard: Double
     let weekVolumeML: Double
     let weekStandard: Double
     let weekSessionCount: Int
-    let lastWeekVolumeML: Double
-    let lastWeekStandard: Double
     let monthSessionCount: Int
     let monthPlaceCount: Int
     let monthSpendFen: Int
-    let monthSpendCount: Int
     let showSpend: Bool
-    let topCategory: DrinkCategory?
     let topBrand: String?
-    let mix: [(DrinkCategory, Double)]
+    let mix: [DrinkMixShare]
+    let lastEndedSession: DrinkSessionEntity?
+    let lastSessionIsToday: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("饮酒一览")
-                .font(.headline)
-
-            HStack(spacing: 10) {
-                metricTile(
-                    icon: "sun.max.fill",
-                    title: "今天",
-                    value: volumeLine(ml: todayVolumeML, standard: todayStandard),
-                    caption: todayVolumeML > 0 ? nil : "还没有记录"
-                )
-                metricTile(
-                    icon: "calendar",
-                    title: "本周",
-                    value: volumeLine(ml: weekVolumeML, standard: weekStandard),
-                    caption: weekSessionCount > 0 ? "\(weekSessionCount) 场" : "还没有场次"
-                )
-            }
-
-            HStack(spacing: 10) {
-                metricTile(
-                    icon: "calendar.badge.clock",
-                    title: "上周",
-                    value: volumeLine(ml: lastWeekVolumeML, standard: lastWeekStandard),
-                    caption: lastWeekVolumeML > 0 ? "对照看一眼" : "上周没有记录"
-                )
-                metricTile(
-                    icon: "building.2.fill",
-                    title: "本月",
-                    value: monthSessionCount > 0 ? "\(monthSessionCount) 场" : "—",
-                    caption: monthPlaceCount > 0 ? "走过 \(monthPlaceCount) 个地方" : (monthSessionCount > 0 ? "还没有地点" : "还没有场次")
-                )
-            }
-
-            if showSpend {
-                HStack(spacing: 10) {
-                    metricTile(
-                        icon: "yensign.circle.fill",
-                        title: "本月花费",
-                        value: monthSpendCount > 0 ? UserPreferences.formatYuan(fen: monthSpendFen) : "—",
-                        caption: monthSpendCount > 0 ? "\(monthSpendCount) 条记了花费" : "本月还没记花费"
-                    )
+        VStack(spacing: DesignSystem.cardSpacing) {
+            todayCard
+            if let session = lastEndedSession, !lastSessionIsToday {
+                NavigationLink {
+                    SessionDetailView(session: session)
+                } label: {
+                    LastSessionRow(session: session, showsDate: true)
+                        .sipCard()
                 }
+                .buttonStyle(.plain)
             }
+            weekCard
+            monthCard
+        }
+    }
 
-            if let topBrand, !topBrand.isEmpty {
-                HStack(spacing: 6) {
-                    Image(systemName: "star.fill")
-                        .foregroundStyle(Color("AccentColor"))
-                    Text("本月常喝")
-                        .font(.caption)
-                        .foregroundStyle(DesignSystem.secondaryInk)
-                    Text(topBrand)
-                        .font(.caption.weight(.semibold))
+    private var todayCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("今天")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(DesignSystem.mutedInk)
+
+            if todayVolumeML <= 0 {
+                Text("今天还没记")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(DesignSystem.primaryInk)
+                    .padding(.top, 10)
+                    .padding(.bottom, 2)
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(DashboardGlanceBuilder.formatMLNumber(todayVolumeML))
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
                         .foregroundStyle(DesignSystem.primaryInk)
-                    if let topCategory {
-                        Text("· \(topCategory.displayName)")
-                            .font(.caption)
-                            .foregroundStyle(DesignSystem.mutedInk)
-                    }
+                        .monospacedDigit()
+                    Text("ml")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(DesignSystem.primaryInk)
                 }
-            }
-
-            if !mix.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "chart.pie.fill")
-                            .foregroundStyle(Color("AccentColor"))
-                        Text("本周酒类")
-                            .font(.caption)
-                            .foregroundStyle(DesignSystem.secondaryInk)
-                        if let topCategory {
-                            Text("最多是\(topCategory.displayName)")
-                                .font(.caption)
-                                .foregroundStyle(DesignSystem.mutedInk)
-                        }
-                    }
-                    HStack(spacing: 8) {
-                        ForEach(mix, id: \.0) { item in
-                            HStack(spacing: 4) {
-                                Image(systemName: item.0.systemImage)
-                                    .font(.caption)
-                                    .foregroundStyle(DesignSystem.color(for: item.0))
-                                Text(item.0.displayName)
-                                    .font(.caption)
-                                Text(percent(item.1))
-                                    .font(.caption.monospacedDigit())
-                                    .foregroundStyle(DesignSystem.mutedInk)
-                            }
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(DesignSystem.color(for: item.0).opacity(0.12))
-                            .clipShape(Capsule())
-                        }
-                    }
-                }
-            }
-        }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DesignSystem.chartSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    private func metricTile(icon: String, title: String, value: String, caption: String?) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .foregroundStyle(Color("AccentColor"))
-                Text(title)
-                    .font(.caption)
-                    .foregroundStyle(DesignSystem.secondaryInk)
-            }
-            Text(value)
-                .font(.headline)
-                .monospacedDigit()
-                .fixedSize(horizontal: false, vertical: true)
-            if let caption {
-                Text(caption)
-                    .font(.caption2)
+                .padding(.top, 2)
+                Text(DashboardGlanceBuilder.formatStandardDrinks(todayStandard))
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(DesignSystem.mutedInk)
+                    .padding(.top, 2)
+            }
+
+            if let session = lastEndedSession, lastSessionIsToday {
+                Divider().background(DesignSystem.separator).padding(.vertical, 14)
+                NavigationLink {
+                    SessionDetailView(session: session)
+                } label: {
+                    LastSessionRow(session: session, showsDate: false)
+                }
+                .buttonStyle(.plain)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .sipCard()
     }
 
-    private func volumeLine(ml: Double, standard: Double) -> String {
-        if ml <= 0 { return "—" }
-        return "\(formatML(ml)) · ≈\(formatStandard(standard))"
+    private var weekCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("本周")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(DesignSystem.mutedInk)
+            if weekVolumeML <= 0 {
+                Text("本周还没记")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(DesignSystem.primaryInk)
+            } else {
+                HStack(alignment: .firstTextBaseline) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text("\(DashboardGlanceBuilder.formatMLNumber(weekVolumeML)) ml")
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundStyle(DesignSystem.primaryInk)
+                            .monospacedDigit()
+                        Text("·")
+                            .foregroundStyle(DesignSystem.muted2)
+                        Text(DashboardGlanceBuilder.formatStandardDrinks(weekStandard))
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(DesignSystem.primaryInk)
+                    }
+                    Spacer(minLength: 8)
+                    Text("\(weekSessionCount) 场")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(DesignSystem.mutedInk)
+                }
+                if !mix.isEmpty {
+                    DrinkMixBar(shares: mix)
+                        .padding(.top, 4)
+                    HStack(spacing: 14) {
+                        ForEach(mix) { share in
+                            HStack(spacing: 5) {
+                                Circle()
+                                    .fill(share.color)
+                                    .frame(width: 7, height: 7)
+                                Text("\(share.title) \(share.percentLabel)")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(DesignSystem.primaryInk)
+                            }
+                        }
+                    }
+                    .padding(.top, 2)
+                }
+            }
+        }
+        .sipCard()
     }
 
-    private func formatML(_ ml: Double) -> String {
-        ml == ml.rounded() ? "\(Int(ml)) ml" : String(format: "%.0f ml", ml)
+    private var monthCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("本月")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(DesignSystem.mutedInk)
+            HStack(alignment: .top) {
+                monthColumn(value: "\(monthSessionCount)", label: "场次")
+                Spacer()
+                monthColumn(value: "\(monthPlaceCount)", label: "个地方")
+                if showSpend {
+                    Spacer()
+                    monthColumn(value: UserPreferences.formatYuan(fen: monthSpendFen), label: "花费")
+                }
+            }
+            .padding(.top, 4)
+            if let topBrand, !topBrand.isEmpty {
+                HStack {
+                    Text("常喝")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(DesignSystem.mutedInk)
+                    Spacer()
+                    Text(DashboardGlanceBuilder.shortenedDisplayName(topBrand))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(DesignSystem.primaryInk)
+                        .lineLimit(1)
+                }
+                .padding(.top, 4)
+            }
+        }
+        .sipCard()
     }
 
-    private func formatStandard(_ value: Double) -> String {
-        String(format: "%.1f 标准饮品", value)
+    private func monthColumn(value: String, label: String) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundStyle(DesignSystem.primaryInk)
+                .monospacedDigit()
+            Text(label)
+                .font(.system(size: 13))
+                .foregroundStyle(DesignSystem.mutedInk)
+        }
+        .frame(minWidth: 70)
+    }
+}
+
+struct LastSessionRow: View {
+    let session: DrinkSessionEntity
+    var showsDate: Bool = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(DesignSystem.successSoft)
+                    .frame(width: 26, height: 26)
+                Image(systemName: "checkmark")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(DesignSystem.success)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text("上一场已结束")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(DesignSystem.primaryInk)
+                Text(summary)
+                    .font(.system(size: 13))
+                    .foregroundStyle(DesignSystem.mutedInk)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            Text("查看 / 分享")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(DesignSystem.burgundy)
+        }
     }
 
-    private func percent(_ fraction: Double) -> String {
+    private var logs: [DrinkLogEntity] {
+        Array((session.logs as? Set<DrinkLogEntity>) ?? [])
+    }
+
+    private var summary: String {
+        let volume = logs.reduce(0.0) { $0 + $1.volumeMl }
+        var text = ""
+        if showsDate, let end = session.endedAt ?? session.startedAt {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "zh_CN")
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            text += formatter.string(from: end) + " · "
+        }
+        text += "\(logs.count) 杯 · \(DashboardGlanceBuilder.formatMLNumber(volume)) ml"
+        return text
+    }
+}
+
+struct DrinkMixBar: View {
+    let shares: [DrinkMixShare]
+
+    var body: some View {
+        GeometryReader { geo in
+            HStack(spacing: 0) {
+                ForEach(Array(shares.enumerated()), id: \.element.id) { index, share in
+                    share.color
+                        .frame(width: max(4, geo.size.width * share.fraction))
+                }
+            }
+        }
+        .frame(height: 7)
+        .clipShape(Capsule())
+    }
+}
+
+struct DrinkMixShare: Equatable, Identifiable {
+    let title: String
+    let fraction: Double
+    let category: DrinkCategory?
+
+    var id: String { title }
+    var color: Color {
+        if let category { return DesignSystem.color(for: category) }
+        return DesignSystem.muted2
+    }
+    var percentLabel: String {
         String(format: "%.0f%%", fraction * 100)
     }
 }
@@ -222,7 +308,7 @@ enum DashboardGlanceBuilder {
         let monthSpendCount: Int
         let topCategory: DrinkCategory?
         let topBrand: String?
-        let mix: [(DrinkCategory, Double)]
+        let mix: [DrinkMixShare]
     }
 
     static func metrics(
@@ -288,14 +374,10 @@ enum DashboardGlanceBuilder {
             }
         }
 
-        let totalMix = weekByCategory.values.reduce(0, +)
-        let ranked = weekByCategory.sorted { $0.value > $1.value }
-        let topWeek = ranked.first?.key
-        let mix = ranked.prefix(3).map { category, volume in
-            (category, totalMix > 0 ? volume / totalMix : 0)
-        }
+        let mix = foldedMix(from: weekByCategory)
         let topMonthCategory = monthByCategory.sorted { $0.value > $1.value }.first?.key
         let topBrand = monthByBrand.sorted { $0.value > $1.value }.first?.key
+        let topWeek = mix.first?.category
 
         return Metrics(
             todayVolumeML: todayML,
@@ -313,5 +395,49 @@ enum DashboardGlanceBuilder {
             topBrand: topBrand,
             mix: mix
         )
+    }
+
+    /// At most two segments: if more than two types are present, keep the
+    /// largest share and fold the rest into 「其他」.
+    static func foldedMix(from weekByCategory: [DrinkCategory: Double]) -> [DrinkMixShare] {
+        let total = weekByCategory.values.reduce(0, +)
+        guard total > 0 else { return [] }
+        let ranked = weekByCategory.filter { $0.value > 0 }.sorted { $0.value > $1.value }
+        guard !ranked.isEmpty else { return [] }
+        if ranked.count <= 2 {
+            return ranked.map {
+                DrinkMixShare(title: $0.key.displayName, fraction: $0.value / total, category: $0.key)
+            }
+        }
+        let top = ranked[0]
+        let rest = ranked.dropFirst().reduce(0.0) { $0 + $1.value }
+        return [
+            DrinkMixShare(title: top.key.displayName, fraction: top.value / total, category: top.key),
+            DrinkMixShare(title: "其他", fraction: rest / total, category: .other)
+        ]
+    }
+
+    /// Drop a purely generic qualifier such as 「（通用）」.
+    static func shortenedDisplayName(_ name: String) -> String {
+        var result = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        for suffix in ["（通用）", "(通用)"] where result.hasSuffix(suffix) {
+            result = String(result.dropLast(suffix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return result
+    }
+
+    static func formatMLNumber(_ ml: Double) -> String {
+        ml == ml.rounded() ? "\(Int(ml))" : String(format: "%.0f", ml)
+    }
+
+    static func formatStandardDrinks(_ value: Double) -> String {
+        if value == value.rounded() {
+            return "\(Int(value)) 标饮"
+        }
+        return String(format: "%.1f 标饮", value)
+    }
+
+    static func isOnLocalDay(_ date: Date, now: Date, calendar: Calendar) -> Bool {
+        calendar.isDate(date, inSameDayAs: now)
     }
 }

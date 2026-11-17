@@ -119,7 +119,10 @@ enum UserPreferences {
 
     /// Format an amount stored in 分 (cents) as yuan for display.
     static func formatYuan(fen: Int) -> String {
-        String(format: "¥%.2f", Double(fen) / 100.0)
+        if fen % 100 == 0 {
+            return "¥\(fen / 100)"
+        }
+        return String(format: "¥%.2f", Double(fen) / 100.0)
     }
 
     static func parseYuanToFen(_ text: String) -> Int? {
