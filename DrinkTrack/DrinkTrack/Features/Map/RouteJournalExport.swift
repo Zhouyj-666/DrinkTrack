@@ -20,6 +20,7 @@ struct RouteJournalExport: Equatable {
         let dateText: String
         let kindLabel: String
         let isNameOnly: Bool
+        let note: String?
     }
 
     let range: RouteTimeRange
@@ -60,7 +61,8 @@ struct RouteJournalExport: Equatable {
                 name: stop.name,
                 dateText: formatDateTime(stop.at),
                 kindLabel: stop.kind == .placeMark ? "地点标记" : "饮酒场次",
-                isNameOnly: false
+                isNameOnly: false,
+                note: stop.note
             )
         }
 
@@ -71,7 +73,8 @@ struct RouteJournalExport: Equatable {
                 name: place.name,
                 dateText: place.lastAt.map(formatDateTime) ?? "日期未知",
                 kindLabel: "仅名称",
-                isNameOnly: true
+                isNameOnly: true,
+                note: nil
             ))
         }
 
@@ -104,7 +107,11 @@ struct RouteJournalExport: Equatable {
         for item in items {
             let pin = item.pinNumber.map { "\($0). " } ?? "• "
             let extra = item.isNameOnly ? "（图上未标点）" : ""
-            lines.append("\(pin)\(item.name)  \(item.dateText)  \(item.kindLabel)\(extra)")
+            var line = "\(pin)\(item.name)  \(item.dateText)  \(item.kindLabel)\(extra)"
+            if let note = item.note, !note.isEmpty {
+                line += "  \(note)"
+            }
+            lines.append(line)
         }
         lines.append("")
         lines.append(privacyLine)
@@ -135,6 +142,9 @@ struct RouteJournalExport: Equatable {
             ]
             if let pin = item.pinNumber {
                 dict["pin"] = pin
+            }
+            if let note = item.note, !note.isEmpty {
+                dict["note"] = note
             }
             return dict
         }

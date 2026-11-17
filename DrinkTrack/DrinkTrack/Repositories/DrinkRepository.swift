@@ -70,6 +70,43 @@ final class DrinkRepository: ObservableObject {
         save()
     }
 
+    /// Session-level remarks for the in-app detail page and the 饮酒打卡 share card.
+    /// Empty strings clear the field. Existing records without these keys stay usable.
+    func updateSessionDescriptions(
+        of session: DrinkSessionEntity,
+        note: String?,
+        placeNote: String?
+    ) {
+        session.setValue(Self.trimmed(note), forKey: "note")
+        session.setValue(Self.trimmed(placeNote), forKey: "placeNote")
+        if let place = Self.trimmed(session.locationName), let placeNote = Self.trimmed(placeNote) {
+            applyPlaceNote(placeNote, toPlaceName: place, saveChanges: false)
+        }
+        save()
+    }
+
+    /// Update the description on PlaceMarks and sessions that share this place name.
+    func updatePlaceNote(_ note: String?, forPlaceName name: String) {
+        applyPlaceNote(note, toPlaceName: name, saveChanges: true)
+    }
+
+    private func applyPlaceNote(_ note: String?, toPlaceName name: String, saveChanges: Bool) {
+        let trimmedName = Self.trimmed(name)
+        guard let trimmedName else { return }
+        let value = Self.trimmed(note)
+        let markRequest = NSFetchRequest<NSManagedObject>(entityName: "PlaceMark")
+        markRequest.predicate = NSPredicate(format: "name == %@", trimmedName)
+        for mark in (try? context.fetch(markRequest)) ?? [] {
+            mark.setValue(value, forKey: "note")
+        }
+        let sessionRequest = NSFetchRequest<DrinkSessionEntity>(entityName: "DrinkSession")
+        sessionRequest.predicate = NSPredicate(format: "locationName == %@", trimmedName)
+        for row in (try? context.fetch(sessionRequest)) ?? [] {
+            row.setValue(value, forKey: "placeNote")
+        }
+        if saveChanges { save() }
+    }
+
     func fetchActiveSession() -> DrinkSessionEntity? {
         let request = NSFetchRequest<DrinkSessionEntity>(entityName: "DrinkSession")
         request.predicate = NSPredicate(format: "status == %@", "active")
@@ -246,6 +283,10 @@ final class DrinkRepository: ObservableObject {
                 var acc = buckets[sessionPlace] ?? PlaceAccumulator(name: sessionPlace)
                 acc.addSession(session)
                 acc.consider(coordinate: sessionCoordinate, at: session.startedAt)
+                acc.considerNote(session.value(forKey: "placeNote") as? String, at: session.startedAt)
+                buckets[sessionPlace] = acc
+            } else if let sessionPlace, var acc = buckets[sessionPlace] {
+                acc.considerNote(session.value(forKey: "placeNote") as? String, at: session.startedAt)
                 buckets[sessionPlace] = acc
             }
         }
@@ -260,6 +301,7 @@ final class DrinkRepository: ObservableObject {
                 coordinate: LocationCoordinate.validated(latitude: latitude, longitude: longitude),
                 at: markedAt
             )
+            acc.considerNote(mark.value(forKey: "note") as? String, at: markedAt)
             buckets[name] = acc
         }
 
@@ -270,11 +312,14 @@ final class DrinkRepository: ObservableObject {
 
     /// Chronological 饮酒地图 stops (sessions with coordinates + PlaceMarks).
     func routeStops() -> [RouteStop] {
-        let sessions = fetchAllSessions(limit: 1000).map { session -> (id: String, name: String?, startedAt: Date?, latitude: Double?, longitude: Double?, volumeML: Double, standardDrinks: Double) in
+        let sessions = fetchAllSessions(limit: 1000).map { session -> (id: String, name: String?, startedAt: Date?, latitude: Double?, longitude: Double?, volumeML: Double, standardDrinks: Double, note: String?) in
             let logs = (session.logs as? Set<DrinkLogEntity>) ?? []
             let volume = logs.reduce(0.0) { $0 + $1.volumeMl }
             let standard = logs.reduce(0.0) { $0 + $1.standardDrinks }
             let pair = LocationCoordinate.pair(from: session)
+            let placeNote = Self.trimmed(session.value(forKey: "placeNote") as? String)
+            let sessionNote = Self.trimmed(session.value(forKey: "note") as? String)
+            let note = [placeNote, sessionNote].compactMap { $0 }.joined(separator: " · ")
             return (
                 id: session.objectID.uriRepresentation().absoluteString,
                 name: session.locationName,
@@ -282,11 +327,12 @@ final class DrinkRepository: ObservableObject {
                 latitude: pair?.0,
                 longitude: pair?.1,
                 volumeML: volume,
-                standardDrinks: standard
+                standardDrinks: standard,
+                note: note.isEmpty ? nil : note
             )
         }
 
-        let marks = fetchPlaceMarks().compactMap { mark -> (id: String, name: String, markedAt: Date, latitude: Double, longitude: Double)? in
+        let marks = fetchPlaceMarks().compactMap { mark -> (id: String, name: String, markedAt: Date, latitude: Double, longitude: Double, note: String?)? in
             guard let name = Self.trimmed(mark.value(forKey: "name") as? String),
                   let markedAt = mark.value(forKey: "markedAt") as? Date,
                   let latitude = Self.doubleKey(mark, "latitude"),
@@ -295,10 +341,10 @@ final class DrinkRepository: ObservableObject {
             }
             let id = (mark.value(forKey: "id") as? UUID)?.uuidString
                 ?? mark.objectID.uriRepresentation().absoluteString
-            return (id: id, name: name, markedAt: markedAt, latitude: latitude, longitude: longitude)
+            return (id: id, name: name, markedAt: markedAt, latitude: latitude, longitude: longitude, note: Self.trimmed(mark.value(forKey: "note") as? String))
         }
 
-        return RouteJournal.stops(sessions: sessions, placeMarks: marks)
+        return RouteJournal.annotatedStops(sessions: sessions, placeMarks: marks)
     }
 
     // MARK: PlaceMark / 饮酒地图标记

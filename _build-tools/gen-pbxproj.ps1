@@ -105,9 +105,10 @@ $xcdatamodelChildNames = @(
     "DrinkTrack 4.xcdatamodel",
     "DrinkTrack 5.xcdatamodel",
     "DrinkTrack 6.xcdatamodel",
-    "DrinkTrack 7.xcdatamodel"
+    "DrinkTrack 7.xcdatamodel",
+    "DrinkTrack 8.xcdatamodel"
 )
-$xcdatamodelCurrentName = "DrinkTrack 7.xcdatamodel"
+$xcdatamodelCurrentName = "DrinkTrack 8.xcdatamodel"
 
 # Watch companion and files shared with the iPhone target live next to the
 # iPhone source folder (siblings of DrinkTrack/ under the .xcodeproj dir).
@@ -739,7 +740,7 @@ $targetCommonSettings = @'
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DrinkTrack/DrinkTrack.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkTrack/Info.plist;
@@ -781,7 +782,7 @@ $watchCommonSettings = @'
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "BRAND_DISPLAY_NAME";
 				INFOPLIST_KEY_WKApplication = YES;

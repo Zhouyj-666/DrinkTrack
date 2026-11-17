@@ -183,4 +183,25 @@ final class RouteJournalTests: XCTestCase {
         XCTAssertTrue(payload.items.isEmpty)
         XCTAssertFalse(RouteJournalExport.emptyHint(hasAnyData: false, range: .all).isEmpty)
     }
+
+    func testAnnotatedStopsCarryNotesIntoExportWithoutCoordinates() {
+        let calendar = Calendar(identifier: .gregorian)
+        let day = calendar.date(from: DateComponents(year: 2026, month: 11, day: 17, hour: 20))!
+        let stops = RouteJournal.annotatedStops(
+            sessions: [
+                (id: "s1", name: "武康路", startedAt: day, latitude: 31.21, longitude: 121.44, volumeML: 150, standardDrinks: 1.2, note: "老酒吧，点了杯威士忌")
+            ],
+            placeMarks: [
+                (id: "m1", name: "江边", markedAt: day, latitude: 31.23, longitude: 121.47, note: "看见江景")
+            ]
+        )
+        XCTAssertEqual(stops.map(\.note), ["老酒吧，点了杯威士忌", "看见江景"])
+        let payload = RouteJournalExport.build(stops: stops, nameOnlyPlaces: [], range: .all, now: day, calendar: calendar)
+        XCTAssertTrue(payload.shareableText.contains("老酒吧，点了杯威士忌"))
+        XCTAssertTrue(payload.shareableText.contains("看见江景"))
+        XCTAssertTrue(payload.shareableJSONString.contains("老酒吧，点了杯威士忌"))
+        let blob = payload.shareableText + "\n" + payload.shareableJSONString
+        XCTAssertFalse(blob.contains("31.21"))
+        XCTAssertFalse(blob.contains("121.44"))
+    }
 }

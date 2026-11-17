@@ -11,6 +11,8 @@ struct SessionDetailView: View {
     @State private var locationDraft = ""
     @State private var locationLatitude: Double? = nil
     @State private var locationLongitude: Double? = nil
+    @State private var sessionNoteDraft = ""
+    @State private var placeNoteDraft = ""
     @State private var renderedImage: Image?
     @State private var sessionAlerts: [AlertThresholdEngine.AlertResult] = []
     @StateObject private var locationProvider = LocationProvider()
@@ -24,6 +26,8 @@ struct SessionDetailView: View {
 
                 locationEditor
 
+                notesEditor
+
                 SessionLogListView(session: session, sessionIsActive: session.status == "active")
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -31,7 +35,7 @@ struct SessionDetailView: View {
                     Toggle("附加本场心率走势", isOn: $includeHeartRateCurve)
                     Toggle("在卡片上显示地点", isOn: $showLocationOnCard)
                         .disabled((session.locationName ?? "").isEmpty)
-                    Text("卡片不会包含花费或坐标；心率只显示走势，不显示数值。地点默认关闭，打开后也只显示地名。")
+                    Text("卡片不会包含花费或坐标；心率只显示走势，不显示数值。地点默认关闭，打开后只显示地名。你写下的场次描述和地点描述会出现在卡片上，也不会带上坐标。")
                         .font(.caption2)
                         .foregroundStyle(DesignSystem.mutedInk)
                 }
@@ -70,6 +74,7 @@ struct SessionDetailView: View {
         }
         .onAppear {
             loadLocationDraft()
+            loadNotesDraft()
             sessionAlerts = AlertThresholdEngine.decode(session.value(forKey: "alertsJSON") as? String)
             renderShareImage()
         }
@@ -118,6 +123,64 @@ struct SessionDetailView: View {
         default:
             return true
         }
+    }
+
+    private var notesEditor: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("描述").font(.headline)
+                Spacer()
+                if notesNeedSave {
+                    Button("保存", action: saveNotes)
+                        .buttonStyle(.bordered)
+                        .font(.footnote)
+                }
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Text("场次描述")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(DesignSystem.mutedInk)
+                TextField("这晚喝了什么，或一句短记", text: $sessionNoteDraft, axis: .vertical)
+                    .lineLimit(2...4)
+                Text("地点描述")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(DesignSystem.mutedInk)
+                    .padding(.top, 4)
+                TextField("店名，或对这个地址的备注", text: $placeNoteDraft, axis: .vertical)
+                    .lineLimit(2...4)
+            }
+            Text("这些描述只用来帮助你自己回忆。会出现在会话详情和饮酒打卡上，不会带上经纬度。")
+                .font(.caption2)
+                .foregroundStyle(DesignSystem.mutedInk)
+        }
+        .padding()
+        .background(DesignSystem.chartSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var notesNeedSave: Bool {
+        Self.trimmed(sessionNoteDraft) != Self.trimmed(session.value(forKey: "note") as? String)
+            || Self.trimmed(placeNoteDraft) != Self.trimmed(session.value(forKey: "placeNote") as? String)
+    }
+
+    private func loadNotesDraft() {
+        sessionNoteDraft = session.value(forKey: "note") as? String ?? ""
+        placeNoteDraft = session.value(forKey: "placeNote") as? String ?? ""
+    }
+
+    private func saveNotes() {
+        drinkRepository.updateSessionDescriptions(
+            of: session,
+            note: sessionNoteDraft,
+            placeNote: placeNoteDraft
+        )
+        loadNotesDraft()
+        renderShareImage()
+    }
+
+    private static func trimmed(_ raw: String?) -> String? {
+        let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return value.isEmpty ? nil : value
     }
 
     private func loadLocationDraft() {

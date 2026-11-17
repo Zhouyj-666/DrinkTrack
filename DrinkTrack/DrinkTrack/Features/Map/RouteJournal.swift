@@ -47,6 +47,8 @@ struct RouteStop: Identifiable, Equatable {
     let volumeML: Double
     let standardDrinks: Double
     let sessionObjectIDURI: String?
+    /// User-written place or session remark (shop name, drink name, short note).
+    let note: String?
 
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
@@ -60,6 +62,20 @@ enum RouteJournal {
     static func stops(
         sessions: [(id: String, name: String?, startedAt: Date?, latitude: Double?, longitude: Double?, volumeML: Double, standardDrinks: Double)],
         placeMarks: [(id: String, name: String, markedAt: Date, latitude: Double, longitude: Double)]
+    ) -> [RouteStop] {
+        annotatedStops(
+            sessions: sessions.map {
+                (id: $0.id, name: $0.name, startedAt: $0.startedAt, latitude: $0.latitude, longitude: $0.longitude, volumeML: $0.volumeML, standardDrinks: $0.standardDrinks, note: nil)
+            },
+            placeMarks: placeMarks.map {
+                (id: $0.id, name: $0.name, markedAt: $0.markedAt, latitude: $0.latitude, longitude: $0.longitude, note: nil)
+            }
+        )
+    }
+
+    static func annotatedStops(
+        sessions: [(id: String, name: String?, startedAt: Date?, latitude: Double?, longitude: Double?, volumeML: Double, standardDrinks: Double, note: String?)],
+        placeMarks: [(id: String, name: String, markedAt: Date, latitude: Double, longitude: Double, note: String?)]
     ) -> [RouteStop] {
         var result: [RouteStop] = []
 
@@ -78,7 +94,8 @@ enum RouteJournal {
                 kind: .session,
                 volumeML: session.volumeML,
                 standardDrinks: session.standardDrinks,
-                sessionObjectIDURI: session.id
+                sessionObjectIDURI: session.id,
+                note: trimmed(session.note)
             ))
         }
 
@@ -96,7 +113,8 @@ enum RouteJournal {
                 kind: .placeMark,
                 volumeML: 0,
                 standardDrinks: 0,
-                sessionObjectIDURI: nil
+                sessionObjectIDURI: nil,
+                note: trimmed(mark.note)
             ))
         }
 

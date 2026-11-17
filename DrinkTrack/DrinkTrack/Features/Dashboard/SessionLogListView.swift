@@ -43,7 +43,7 @@ struct SessionLogListView: View {
             }
 
             if logs.isEmpty {
-                Text(sessionIsActive ? "还没有记录。点上方「+ 添加记录」记下你喝的第一杯。" : "这次会话没有记录任何饮品。")
+                Text(sessionIsActive ? "还没有记录。点「再记一杯」记下你喝的这杯。" : "这次会话没有记录任何饮品。")
                     .font(.footnote)
                     .foregroundStyle(DesignSystem.mutedInk)
                     .frame(maxWidth: .infinity, alignment: .leading)

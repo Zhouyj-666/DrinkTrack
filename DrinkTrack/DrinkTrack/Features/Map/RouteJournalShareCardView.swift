@@ -96,6 +96,12 @@ struct RouteJournalShareCardView: View {
                         Text(item.name)
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(DesignSystem.primaryInk)
+                        if let note = item.note, !note.isEmpty {
+                            Text(note)
+                                .font(.caption)
+                                .foregroundStyle(DesignSystem.primaryInk)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                         Text(itemLine(item))
                             .font(.caption)
                             .foregroundStyle(DesignSystem.secondaryInk)

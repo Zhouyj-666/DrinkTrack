@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// FR-DASH-04：会话开始/结束控制。也提供 FR-DR-06 一键开始：一次点击创建会话并写入第一条记录。
+/// FR-DASH-04：会话开始/结束控制。开始后立刻打开记酒表单，先记下这杯再看着身体的变化。
 struct SessionControlView: View {
     @ObservedObject var drinkRepository: DrinkRepository
     @Binding var activeSession: DrinkSessionEntity?
@@ -24,8 +24,9 @@ struct SessionControlView: View {
                         Spacer(minLength: 8)
                     }
                     HStack(spacing: 10) {
-                        Button("+ 添加记录") { showQuickLog = true }
+                        Button("再记一杯") { showQuickLog = true }
                             .buttonStyle(SipOutlineButtonStyle())
+                            .accessibilityLabel("再记一杯")
                         Button("结束会话") {
                             drinkRepository.endSession(session)
                             activeSession = nil
@@ -36,33 +37,21 @@ struct SessionControlView: View {
                 }
             } else {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("当前没有进行中的会话")
+                    Text("当前没有进行中的小酌")
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(DesignSystem.primaryInk)
-                    Text("一键开始将按上次的\(UserPreferences.oneTapPresetLabel)记入，之后还能改。")
+                    Text("点开始后先记这杯酒。进行时，也能看见自己的身体。")
                         .font(.system(size: 13))
                         .foregroundStyle(DesignSystem.mutedInk)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                HStack(spacing: 10) {
-                    Button("开始新会话") {
-                        activeSession = drinkRepository.startNewSession()
-                    }
-                    .buttonStyle(SipOutlineButtonStyle())
-
-                    Button {
-                        activeSession = drinkRepository.startSessionWithQuickLog()
-                    } label: {
-                        VStack(spacing: 1) {
-                            Text("一键开始")
-                            Text(UserPreferences.oneTapPresetLabel)
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.82))
-                        }
-                    }
-                    .buttonStyle(SipPrimaryButtonStyle())
-                    .accessibilityIdentifier("one-tap-start")
+                Button("开启小酌之旅") {
+                    activeSession = drinkRepository.startNewSession()
+                    showQuickLog = true
                 }
+                .buttonStyle(SipPrimaryButtonStyle())
+                .accessibilityLabel("开启小酌之旅")
+                .accessibilityIdentifier("start-session")
             }
         }
         .sipCard()

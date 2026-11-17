@@ -173,17 +173,12 @@ final class DrinkTrackSmokeUITests: XCTestCase {
 
         // Dashboard + drink logging
         snap("tab-1-dashboard")
-        if tap(app.buttons["开始新会话"], "dashboard-start-session", required: false) {
+        if tap(app.buttons["开启小酌之旅"], "dashboard-start-session", required: false) {
             sleep(1)
             snap("dashboard-session-started")
-            if tap(app.buttons["+ 添加记录"], "dashboard-open-quicklog") {
-                if app.navigationBars["添加饮酒记录"].waitForExistence(timeout: 8) {
-                    snap("quicklog-sheet")
-                } else {
-                    snap("MISSING-quicklog-sheet")
-                    note("Quick-log sheet did not open.")
-                }
-                if tap(app.buttons["+1 继续"], "quicklog-add-one") {
+            if app.navigationBars["添加饮酒记录"].waitForExistence(timeout: 8) {
+                snap("quicklog-sheet")
+                if tap(app.buttons["记好这杯"], "quicklog-add-one") {
                     sleep(1)
                     snap("quicklog-after-add")
                 }
@@ -215,6 +210,9 @@ final class DrinkTrackSmokeUITests: XCTestCase {
                     note("Dashboard session log list ('本次记录') not found after logging a drink.")
                     XCTFail("Logged drink is not visible on the dashboard")
                 }
+            } else {
+                snap("MISSING-quicklog-sheet")
+                note("Quick-log sheet did not open after starting a session.")
             }
             if tap(app.buttons["结束会话"], "dashboard-end-session", required: false) {
                 sleep(1)

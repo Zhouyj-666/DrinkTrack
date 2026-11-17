@@ -17,6 +17,8 @@ struct PlaceSummary: Identifiable {
     let lastAt: Date?
     let categoryMix: [(category: DrinkCategory, fraction: Double)]
     let sessions: [DrinkSessionEntity]
+    /// Shop name or a short remark the user wrote for this place.
+    let note: String?
 
     var coordinate: CLLocationCoordinate2D? {
         LocationCoordinate.clLocation(from: LocationCoordinate.validated(latitude: latitude, longitude: longitude))
@@ -38,6 +40,8 @@ struct PlaceAccumulator {
     private var totalStandardDrinks = 0.0
     private var lastAt: Date?
     private var categoryVolumes: [DrinkCategory: Double] = [:]
+    private var note: String?
+    private var noteAt: Date?
 
     init(name: String) {
         self.name = name
@@ -78,6 +82,15 @@ struct PlaceAccumulator {
         }
     }
 
+    mutating func considerNote(_ raw: String?, at date: Date?) {
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !trimmed.isEmpty else { return }
+        if note == nil || (date ?? .distantPast) >= (noteAt ?? .distantPast) {
+            note = trimmed
+            noteAt = date
+        }
+    }
+
     func summary() -> PlaceSummary {
         let ranked = categoryVolumes.sorted { $0.value > $1.value }
         let total = ranked.reduce(0) { $0 + $1.value }
@@ -97,7 +110,8 @@ struct PlaceAccumulator {
             totalStandardDrinks: totalStandardDrinks,
             lastAt: lastAt,
             categoryMix: mix,
-            sessions: sortedSessions
+            sessions: sortedSessions,
+            note: note
         )
     }
 }

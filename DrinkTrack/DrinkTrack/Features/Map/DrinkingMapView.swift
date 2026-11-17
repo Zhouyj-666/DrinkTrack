@@ -405,6 +405,12 @@ struct DrinkingMapView: View {
                 Text(stop.kind == .placeMark ? "地点标记" : "饮酒场次")
                     .font(.caption2)
                     .foregroundStyle(DesignSystem.mutedInk)
+                if let note = stop.note, !note.isEmpty {
+                    Text(note)
+                        .font(.caption)
+                        .foregroundStyle(DesignSystem.primaryInk)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             Spacer()
         }
@@ -512,11 +518,29 @@ struct PlaceDetailView: View {
     let place: PlaceSummary
 
     @State private var showFillSheet = false
+    @State private var placeNoteDraft = ""
+    @State private var savedPlaceNote: String?
 
     var body: some View {
         List {
             Section {
                 recap
+            }
+
+            Section {
+                TextField("店名，或对这个地址的备注", text: $placeNoteDraft, axis: .vertical)
+                    .lineLimit(2...4)
+                if placeNoteNeedsSave {
+                    Button("保存地点描述") {
+                        drinkRepository.updatePlaceNote(placeNoteDraft, forPlaceName: place.name)
+                        savedPlaceNote = trimmedNote
+                        placeNoteDraft = trimmedNote ?? ""
+                    }
+                }
+            } header: {
+                Text("地点描述")
+            } footer: {
+                Text("这段描述会出现在地点详情和分享卡片上，不会带上经纬度。")
             }
 
             if !place.hasCoordinate {
@@ -564,6 +588,10 @@ struct PlaceDetailView: View {
         }
         .navigationTitle(place.name)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            savedPlaceNote = Self.trimmed(place.note)
+            placeNoteDraft = savedPlaceNote ?? ""
+        }
         .sheet(isPresented: $showFillSheet) {
             MarkPlaceSheet(
                 initialCoordinate: nil,
@@ -574,8 +602,21 @@ struct PlaceDetailView: View {
         }
     }
 
+    private var trimmedNote: String? { Self.trimmed(placeNoteDraft) }
+
+    private var placeNoteNeedsSave: Bool { trimmedNote != savedPlaceNote }
+
+    private static func trimmed(_ raw: String?) -> String? {
+        let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return value.isEmpty ? nil : value
+    }
+
     private var recap: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if let note = place.note, !note.isEmpty {
+                Text(note)
+                    .font(.body)
+            }
             Text(PlaceRecap.line(for: place))
                 .font(.body)
             if place.totalVolumeML > 0 {
@@ -602,6 +643,12 @@ struct PlaceDetailView: View {
                 Text("\(count) 条记录")
                     .font(.caption2)
                     .foregroundStyle(DesignSystem.mutedInk)
+                if let note = (session.value(forKey: "note") as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !note.isEmpty {
+                    Text(note)
+                        .font(.caption2)
+                        .foregroundStyle(DesignSystem.primaryInk)
+                        .lineLimit(2)
+                }
             }
             if session.status == "active" {
                 Text("进行中")

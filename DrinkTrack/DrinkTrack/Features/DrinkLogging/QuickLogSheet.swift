@@ -110,10 +110,16 @@ struct QuickLogSheet: View {
                     Button {
                         addLogAndContinue()
                     } label: {
-                        Text(addedCount == 0 ? "+1 继续" : "再添加一条（已记录 \(addedCount) 条）")
+                        Text("记好这杯")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
+                    .accessibilityLabel("记好这杯")
+                    if addedCount > 0 {
+                        Text("已记 \(addedCount) 杯，还可以再记。")
+                            .font(.caption)
+                            .foregroundStyle(DesignSystem.mutedInk)
+                    }
 
                     Button {
                         dismiss()
@@ -121,6 +127,10 @@ struct QuickLogSheet: View {
                         Text("完成").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
+                    .accessibilityLabel("完成")
+                    Text("完成只是合上这张表，这场小酌还在进行。要结束整场，请回到仪表盘点「结束会话」。")
+                        .font(.caption)
+                        .foregroundStyle(DesignSystem.mutedInk)
                 }
             }
             .navigationTitle("添加饮酒记录")
@@ -197,12 +207,20 @@ private struct ABVRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
+            HStack(spacing: 8) {
                 Text("酒精度")
+                    .fixedSize(horizontal: true, vertical: false)
                 Slider(value: $abvPercent, in: 0...70, step: 0.5)
-                Text(abvLabel)
-                    .monospacedDigit()
-                    .frame(width: 56, alignment: .trailing)
+                HStack(spacing: 0) {
+                    Text(String(format: "%.1f", abvPercent))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Text("%")
+                        .lineLimit(1)
+                }
+                .fixedSize(horizontal: true, vertical: false)
+                .frame(minWidth: 64, alignment: .trailing)
             }
             Text(fromBrand ? "已按所选酒款的参考酒精度计算，可拖动调整" : "默认按该酒种的常见酒精度估算，可拖动调整")
                 .font(.caption2)
@@ -210,11 +228,6 @@ private struct ABVRow: View {
         }
     }
 
-    private var abvLabel: String {
-        abvPercent == abvPercent.rounded()
-            ? String(format: "%.0f%%", abvPercent)
-            : String(format: "%.1f%%", abvPercent)
-    }
 }
 
 /// FR-DR-03：品牌搜索 / 自由输入。没输入时给出当前类目的常见酒款；

@@ -32,10 +32,30 @@ struct ShareCardView: View {
         VStack(alignment: .leading, spacing: 14) {
             header
 
-            if showLocation, let place = session.locationName, !place.isEmpty {
-                Label(place, systemImage: "mappin.and.ellipse")
+            if let sessionNote = Self.trimmed(session.value(forKey: "note") as? String) {
+                Text(sessionNote)
+                    .font(.subheadline)
+                    .foregroundStyle(DesignSystem.primaryInk)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if showLocation, let place = Self.trimmed(session.locationName) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Label(place, systemImage: "mappin.and.ellipse")
+                        .font(.footnote)
+                        .foregroundStyle(DesignSystem.secondaryInk)
+                    if let placeNote = Self.trimmed(session.value(forKey: "placeNote") as? String) {
+                        Text(placeNote)
+                            .font(.footnote)
+                            .foregroundStyle(DesignSystem.secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            } else if let placeNote = Self.trimmed(session.value(forKey: "placeNote") as? String) {
+                Label(placeNote, systemImage: "mappin.and.ellipse")
                     .font(.footnote)
                     .foregroundStyle(DesignSystem.secondaryInk)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             statsRow
@@ -173,6 +193,11 @@ struct ShareCardView: View {
         let startText = start.formatted(.dateTime.hour().minute())
         let endText = end.formatted(.dateTime.hour().minute())
         return "\(dateText) \(startText)–\(endText)"
+    }
+
+    private static func trimmed(_ raw: String?) -> String? {
+        let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return value.isEmpty ? nil : value
     }
 
     /// 只取本场时间段内的心率点（前后各留 10 分钟），不拿别的时间的数据冒充本场。
