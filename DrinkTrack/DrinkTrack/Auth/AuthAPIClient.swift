@@ -30,7 +30,13 @@ struct AuthAPIClient: AuthAPIClientProtocol {
             let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmed.isEmpty { body["display_name"] = trimmed }
         }
-        return try await post("v1/auth/register", body: body, token: nil, decode: AuthSessionResponse.self)
+        return try await post(
+            "v1/auth/register",
+            body: body,
+            token: nil,
+            decode: AuthSessionResponse.self,
+            timeout: AuthRequestTimeout.interactive
+        )
     }
 
     func login(email: String, password: String) async throws -> AuthSessionResponse {
@@ -38,21 +44,40 @@ struct AuthAPIClient: AuthAPIClientProtocol {
             "v1/auth/login",
             body: ["email": email, "password": password],
             token: nil,
-            decode: AuthSessionResponse.self
+            decode: AuthSessionResponse.self,
+            timeout: AuthRequestTimeout.interactive
         )
     }
 
     func logout(token: String) async throws {
-        _ = try await send(path: "v1/auth/logout", method: "POST", body: nil, token: token)
+        _ = try await send(
+            path: "v1/auth/logout",
+            method: "POST",
+            body: nil,
+            token: token,
+            timeout: AuthRequestTimeout.interactive
+        )
     }
 
     func currentUser(token: String) async throws -> AuthUser {
-        let data = try await send(path: "v1/auth/me", method: "GET", body: nil, token: token)
+        let data = try await send(
+            path: "v1/auth/me",
+            method: "GET",
+            body: nil,
+            token: token,
+            timeout: AuthRequestTimeout.sessionRestore
+        )
         return try decode(AuthUser.self, from: data)
     }
 
-    private func post<T: Decodable>(_ path: String, body: [String: String], token: String?, decode type: T.Type) async throws -> T {
-        let data = try await send(path: path, method: "POST", body: body, token: token)
+    private func post<T: Decodable>(
+        _ path: String,
+        body: [String: String],
+        token: String?,
+        decode type: T.Type,
+        timeout: TimeInterval
+    ) async throws -> T {
+        let data = try await send(path: path, method: "POST", body: body, token: token, timeout: timeout)
         return try self.decode(type, from: data)
     }
 
@@ -67,9 +92,15 @@ struct AuthAPIClient: AuthAPIClientProtocol {
         return url
     }
 
-    private func send(path: String, method: String, body: [String: String]?, token: String?) async throws -> Data {
+    private func send(
+        path: String,
+        method: String,
+        body: [String: String]?,
+        token: String?,
+        timeout: TimeInterval
+    ) async throws -> Data {
         let url = try makeURL(path: path)
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: url, timeoutInterval: timeout)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         if let body {

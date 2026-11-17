@@ -52,6 +52,7 @@ $swiftFiles = @(
     "Features/Trends/MonthlySpendSummaryView.swift",
     "Features/Social/FriendFeedView.swift",
     "Features/Social/FriendCodeView.swift",
+    "Features/Social/FriendQRScannerView.swift",
     "Features/Social/ShareCardView.swift",
     "Features/Social/SessionDetailView.swift",
     "Features/Social/SessionTimelineChart.swift",
@@ -69,6 +70,8 @@ $swiftFiles = @(
     "Shared/LocationProvider.swift",
     "Shared/QRCodeImage.swift",
     "Shared/BrandSplashView.swift",
+    "Shared/AppLaunchFlow.swift",
+    "Shared/FriendCodeParser.swift",
     "Features/Dashboard/DashboardGlanceView.swift",
     "Features/Dashboard/DashboardRoutePreviewCard.swift",
     "Repositories/DataImporter.swift",
@@ -78,6 +81,7 @@ $swiftFiles = @(
     "Auth/AuthAPIClient.swift",
     "Auth/KeychainTokenStore.swift",
     "Auth/AccountRecordTagger.swift",
+    "Auth/AuthRequestTimeout.swift",
     "Auth/AuthSession.swift",
     "Features/Auth/AuthPalette.swift",
     "Features/Auth/LoginView.swift",
@@ -740,7 +744,7 @@ $targetCommonSettings = @'
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DrinkTrack/DrinkTrack.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkTrack/Info.plist;
@@ -782,7 +786,7 @@ $watchCommonSettings = @'
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "BRAND_DISPLAY_NAME";
 				INFOPLIST_KEY_WKApplication = YES;

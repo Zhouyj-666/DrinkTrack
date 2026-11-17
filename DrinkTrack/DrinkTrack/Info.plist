@@ -19,7 +19,11 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>12</string>
+	<string>13</string>
+
+	<!-- FR-SOC-01 friend-code QR scanning. Permission is requested only when the user taps Scan. -->
+	<key>NSCameraUsageDescription</key>
+	<string>小酌场需要使用相机来扫描朋友的好友码二维码。扫描结果只会保存在这台手机上，不会上传，也不会用来添加其他类型的码。</string>
 
 	<!-- FR-HK-06 权限管理：系统授权弹窗展示的文案 -->
 	<key>NSHealthShareUsageDescription</key>

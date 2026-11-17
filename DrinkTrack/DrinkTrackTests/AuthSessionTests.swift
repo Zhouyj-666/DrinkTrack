@@ -91,6 +91,40 @@ final class AuthSessionTests: XCTestCase {
         XCTAssertEqual(CurrentAccountContext.accountID, "acct-1")
     }
 
+    func testRestoreTimeoutKeepsCachedUserSignedInOffline() async {
+        tokenStore.token = "tok-live"
+        userStore.user = AuthUser(id: "acct-1", email: "you@example.com", displayName: "小酌")
+        client.meHandler = { _ in
+            try await Task.sleep(for: .seconds(2))
+            return AuthUser(id: "acct-1", email: "you@example.com", displayName: "fresh")
+        }
+
+        let auth = makeSession()
+        let started = Date()
+        await auth.restoreSession(timeout: 0.05)
+
+        XCTAssertEqual(auth.phase, .signedInOffline)
+        XCTAssertEqual(auth.user?.email, "you@example.com")
+        XCTAssertEqual(auth.user?.displayName, "小酌")
+        XCTAssertEqual(tokenStore.token, "tok-live")
+        XCTAssertLessThan(Date().timeIntervalSince(started), 1.0)
+    }
+
+    func testRestoreTimeoutWithoutCachedUserStaysLoggedOutAndKeepsToken() async {
+        tokenStore.token = "tok-live"
+        client.meHandler = { _ in
+            try await Task.sleep(for: .seconds(2))
+            return AuthUser(id: "acct-1", email: "you@example.com", displayName: "小酌")
+        }
+
+        let auth = makeSession()
+        await auth.restoreSession(timeout: 0.05)
+
+        XCTAssertEqual(auth.phase, .loggedOut)
+        XCTAssertNil(auth.user)
+        XCTAssertEqual(tokenStore.token, "tok-live")
+    }
+
     private func makeSession() -> AuthSession {
         AuthSession(
             client: client,

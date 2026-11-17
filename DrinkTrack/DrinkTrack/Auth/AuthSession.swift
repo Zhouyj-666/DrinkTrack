@@ -44,15 +44,17 @@ final class AuthSession: ObservableObject {
         }
     }
 
-    /// Check a stored token on launch. A 401 clears it; a network failure keeps the cached user.
-    func restoreSession() async {
+    /// Check a stored token on launch. A 401 clears it; a network failure or timeout keeps the cached user.
+    func restoreSession(timeout: TimeInterval = AuthRequestTimeout.sessionRestore) async {
         guard let token = tokenStore.loadToken() else {
             clearLocalSession(keepCachedUser: false)
             return
         }
         phase = .restoring
         do {
-            let fresh = try await client.currentUser(token: token)
+            let fresh = try await AuthAsyncTimeout.run(seconds: timeout) { [client] in
+                try await client.currentUser(token: token)
+            }
             try? userStore.saveUser(fresh)
             applyAuthenticated(user: fresh)
             phase = .signedIn

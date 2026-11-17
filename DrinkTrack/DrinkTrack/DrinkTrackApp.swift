@@ -39,13 +39,18 @@ struct DrinkTrackApp: App {
             .preferredColorScheme(preferredColorScheme)
             .onAppear { DesignSystem.applyChrome() }
             .task {
-                await authSession.restoreSession()
-                PhoneWatchBridge.shared.start(repository: drinkRepository, health: healthKitManager)
-                guard showBrandSplash else { return }
-                try? await Task.sleep(for: .milliseconds(1200))
-                withAnimation(.easeOut(duration: 0.35)) {
-                    showBrandSplash = false
-                }
+                AppLaunchFlow.start(
+                    showSplash: showBrandSplash,
+                    restore: { await authSession.restoreSession() },
+                    startWatch: {
+                        PhoneWatchBridge.shared.start(repository: drinkRepository, health: healthKitManager)
+                    },
+                    onDismissSplash: {
+                        withAnimation(.easeOut(duration: 0.35)) {
+                            showBrandSplash = false
+                        }
+                    }
+                )
             }
         }
         // FR-DASH-04：每次 App 变为 active（冷启动或从后台回到前台）都做一次自动归档扫描，

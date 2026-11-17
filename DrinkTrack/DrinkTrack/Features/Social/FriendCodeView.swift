@@ -10,6 +10,8 @@ struct FriendCodeView: View {
     @State private var statusMessage: String?
     @State private var isError = false
     @State private var copied = false
+    @State private var showScanner = false
+    @State private var showCameraDenied = false
 
     var body: some View {
         NavigationStack {
@@ -45,23 +47,36 @@ struct FriendCodeView: View {
                 } header: {
                     Text("我的好友码")
                 } footer: {
-                    Text("把这串 6 位数字或二维码发给朋友。本版本名单只存在这台手机上，还不能在两台设备之间同步动态。")
+                    Text("把这串 6 位数字或二维码发给朋友。对方可以在本页用「扫一扫」识别，也可以手动输入。本版本名单只存在这台手机上，还不能在两台设备之间同步动态。")
                 }
 
-                Section("保存对方的好友码") {
+                Section {
                     TextField("输入对方的 6 位好友码", text: $inputCode)
                         .keyboardType(.numberPad)
                         .textInputAutocapitalization(.never)
-                    Button("保存到本机") {
-                        Task { await saveCode() }
+                    HStack(spacing: 12) {
+                        Button {
+                            Task { await startScan() }
+                        } label: {
+                            Label("扫一扫", systemImage: "qrcode.viewfinder")
+                        }
+                        .accessibilityIdentifier("friend-code-scan")
+
+                        Button("保存到本机") {
+                            Task { await saveCode() }
+                        }
+                        .disabled(inputCode.trimmingCharacters(in: .whitespaces).count != 6)
                     }
-                    .disabled(inputCode.trimmingCharacters(in: .whitespaces).count != 6)
 
                     if let statusMessage {
                         Text(statusMessage)
                             .font(.footnote)
                             .foregroundStyle(isError ? DesignSystem.statusCritical : DesignSystem.statusGood)
                     }
+                } header: {
+                    Text("保存对方的好友码")
+                } footer: {
+                    Text("点「扫一扫」用相机读取对方出示的好友码二维码。权限只会在你点按钮时申请。")
                 }
 
                 Section {
@@ -75,7 +90,49 @@ struct FriendCodeView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() } }
             }
             .task { myCode = await repository.myFriendCode() }
+            .sheet(isPresented: $showScanner) {
+                FriendQRScannerView { code in
+                    Task { await saveScannedCode(code) }
+                }
+            }
+            .alert("无法使用相机", isPresented: $showCameraDenied) {
+                Button("去设置") { openAppSettings() }
+                Button("我知道了", role: .cancel) {}
+            } message: {
+                Text("请在「设置」›「小酌场」中开启相机权限，即可扫描好友码。也可以在本页直接输入 6 位好友码。")
+            }
         }
+    }
+
+    private func startScan() async {
+        guard FriendQRScannerSupport.hasCameraHardware else {
+            statusMessage = "这台设备没有可用的相机，请手动输入 6 位好友码。"
+            isError = true
+            return
+        }
+        switch FriendQRScannerSupport.authorizationStatus {
+        case .authorized:
+            showScanner = true
+        case .notDetermined:
+            let granted = await FriendQRScannerSupport.requestAccess()
+            if granted {
+                showScanner = true
+            } else {
+                showCameraDenied = true
+            }
+        default:
+            showCameraDenied = true
+        }
+    }
+
+    private func saveScannedCode(_ code: String) async {
+        inputCode = code
+        await saveCode()
+    }
+
+    private func openAppSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
     }
 
     private var shareText: String {

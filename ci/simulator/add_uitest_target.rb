@@ -51,6 +51,8 @@ unless project.targets.any? { |t| t.name == UNITTEST_NAME }
     AuthAPIMappingTests.swift
     AccountRecordTaggerTests.swift
     AuthSessionTests.swift
+    AppLaunchFlowTests.swift
+    FriendCodeParserTests.swift
   ].each do |name|
     ref = group.new_reference(name)
     unit.add_file_references([ref])

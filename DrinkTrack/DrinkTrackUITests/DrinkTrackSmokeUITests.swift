@@ -292,6 +292,14 @@ final class DrinkTrackSmokeUITests: XCTestCase {
             if tap(qr, "friends-open-friend-code", required: false) {
                 sleep(1)
                 snap("friend-code-sheet")
+                let scan = app.buttons["扫一扫"]
+                if scan.waitForExistence(timeout: 3) {
+                    snap("friend-code-scan-button")
+                } else {
+                    note("扫一扫 button was not found on the friend-code sheet.")
+                }
+                // Do not tap Scan in CI: the simulator has no camera and must
+                // not be prompted for camera permission.
                 tap(app.buttons["关闭"], "friend-code-close", required: false)
             }
         }
