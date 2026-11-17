@@ -45,20 +45,24 @@ enum DesignSystem {
     static let statusSerious = Color(hex: "#C45A2A")
     static let statusCritical = Color(hex: "#7A1A28")
 
-    // Warm categorical palette. Beer and rice wine stay locked to the mockup.
+    // Categorical palette for drink types (trends, dashboard mix, pickers).
+    // Adjacent categories use clearly different hues so two stacked series
+    // never sit in the same red/pink or orange family. Beer and rice wine
+    // stay locked to the logo mockup; darker swatches have a lighter dark-mode
+    // token so bars stay readable on the warm night surface.
     static let categorical: [Color] = [
-        Color(hex: "#6B3A2A"), // baijiu
-        beer,                  // beer
-        Color(hex: "#7A1A28"), // redWine
-        Color(hex: "#C9A04A"), // huangjiu
-        riceWine,              // riceWine
-        Color(hex: "#C45A4A"), // sake
-        Color(hex: "#B8811E"), // soju
-        Color(hex: "#5A101C"), // spirits
-        Color(hex: "#D48B93"), // cocktail
-        Color(hex: "#E08A2A"), // fruitWine
-        Color(hex: "#8A7D74"), // premix
-        Color(hex: "#B0A49B"), // other
+        Color(light: "#7A1A28", dark: "#E8A0A8"), // baijiu - brand burgundy
+        beer,                                       // beer - logo amber, locked
+        Color(light: "#5B2A7A", dark: "#C9A6DC"), // redWine - plum, not another red
+        Color(hex: "#C9A04A"),                      // huangjiu - gold
+        riceWine,                                   // riceWine - logo rose, locked
+        Color(light: "#2F7A6B", dark: "#6ECBBA"), // sake - celadon teal
+        Color(hex: "#B8811E"),                      // soju - logo gold
+        Color(light: "#2C3A6B", dark: "#9AACE0"), // spirits - indigo
+        Color(light: "#C43A7A", dark: "#E890B4"), // cocktail - magenta
+        Color(light: "#2F8A5A", dark: "#6FCB93"), // fruitWine - leaf green
+        Color(light: "#3A6B9A", dark: "#8AB0D8"), // premix - steel blue
+        Color(light: "#8A7D74", dark: "#B0A49B"), // other - warm taupe
     ]
 
     static func color(for category: DrinkCategory) -> Color {
