@@ -60,6 +60,7 @@ $swiftFiles = @(
     "Features/Settings/AlertSettingsView.swift",
     "Features/Settings/ProfileView.swift",
     "Features/Settings/HealthConnectionStatusView.swift",
+    "Shared/CalendarDayContext.swift",
     "Shared/DisclaimerStrings.swift",
     "Shared/DesignSystem.swift",
     "Shared/NumericField.swift",
@@ -726,7 +727,7 @@ $targetCommonSettings = @'
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DrinkTrack/DrinkTrack.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DrinkTrack/Info.plist;
@@ -768,7 +769,7 @@ $watchCommonSettings = @'
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "BRAND_DISPLAY_NAME";
 				INFOPLIST_KEY_WKApplication = YES;

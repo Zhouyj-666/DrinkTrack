@@ -6,6 +6,7 @@ struct DashboardView: View {
     @Binding var selectedTab: AppTab
     @EnvironmentObject private var healthKitManager: HealthKitManager
     @EnvironmentObject private var drinkRepository: DrinkRepository
+    @EnvironmentObject private var calendarDay: CalendarDayContext
     @Environment(\.managedObjectContext) private var context
 
     @State private var activeSession: DrinkSessionEntity?
@@ -169,6 +170,11 @@ struct DashboardView: View {
                 loadGlance()
                 loadRoutePreview()
             }
+            .onChange(of: calendarDay.todayStart) { _, _ in
+                loadGlance()
+                loadRoutePreview()
+                loadLastEndedSession()
+            }
             .onChange(of: healthKitManager.recentHeartRatePoints.count) { _, _ in
                 evaluateAlerts()
             }
@@ -212,7 +218,7 @@ struct DashboardView: View {
 
     private func loadGlance() {
         let calendar = Calendar.current
-        let now = Date()
+        let now = calendarDay.now
         let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? calendar.startOfDay(for: now)
         let startOfLastWeek = calendar.date(byAdding: .day, value: -7, to: startOfWeek) ?? startOfWeek
         let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? startOfWeek

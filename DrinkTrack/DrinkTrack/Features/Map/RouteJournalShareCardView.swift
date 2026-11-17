@@ -2,7 +2,7 @@ import SwiftUI
 import MapKit
 import UIKit
 
-/// Branded 路书 share card: title, date range, named stops, and a map overview.
+/// Branded 饮酒地图 share card: title, date range, named stops, and a map overview.
 /// Place names are labeled on the map so a shop is recognizable; latitude and
 /// longitude numbers are never drawn or printed on the card.
 struct RouteJournalShareCardView: View {
@@ -45,7 +45,7 @@ struct RouteJournalShareCardView: View {
                 .frame(width: 28, height: 28)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text("小酌场 路书")
+                Text("小酌场 饮酒地图")
                     .font(.headline)
                     .foregroundStyle(DesignSystem.primaryInk)
                 Text("\(payload.rangeTitle) · \(payload.dateRangeText)")
@@ -68,7 +68,7 @@ struct RouteJournalShareCardView: View {
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: "mappin.slash")
                     .foregroundStyle(Color("AccentColor"))
-                Text("这些地点还没有坐标，路书图上暂不标点。")
+                Text("这些地点还没有坐标，饮酒地图上暂不标点。")
                     .font(.caption)
                     .foregroundStyle(DesignSystem.secondaryInk)
                     .fixedSize(horizontal: false, vertical: true)
@@ -192,7 +192,7 @@ struct RouteJournalExportSheet: View {
                 .padding()
             }
             .background(DesignSystem.pagePlane)
-            .navigationTitle("导出路书")
+            .navigationTitle("导出饮酒地图")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -454,7 +454,7 @@ enum RouteJournalExportRenderer {
     }
 
     static func fileStem(for payload: RouteJournalExport) -> String {
-        "小酌场路书-\(payload.rangeTitle)"
+        "小酌场饮酒地图-\(payload.rangeTitle)"
     }
 
     static func writePNG(_ image: UIImage, suggestedName: String) -> URL? {
@@ -485,7 +485,7 @@ enum RouteJournalExportRenderer {
     }
 }
 
-/// System share sheet that can carry a 路书 image, PDF, and caption together.
+/// System share sheet that can carry a 饮酒地图 image, PDF, and caption together.
 struct ActivityShareItemsView: UIViewControllerRepresentable {
     let items: [Any]
 

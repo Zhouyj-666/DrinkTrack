@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Root tabs. `selectedTab` lets the dashboard jump to 路书 without nesting another map.
+/// Root tabs. `selectedTab` lets the dashboard jump to 饮酒地图 without nesting another map.
 enum AppTab: Hashable {
     case dashboard
     case trends

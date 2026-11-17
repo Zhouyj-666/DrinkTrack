@@ -7,6 +7,8 @@ import Charts
 /// 不会因为某天某种类目数据多少而重新排序配色（Color follows the entity, never its rank）。
 struct VolumeTrendChart: View {
     let logs: [DrinkLogEntity]
+    var now: Date = Date()
+    var calendar: Calendar = .current
     @State private var unit: Unit = .standardDrinks
     @State private var range: TrendRange = .quarter
 
@@ -71,11 +73,11 @@ struct VolumeTrendChart: View {
     }
 
     private var xDomain: ClosedRange<Date> {
-        ChartDateDomain.range(for: range)
+        ChartDateDomain.range(for: range, now: now, calendar: calendar)
     }
 
     private var axisPlan: TrendAxisPlan {
-        TrendAxisPlan.plan(for: range, domain: xDomain)
+        TrendAxisPlan.plan(for: range, domain: xDomain, calendar: calendar)
     }
 
     private var logsInWindow: [DrinkLogEntity] {
@@ -97,7 +99,7 @@ struct VolumeTrendChart: View {
     }
 
     private var stackedPoints: [StackedPoint] {
-        let calendar = Calendar.current
+        let calendar = calendar
         let component = range.bucket
         let grouped = Dictionary(grouping: logsInWindow) { log -> Date in
             let timestamp = log.timestamp ?? Date()

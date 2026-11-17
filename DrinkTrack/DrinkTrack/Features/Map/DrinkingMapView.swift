@@ -1,10 +1,11 @@
 import SwiftUI
 import MapKit
 
-/// 路书：上方始终是可交互地图，按时间串起走过的地方；下方是时间线 + 地点目录。
+/// 饮酒地图：上方始终是可交互地图，按时间串起走过的地方；下方是时间线 + 地点目录。
 /// 只有用户明确标记（当前位置 / 长按选点 / 补点）的坐标才会上图；不会按地名估点，打开本页也不申请定位。
 struct DrinkingMapView: View {
     @EnvironmentObject private var drinkRepository: DrinkRepository
+    @EnvironmentObject private var calendarDay: CalendarDayContext
 
     @State private var allStops: [RouteStop] = []
     @State private var places: [PlaceSummary] = []
@@ -35,7 +36,7 @@ struct DrinkingMapView: View {
     }
 
     private var filteredStops: [RouteStop] {
-        RouteJournal.filter(allStops, range: timeRange)
+        RouteJournal.filter(allStops, range: timeRange, now: calendarDay.now)
     }
 
     private var pins: [(number: Int, stop: RouteStop)] {
@@ -57,7 +58,8 @@ struct DrinkingMapView: View {
         RouteJournalExport.build(
             stops: allStops,
             nameOnlyPlaces: nameOnlyPlaces,
-            range: timeRange
+            range: timeRange,
+            now: calendarDay.now
         )
     }
 
@@ -79,7 +81,7 @@ struct DrinkingMapView: View {
                 }
             }
             .background(DesignSystem.pagePlane)
-            .navigationTitle("路书")
+            .navigationTitle("饮酒地图")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -91,7 +93,7 @@ struct DrinkingMapView: View {
                     } label: {
                         Label("分享", systemImage: "square.and.arrow.up")
                     }
-                    .accessibilityLabel("分享路书")
+                    .accessibilityLabel("分享饮酒地图")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -131,7 +133,7 @@ struct DrinkingMapView: View {
                     .environmentObject(drinkRepository)
                 }
             }
-            .alert("还没有可导出的路书", isPresented: $showExportEmptyHint) {
+            .alert("还没有可导出的饮酒地图", isPresented: $showExportEmptyHint) {
                 Button("好", role: .cancel) {}
             } message: {
                 Text(RouteJournalExport.emptyHint(hasAnyData: hasAnyRouteData, range: timeRange))
@@ -139,7 +141,7 @@ struct DrinkingMapView: View {
             .sheet(isPresented: $showExportSheet) {
                 RouteJournalExportSheet(
                     payload: exportPayload,
-                    mappedStops: RouteJournal.filter(allStops, range: timeRange)
+                    mappedStops: RouteJournal.filter(allStops, range: timeRange, now: calendarDay.now)
                 )
             }
             .task { reload(fit: true) }
@@ -147,6 +149,10 @@ struct DrinkingMapView: View {
                 reload(fit: false)
             }
             .onChange(of: timeRange) { _, _ in
+                selectedPinName = nil
+                fitMap(animated: true)
+            }
+            .onChange(of: calendarDay.todayStart) { _, _ in
                 selectedPinName = nil
                 fitMap(animated: true)
             }
@@ -189,7 +195,7 @@ struct DrinkingMapView: View {
                         }
                 )
             }
-            .accessibilityLabel("路书地图")
+            .accessibilityLabel("饮酒地图")
 
             if pins.isEmpty {
                 emptyMapHint
@@ -256,7 +262,7 @@ struct DrinkingMapView: View {
             if nameOnly > 0 {
                 return "地图上还没有点 · 列表里有 \(nameOnly) 个仅名称地点"
             }
-            return "还没有路书足迹"
+            return "还没有饮酒地图足迹"
         }
         return "走过 \(placeCount) 个地方 · \(stopCount) 次停留"
     }
@@ -463,7 +469,7 @@ private struct RoutePinBadge: View {
                 .foregroundStyle(.white)
                 .monospacedDigit()
         }
-        .accessibilityLabel("路书第 \(number) 站")
+        .accessibilityLabel("饮酒地图第 \(number) 站")
     }
 }
 
@@ -542,7 +548,7 @@ struct PlaceDetailView: View {
             Section("场次") {
                 if place.sessions.isEmpty {
                     Text(place.hasCoordinate
-                        ? "还没有关联的饮酒场次。若这是路书标记，它不会算成一场酒。"
+                        ? "还没有关联的饮酒场次。若这是饮酒地图标记，它不会算成一场酒。"
                         : "还没有可以打开的场次。")
                         .foregroundStyle(DesignSystem.mutedInk)
                 } else {

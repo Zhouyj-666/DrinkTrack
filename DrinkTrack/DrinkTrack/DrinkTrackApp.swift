@@ -4,6 +4,7 @@ import SwiftUI
 struct DrinkTrackApp: App {
     @StateObject private var healthKitManager = HealthKitManager.shared
     @StateObject private var drinkRepository = DrinkRepository()
+    @StateObject private var calendarDay = CalendarDayContext()
     private let persistence = PersistenceController.shared
     @StateObject private var friendRepository = LocalFriendRepository()
 
@@ -32,6 +33,7 @@ struct DrinkTrackApp: App {
             .environment(\.managedObjectContext, persistence.viewContext)
             .environmentObject(healthKitManager)
             .environmentObject(drinkRepository)
+            .environmentObject(calendarDay)
             .preferredColorScheme(preferredColorScheme)
             .task {
                 PhoneWatchBridge.shared.start(repository: drinkRepository, health: healthKitManager)
@@ -50,6 +52,7 @@ struct DrinkTrackApp: App {
         // 原来 startForegroundSampling() 只在首次授权那一刻被调用过一次。
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
+                calendarDay.refreshFromSystemClock()
                 SessionAutoArchiver.runAutoArchiveSweep(context: persistence.viewContext)
                 Task { await healthKitManager.resumeIfPossible() }
                 PhoneWatchBridge.shared.publishSnapshot()

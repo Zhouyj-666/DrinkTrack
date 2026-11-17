@@ -153,7 +153,7 @@ final class DrinkRepository: ObservableObject {
         NotificationCenter.default.post(name: .drinkTrackDataDidChange, object: nil)
     }
 
-    // MARK: Places / 喝酒地图
+    // MARK: Places / 饮酒地图
 
     /// Exact-name lookup for a coordinate the user already granted via current location
     /// or an explicit PlaceMark. Never geocodes a typed name.
@@ -266,7 +266,7 @@ final class DrinkRepository: ObservableObject {
             .sorted { ($0.lastAt ?? .distantPast) > ($1.lastAt ?? .distantPast) }
     }
 
-    /// Chronological 路书 stops (sessions with coordinates + PlaceMarks).
+    /// Chronological 饮酒地图 stops (sessions with coordinates + PlaceMarks).
     func routeStops() -> [RouteStop] {
         let sessions = fetchAllSessions(limit: 1000).map { session -> (id: String, name: String?, startedAt: Date?, latitude: Double?, longitude: Double?, volumeML: Double, standardDrinks: Double) in
             let logs = (session.logs as? Set<DrinkLogEntity>) ?? []
@@ -299,7 +299,7 @@ final class DrinkRepository: ObservableObject {
         return RouteJournal.stops(sessions: sessions, placeMarks: marks)
     }
 
-    // MARK: PlaceMark / 路书标记
+    // MARK: PlaceMark / 饮酒地图标记
 
     func fetchPlaceMarks() -> [NSManagedObject] {
         let request = NSFetchRequest<NSManagedObject>(entityName: "PlaceMark")

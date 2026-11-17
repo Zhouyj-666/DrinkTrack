@@ -1,7 +1,7 @@
 import SwiftUI
 import Charts
 
-/// 趋势页共用的时间范围。饮酒频率和饮酒量趋势两张图都用它，
+/// 趋势页共用的时间范围。每日饮酒量和饮酒量趋势两张图都用它，
 /// 保证同一个范围在两张图上的横轴窗口、柱子粒度和刻度规则完全一致。
 enum TrendRange: String, CaseIterable, Identifiable {
     case week = "周"
@@ -23,8 +23,7 @@ enum TrendRange: String, CaseIterable, Identifiable {
 
 /// Visible x-axis windows for the trends charts.
 enum ChartDateDomain {
-    static func range(for trendRange: TrendRange, now: Date = Date()) -> ClosedRange<Date> {
-        let calendar = Calendar.current
+    static func range(for trendRange: TrendRange, now: Date = Date(), calendar: Calendar = .current) -> ClosedRange<Date> {
         let todayStart = calendar.startOfDay(for: now)
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: todayStart) ?? now.addingTimeInterval(86400)
         switch trendRange {
@@ -48,8 +47,8 @@ enum ChartDateDomain {
     }
 
     /// Oldest date any trends chart can show. TrendsView loads logs from here.
-    static func earliestStart(now: Date = Date()) -> Date {
-        range(for: .year, now: now).lowerBound
+    static func earliestStart(now: Date = Date(), calendar: Calendar = .current) -> Date {
+        range(for: .year, now: now, calendar: calendar).lowerBound
     }
 }
 
@@ -68,8 +67,7 @@ struct TrendAxisPlan {
 
     static let maxLabels = 6
 
-    static func plan(for range: TrendRange, domain: ClosedRange<Date>) -> TrendAxisPlan {
-        let calendar = Calendar.current
+    static func plan(for range: TrendRange, domain: ClosedRange<Date>, calendar: Calendar = .current) -> TrendAxisPlan {
         switch range {
         case .week:
             // 7 day labels such as "11/7" fit comfortably on a phone.

@@ -239,14 +239,14 @@ final class DrinkTrackSmokeUITests: XCTestCase {
             snap("tab-2-trends-scrolled")
         }
 
-        // 路书 / map. Do not tap 「用当前位置」 or 「标记地点」; that would request
+        // 饮酒地图 / map. Do not tap 「用当前位置」 or 「标记地点」; that would request
         // system location permission. Opening the map itself must not.
         if tap(tabBar.buttons["地图"], "tab-map") {
             sleep(2)
             snap("tab-map")
             let emptyA = app.staticTexts["还没有可以画在地图上的地点"]
-            let emptyB = app.staticTexts["还没有路书足迹"]
-            let title = app.navigationBars["路书"]
+            let emptyB = app.staticTexts["还没有饮酒地图足迹"]
+            let title = app.navigationBars["饮酒地图"]
             if title.waitForExistence(timeout: 3) {
                 snap("tab-map-title-luxshu")
             }
@@ -256,17 +256,17 @@ final class DrinkTrackSmokeUITests: XCTestCase {
                 app.swipeUp()
                 snap("tab-map-list")
             }
-            let share = app.buttons["分享路书"]
+            let share = app.buttons["分享饮酒地图"]
             if share.waitForExistence(timeout: 3) {
                 snap("tab-map-share-button")
                 if share.isHittable {
                     share.tap()
-                    let alert = app.alerts["还没有可导出的路书"]
+                    let alert = app.alerts["还没有可导出的饮酒地图"]
                     if alert.waitForExistence(timeout: 3) {
                         snap("tab-map-share-empty")
                         let ok = alert.buttons["好"]
                         if ok.exists { ok.tap() }
-                    } else if app.navigationBars["导出路书"].waitForExistence(timeout: 3) {
+                    } else if app.navigationBars["导出饮酒地图"].waitForExistence(timeout: 3) {
                         snap("tab-map-export-sheet")
                         let close = app.buttons["关闭"]
                         if close.exists { close.tap() }
@@ -274,7 +274,7 @@ final class DrinkTrackSmokeUITests: XCTestCase {
                 }
             } else {
                 snap("MISSING-map-share")
-                note("路书 share button was not found.")
+                note("饮酒地图 share button was not found.")
             }
         }
 

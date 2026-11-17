@@ -3,6 +3,7 @@ import SwiftUI
 /// §5.4 长期趋势报告模块。
 struct TrendsView: View {
     @EnvironmentObject private var drinkRepository: DrinkRepository
+    @EnvironmentObject private var calendarDay: CalendarDayContext
     @State private var logs: [DrinkLogEntity] = []
     @State private var sessions: [DrinkSessionEntity] = []
     @State private var spendSummary: (monthTotalFen: Int, monthToDateFen: Int, sessionAverageFen: Int?, sessionCount: Int) = (0, 0, nil, 0)
@@ -16,12 +17,12 @@ struct TrendsView: View {
                         ContentUnavailableView(
                             "暂无数据",
                             systemImage: "chart.bar",
-                            description: Text("记录至少一次饮酒后，这里会展示你的饮酒频率、饮酒量趋势和健康对比报告")
+                            description: Text("记录至少一次饮酒后，这里会展示你的每日饮酒量、饮酒量趋势和健康对比报告")
                         )
                         .padding(.top, 60)
                     } else {
-                        FrequencyChart(logs: logs)
-                        VolumeTrendChart(logs: logs)
+                        FrequencyChart(logs: logs, now: calendarDay.now)
+                        VolumeTrendChart(logs: logs, now: calendarDay.now)
                         if spendTrackingEnabled {
                             MonthlySpendSummaryView(
                                 monthTotalFen: spendSummary.monthTotalFen,
@@ -38,6 +39,7 @@ struct TrendsView: View {
             }
             .navigationTitle("趋势报告")
             .task { load() }
+            .onChange(of: calendarDay.todayStart) { _, _ in load() }
             .refreshable { load() }
         }
     }
@@ -109,9 +111,9 @@ struct TrendsView: View {
     private func load() {
         // Load the widest window any chart offers (the 年 range), not just 3 months,
         // otherwise the 年 view silently shows only the last quarter.
-        logs = drinkRepository.allLogs(since: ChartDateDomain.earliestStart())
+        logs = drinkRepository.allLogs(since: ChartDateDomain.earliestStart(now: calendarDay.now))
         sessions = drinkRepository.fetchAllSessions()
         spendTrackingEnabled = UserPreferences.spendTrackingEnabled
-        spendSummary = drinkRepository.monthSpendSummary()
+        spendSummary = drinkRepository.monthSpendSummary(now: calendarDay.now)
     }
 }

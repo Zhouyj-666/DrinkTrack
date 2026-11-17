@@ -29,7 +29,7 @@ enum DataImporter {
             case .newerSchema(let version):
                 return "这个备份的格式版本是 \(version)，当前 App 只支持到版本 \(DataImporter.supportedSchemaVersion)。请先把小酌场更新到更新的版本，再尝试导入。"
             case .empty:
-                return "这个备份里没有可以导入的会话、饮酒记录、路书标记、好友或个人基础信息。"
+                return "这个备份里没有可以导入的会话、饮酒记录、饮酒地图标记、好友或个人基础信息。"
             }
         }
     }

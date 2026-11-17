@@ -1,7 +1,7 @@
 import SwiftUI
 import MapKit
 
-/// Compact 路书 teaser on the dashboard. Tapping switches to the Map tab.
+/// Compact 饮酒地图 teaser on the dashboard. Tapping switches to the Map tab.
 struct DashboardRoutePreviewCard: View {
     let stops: [RouteStop]
     let placeCount: Int
@@ -16,7 +16,7 @@ struct DashboardRoutePreviewCard: View {
         Button(action: onOpenMap) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Label("路书", systemImage: "map")
+                    Label("饮酒地图", systemImage: "map")
                         .font(.headline)
                         .foregroundStyle(DesignSystem.primaryInk)
                     Spacer()
@@ -73,7 +73,7 @@ struct DashboardRoutePreviewCard: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("打开路书")
+        .accessibilityLabel("打开饮酒地图")
     }
 
     private var caption: String {

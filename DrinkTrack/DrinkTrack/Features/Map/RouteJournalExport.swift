@@ -1,13 +1,13 @@
 import Foundation
 
 /// A name-only place (no validated coordinates) that can appear on an exported
-/// 路书 list but is never given a invented map position.
+/// 饮酒地图 list but is never given a invented map position.
 struct RouteJournalNameOnlyPlace: Equatable {
     let name: String
     let lastAt: Date?
 }
 
-/// Shareable 路书 payload for the current time-range filter.
+/// Shareable 饮酒地图 payload for the current time-range filter.
 ///
 /// Coordinates may be used in memory to draw a map overview, but this payload
 /// and its shareable text/JSON never include latitude or longitude by default.
@@ -36,9 +36,9 @@ struct RouteJournalExport: Equatable {
 
     var canExport: Bool { !items.isEmpty }
 
-    var shareTitle: String { "小酌场 路书" }
+    var shareTitle: String { "小酌场 饮酒地图" }
 
-    static let defaultPrivacyLine = "分享的路书默认不含精确坐标。"
+    static let defaultPrivacyLine = "分享的饮酒地图默认不含精确坐标。"
 
     static func build(
         stops: [RouteStop],
@@ -116,7 +116,7 @@ struct RouteJournalExport: Equatable {
     var shareableJSONString: String {
         var root: [String: Any] = [
             "brand": "小酌场",
-            "title": "路书",
+            "title": "饮酒地图",
             "range": rangeTitle,
             "dateRange": dateRangeText,
             "mappedPlaceCount": mappedPlaceCount,
@@ -147,10 +147,10 @@ struct RouteJournalExport: Equatable {
 
     static func emptyHint(hasAnyData: Bool, range: RouteTimeRange) -> String {
         if !hasAnyData {
-            return "还没有可导出的路书。先标记地点，或在记酒时加上地点。"
+            return "还没有可导出的饮酒地图。先标记地点，或在记酒时加上地点。"
         }
         if range == .all {
-            return "还没有可导出的路书。先标记地点，或在记酒时加上地点。"
+            return "还没有可导出的饮酒地图。先标记地点，或在记酒时加上地点。"
         }
         return "这个时间范围里还没有可导出的内容，可切换到「全部」看看。"
     }
@@ -181,7 +181,7 @@ struct RouteJournalExport: Equatable {
             parts.append("\(nameOnlyCount) 个仅名称地点")
         }
         if parts.isEmpty {
-            return "还没有路书足迹"
+            return "还没有饮酒地图足迹"
         }
         return parts.joined(separator: " · ")
     }

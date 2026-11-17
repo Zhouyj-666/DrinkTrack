@@ -1,10 +1,12 @@
 import SwiftUI
 import Charts
 
-/// FR-TREND-01：饮酒频率——周/月/3个月/年视图的饮酒量条形图 + 饮酒天数统计。
+/// FR-TREND-01：每日饮酒量——周/月/3个月/年视图的饮酒量条形图，并用饮酒天数作为频率摘要。
 /// 周、月、3个月按天出柱；年视图按月汇总，否则 365 根柱子会挤成细线。
 struct FrequencyChart: View {
     let logs: [DrinkLogEntity]
+    var now: Date = Date()
+    var calendar: Calendar = .current
     @State private var range: TrendRange = .month
 
     private struct BucketTotal: Identifiable {
@@ -15,7 +17,7 @@ struct FrequencyChart: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("饮酒频率").font(.headline)
+            Text("每日饮酒量").font(.headline)
             TrendRangePicker(selection: $range)
 
             Chart(bucketTotals) { item in
@@ -53,11 +55,11 @@ struct FrequencyChart: View {
     }
 
     private var xDomain: ClosedRange<Date> {
-        ChartDateDomain.range(for: range)
+        ChartDateDomain.range(for: range, now: now, calendar: calendar)
     }
 
     private var axisPlan: TrendAxisPlan {
-        TrendAxisPlan.plan(for: range, domain: xDomain)
+        TrendAxisPlan.plan(for: range, domain: xDomain, calendar: calendar)
     }
 
     private var logsInWindow: [DrinkLogEntity] {
@@ -69,12 +71,12 @@ struct FrequencyChart: View {
     }
 
     private var drinkingDayCount: Int {
-        let calendar = Calendar.current
+        let calendar = calendar
         return Set(logsInWindow.compactMap { $0.timestamp.map { calendar.startOfDay(for: $0) } }).count
     }
 
     private var bucketTotals: [BucketTotal] {
-        let calendar = Calendar.current
+        let calendar = calendar
         let component = range.bucket
         let grouped = Dictionary(grouping: logsInWindow) { log -> Date in
             let timestamp = log.timestamp ?? Date()

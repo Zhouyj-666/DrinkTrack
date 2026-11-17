@@ -2,7 +2,7 @@ import Foundation
 import CoreLocation
 import MapKit
 
-/// Time window chips on the 路书 map.
+/// Time window chips on the 饮酒地图 map.
 enum RouteTimeRange: String, CaseIterable, Identifiable {
     case week
     case month
@@ -30,7 +30,7 @@ enum RouteTimeRange: String, CaseIterable, Identifiable {
     }
 }
 
-/// One chronological stop on the 路书 route. Revisiting the same place later
+/// One chronological stop on the 饮酒地图 route. Revisiting the same place later
 /// becomes another stop. PlaceMarks are not drink sessions.
 struct RouteStop: Identifiable, Equatable {
     enum Kind: Equatable {
@@ -53,7 +53,7 @@ struct RouteStop: Identifiable, Equatable {
     }
 }
 
-/// Pure builders for the 路书 map: ordering, filtering, polyline, pin numbers.
+/// Pure builders for the 饮酒地图 map: ordering, filtering, polyline, pin numbers.
 enum RouteJournal {
     /// Build chronological stops (oldest → newest) from sessions with coordinates
     /// and from explicit PlaceMark rows. Name-only places never become stops.

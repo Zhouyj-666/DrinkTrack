@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreLocation
 
-/// Sheet for explicitly marking a place on the 路书 map.
+/// Sheet for explicitly marking a place on the 饮酒地图 map.
 /// Creates a PlaceMark (not a drink session) and can back-fill same-name rows.
 struct MarkPlaceSheet: View {
     @EnvironmentObject private var drinkRepository: DrinkRepository
@@ -37,7 +37,7 @@ struct MarkPlaceSheet: View {
                 } footer: {
                     Text(mode == .fillExisting
                         ? "只会给同名的记录补上坐标，不会新增一场饮酒。打开地图本身不会申请定位。"
-                        : "这是路书上的一个地点标记，不会算成一场饮酒。分享卡片也不会带上坐标。")
+                        : "这是饮酒地图上的一个地点标记，不会算成一场饮酒。分享卡片也不会带上坐标。")
                 }
 
                 Section {

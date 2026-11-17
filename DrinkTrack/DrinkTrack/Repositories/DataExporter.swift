@@ -31,7 +31,7 @@ enum DataExporter {
             "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0",
             "schemaVersion": DataImporter.supportedSchemaVersion,
             "exportedAt": iso(Date()),
-            "note": "本文件由小酌场（SipSession）在本机生成。含饮酒记录、会话、可选花费、地点与路书标记（若你曾用「用当前位置」或「标记地点」，还会包含对应的经纬度）、本场提示和个人基础信息；不含 Apple 健康里的原始心率/血氧样本。分享卡片不会带上坐标。",
+            "note": "本文件由小酌场（SipSession）在本机生成。含饮酒记录、会话、可选花费、地点与饮酒地图标记（若你曾用「用当前位置」或「标记地点」，还会包含对应的经纬度）、本场提示和个人基础信息；不含 Apple 健康里的原始心率/血氧样本。分享卡片不会带上坐标。",
             "sessions": sessionsJSON(context: context),
             "placeMarks": placeMarksJSON(context: context),
             "profile": profileJSON(context: context),
