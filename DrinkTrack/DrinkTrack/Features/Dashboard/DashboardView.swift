@@ -74,7 +74,10 @@ struct DashboardView: View {
                             points: healthKitManager.chartHeartRatePoints,
                             drinkMarks: drinkMarkTimestamps,
                             watchConnected: healthKitManager.watchSeemsConnected,
-                            isInSession: healthKitManager.isChartInSession
+                            isInSession: healthKitManager.isChartInSession,
+                            onRefresh: {
+                                Task { await healthKitManager.resumeIfPossible() }
+                            }
                         )
 
                         if !healthKitManager.chartSpO2Points.isEmpty || healthKitManager.latestInSessionSpO2 != nil {
